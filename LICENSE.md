@@ -1,4 +1,4 @@
-forestPHP Framework
+forestJ Framework
 Copyright (c) 2024, Rene Arentz
 
 This program is free software: you can redistribute it and/or modify
