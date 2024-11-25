@@ -865,17 +865,22 @@ public class File {
 		for (ListingElement o_file : a_files) {
 			/* skip directory elements */
 			if (o_file.getIsDirectory()) {
+														de.forestj.lib.Global.ilogFinest("skip directory '" + o_file.getFullName() + "'");
 				continue;
 			}
 			
 			/* sum up all file sizes and add file element full paths */
 			i_size += o_file.getSize();
 			a_filePaths.add(o_file.getFullName());
+													de.forestj.lib.Global.ilogFinest("added file '" + o_file.getFullName() + "'");
 		}
 		
 		/* overall byte array for all file contents */
 		byte[] by_array = new byte[i_size];
 		int i = 0;
+		
+		/* sort file element full paths, so it is always the correct order when hashing byte array */
+		//TODO de.forestj.lib.Sorts.quickSort(a_filePaths);
 		
 		/* iterate each file element full path */
 		for (String s_file : a_filePaths) {
@@ -1310,6 +1315,7 @@ public class File {
 					try {
 						/* create directory */
 						java.nio.file.Files.createDirectory(o_foo);
+																de.forestj.lib.Global.ilogFinest("auto create directory '" + o_foo + "'");
 					} catch (java.io.IOException o_exc) {
 						throw new java.io.IOException("Directory[" + o_foo + "] could not be created: " + o_exc.getMessage());
 					}	
@@ -1354,13 +1360,15 @@ public class File {
 					if ( (!object.toFile().isDirectory()) && (object.getParent().compareTo(o_source) == 0) ) {
 						/* copy file */
 						File.copyFile(object.toFile().getAbsolutePath(), p_s_destination + File.DIR + object.toFile().getName());
+																de.forestj.lib.Global.ilogFinest("copied file '" + object.toFile().getAbsolutePath() + "'");
 					} else if (object.getParent().compareTo(o_source) == 0) { /* parent directory equals source directory parameter */
 						/* copy directory recursively */
 						File.copyDirectory(object.toFile().getAbsolutePath(), p_s_destination + File.DIR + object.toFile().getName());
+																de.forestj.lib.Global.ilogFinest("copied directory '" + object.toFile().getAbsolutePath() + "'");
 					}
 				}
 			} catch (java.io.IOException o_exc) {
-				o_exc.printStackTrace();
+				de.forestj.lib.Global.logException("CopyDirectory exception: ", o_exc);
 			}
 		});
 	}
@@ -1391,7 +1399,9 @@ public class File {
 		/* move directory */
 		try {
 			File.copyDirectory(p_s_source, p_s_destination);
+													de.forestj.lib.Global.ilogFinest("copied directory '" + p_s_source + "'");
 			File.deleteDirectory(p_s_source);
+													de.forestj.lib.Global.ilogFinest("deleted directory '" + p_s_source + "'");
 		} catch (java.io.IOException o_exc) {
 			throw new java.io.IOException("Directory[" + p_s_source + "] cannot be moved: " + o_exc.getMessage());
 		}	
@@ -1450,12 +1460,14 @@ public class File {
 				if (object != o_source) {
 					if (!object.toFile().isDirectory()) {
 						File.deleteFile(object.toFile().getAbsolutePath());
+																de.forestj.lib.Global.ilogFinest("deleted file '" + object.toFile().getAbsolutePath() + "'");
 					} else {
 						File.deleteDirectory(object.toFile().getAbsolutePath());
+																de.forestj.lib.Global.ilogFinest("deleted directory '" + object.toFile().getAbsolutePath() + "'");
 					}
 				}
 			} catch (java.io.IOException o_exc) {
-				o_exc.printStackTrace();
+				de.forestj.lib.Global.logException("DeleteDirectory issue: ", o_exc);
 			}
 		});
 		
@@ -1489,6 +1501,7 @@ public class File {
 		}
 		
 		File.createDirectory(p_s_source);
+												de.forestj.lib.Global.ilogMass("created root directory '" + p_s_source + "'");
 		
 		/* create 256 directories */
 		for (int i = 0; i < 256; i++) {
@@ -1502,6 +1515,7 @@ public class File {
 			
 			/* create new hex directory */
 			File.createDirectory(p_s_source + File.DIR + s_hex);
+													de.forestj.lib.Global.ilogMass("created sub directory '" + s_hex + "'");
 		}
 	}
 	

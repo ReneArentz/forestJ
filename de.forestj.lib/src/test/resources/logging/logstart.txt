@@ -1,0 +1,7 @@
+UseFile = true
+FileLevel = CONFIG
+FilePath = CurrentDirectory
+FilePattern = testLoggingFromStart.log
+FileLimit = 250000
+FileCount = 23
+FormatLogLine=[%1$tF %1$tT] [%4$-8s] [%2$-16s] %5$s%n

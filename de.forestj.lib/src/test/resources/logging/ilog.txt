@@ -1,0 +1,6 @@
+UseFile = true
+FileLevel = CONFIG
+FilePath = CurrentDirectory
+FilePattern = testLoggingConfigInternalFromFile.log
+FileLimit = 250000
+FileCount = 3

@@ -1,0 +1,5 @@
+UseFile=true
+FileLevel=FINEST
+FilePattern=testLoggingConfigFromFile.log
+FileLimit=500000
+FileCount=5
