@@ -17,6 +17,8 @@ public class Sandbox {
 				System.out.println("");
 				
 				System.out.println("[1] test Console");
+				//System.out.println("[2] test ConsoleProgressBar");
+				System.out.println("[3] test JVMMemoryInfo");
 				System.out.println("[0] quit");
 				
 				System.out.println("");
@@ -27,6 +29,10 @@ public class Sandbox {
 				
 				if (i_input == 1) {
 					ConsoleTest.testConsole();
+				} else if (i_input == 2) {
+					//ConsoleTest.testConsoleProgressBar();
+				} else if (i_input == 3) {
+					JVMMemoryInfoTest.testJVMMemoryInfo();
 				}
 				
 				if ( (i_input >= 1) && (i_input <= 12) ) {
