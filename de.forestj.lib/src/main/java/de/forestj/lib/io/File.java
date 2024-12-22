@@ -880,7 +880,7 @@ public class File {
 		int i = 0;
 		
 		/* sort file element full paths, so it is always the correct order when hashing byte array */
-		//TODO de.forestj.lib.Sorts.quickSort(a_filePaths);
+		de.forestj.lib.Sorts.quickSort(a_filePaths);
 		
 		/* iterate each file element full path */
 		for (String s_file : a_filePaths) {
