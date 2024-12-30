@@ -17,25 +17,28 @@ public class Sandbox {
 				System.out.println("");
 				
 				System.out.println("[1] test Console");
-				//System.out.println("[2] test ConsoleProgressBar");
+				System.out.println("[2] test ConsoleProgressBar");
 				System.out.println("[3] test JVMMemoryInfo");
+				System.out.println("[4] test Sorts");
 				System.out.println("[0] quit");
 				
 				System.out.println("");
 				
-				i_input = de.forestj.lib.Console.consoleInputInteger("Enter menu number[1-11;0]: ", "Invalid input.", "Please enter a value[1-11;0].");
+				i_input = de.forestj.lib.Console.consoleInputInteger("Enter menu number[1-13;0]: ", "Invalid input.", "Please enter a value[1-13;0].");
 				
 				System.out.println("");
 				
 				if (i_input == 1) {
 					ConsoleTest.testConsole();
 				} else if (i_input == 2) {
-					//ConsoleTest.testConsoleProgressBar();
+					ConsoleTest.testConsoleProgressBar();
 				} else if (i_input == 3) {
 					JVMMemoryInfoTest.testJVMMemoryInfo();
+				} else if (i_input == 4) {
+					SortsTest.testSorts();
 				}
 				
-				if ( (i_input >= 1) && (i_input <= 12) ) {
+				if ( (i_input >= 1) && (i_input <= 13) ) {
 					System.out.println("");
 					
 					de.forestj.lib.Console.consoleInputString("Press any key to continue . . . ", true);

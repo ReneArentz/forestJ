@@ -231,4 +231,149 @@ public class ConsoleTest {
     	System.out.println( de.forestj.lib.Console.consoleInputRegex("consoleInputRegex: ", "[a-f0-9]*", "Does not match criteria.") );
     	System.out.println( de.forestj.lib.Console.consoleInputRegex("consoleInputRegex: ", "[a-f0-9]*", "Does not match criteria.", "Please enter a value.") );
     }
+
+	public static void testConsoleProgressBar() throws Exception {
+    	WorkSimulationWithDelegate o_workSim = null;
+    	
+    	de.forestj.lib.ConsoleProgressBar o_progressBar_1 = new de.forestj.lib.ConsoleProgressBar();
+    			
+		o_workSim = new WorkSimulationWithDelegate(
+			new WorkSimulationWithDelegate.IDelegate() {
+				@Override public void PostProgress(int p_i_progress) {
+					o_progressBar_1.report((double)p_i_progress / 100.0d);
+				}
+			}
+		);
+		
+		o_progressBar_1.init("Start progress () . . .", "Done ().");
+		
+		o_workSim.start();
+		o_workSim.join();
+		
+		o_progressBar_1.close();
+		
+		/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+		System.out.println("\n" + "++++++++++++++++++++++++++++++++++++++++++" + "\n");
+		/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+		
+		de.forestj.lib.ConsoleProgressBar o_progressBar_2 = new de.forestj.lib.ConsoleProgressBar(18);
+		
+		o_workSim = new WorkSimulationWithDelegate(
+			new WorkSimulationWithDelegate.IDelegate() { 
+				@Override public void PostProgress(int p_i_progress) {
+					o_progressBar_2.report((double)p_i_progress / 100.0d);
+				}
+			}
+		);
+		
+		o_progressBar_2.init("Start progress (18) . . .", "Done (18).");
+		
+		o_workSim.start();
+		o_workSim.join();
+		
+		o_progressBar_2.close();
+    	
+		/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+		System.out.println("\n" + "++++++++++++++++++++++++++++++++++++++++++" + "\n");
+		/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+		
+		de.forestj.lib.ConsoleProgressBar o_progressBar_3 = new de.forestj.lib.ConsoleProgressBar((long)75, 18);
+		
+		o_workSim = new WorkSimulationWithDelegate(
+			new WorkSimulationWithDelegate.IDelegate() { 
+				@Override public void PostProgress(int p_i_progress) {
+					o_progressBar_3.report((double)p_i_progress / 100.0d);
+				}
+			}
+		);
+		
+		o_progressBar_3.init("Start progress (75, 18) . . .", "Done (75, 18).");
+		
+		o_workSim.start();
+		o_workSim.join();
+		
+		o_progressBar_3.close();
+		
+		/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+		System.out.println("\n" + "++++++++++++++++++++++++++++++++++++++++++" + "\n");
+		/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+		
+		de.forestj.lib.ConsoleProgressBar o_progressBar_4 = new de.forestj.lib.ConsoleProgressBar((long)75, 18, 10);
+		
+		o_workSim = new WorkSimulationWithDelegate(
+			new WorkSimulationWithDelegate.IDelegate() { 
+				@Override public void PostProgress(int p_i_progress) {
+					o_progressBar_4.report((double)p_i_progress / 100.0d);
+				}
+			}
+		);
+		
+		o_progressBar_4.init("Start progress (75, 18, 10) . . .", "Done (75, 18, 10).", "Marquee test with large 38 text length");
+		
+		o_workSim.start();
+		o_workSim.join();
+		
+		o_progressBar_4.close();
+		
+		/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+		System.out.println("\n" + "++++++++++++++++++++++++++++++++++++++++++" + "\n");
+		/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+		
+		de.forestj.lib.ConsoleProgressBar o_progressBar_5 = new de.forestj.lib.ConsoleProgressBar(10, 8);
+		
+		o_workSim = new WorkSimulationWithDelegate(
+			new WorkSimulationWithDelegate.IDelegate() { 
+				@Override public void PostProgress(int p_i_progress) {
+					o_progressBar_5.report((double)p_i_progress / 100.0d);
+				}
+			}
+		);
+		
+		o_progressBar_5.init("Start progress (10, 8) . . .", "Done (10, 8).", "Marquee test with large 38 text length");
+		
+		o_workSim.start();
+		o_workSim.join();
+		
+		o_progressBar_5.close();
+		
+		/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+		System.out.println("\n" + "++++++++++++++++++++++++++++++++++++++++++" + "\n");
+		/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+		
+		de.forestj.lib.ConsoleProgressBar o_progressBar_6 = new de.forestj.lib.ConsoleProgressBar((long)75, 18, 10, 12);
+		
+		o_workSim = new WorkSimulationWithDelegate(
+			new WorkSimulationWithDelegate.IDelegate() { 
+				@Override public void PostProgress(int p_i_progress) {
+					o_progressBar_6.report((double)p_i_progress / 100.0d);
+				}
+			}
+		);
+		
+		o_progressBar_6.init("Start progress (75, 18, 10, 12) . . .", "Done (75, 18, 10, 12).", "Marquee test with large 38 text length");
+		
+		o_workSim.start();
+		o_workSim.join();
+		
+		o_progressBar_6.close();
+		
+		/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+		System.out.println("\n" + "++++++++++++++++++++++++++++++++++++++++++" + "\n");
+		/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+		
+		o_workSim = new WorkSimulationWithDelegate(
+			new WorkSimulationWithDelegate.IDelegate() { 
+				@Override public void PostProgress(int p_i_progress) {
+					o_progressBar_6.report((double)p_i_progress / 100.0d);
+				}
+			}
+		);
+		
+		o_progressBar_6.init("Start progress (75, 18, 10, 12) . . .", "Done (75, 18, 10, 12).", "Short Marquee");
+		
+		o_workSim.start();
+		o_workSim.join();
+		
+		o_progressBar_6.close();
+    }
 }
