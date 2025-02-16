@@ -388,6 +388,37 @@ public class Global {
 	}
 	
 	/**
+	 * Create internal log message with INFO log level, if internal log level is included in logControl field, limit each log line to a constant amount of characters
+	 * 
+	 * @param p_s_log		log message which will be logged
+	 * @param p_i_limit		constant limit amount of characters
+	 */
+	public static synchronized void ilogLarge(String p_s_log, int p_i_limit) {
+		if ((p_i_limit > 0) && (p_s_log.length() > p_i_limit)) {
+		       if ( (de.forestj.lib.Global.get().by_internalLogControl & de.forestj.lib.Global.INFO) == de.forestj.lib.Global.INFO ) {
+					Global.o_instance.ILOG.logp(java.util.logging.Level.INFO, (Thread.currentThread().getStackTrace())[2].getClassName(), (Thread.currentThread().getStackTrace())[2].getMethodName(), p_s_log.substring(0, p_i_limit));
+					
+					/* call other log implementation */
+					if (Global.o_instance.itf_logging != null) {
+						Global.o_instance.itf_logging.OtherImplementation(true, de.forestj.lib.Global.INFO, (Thread.currentThread().getStackTrace())[2].getClassName(), (Thread.currentThread().getStackTrace())[2].getMethodName(), p_s_log.substring(0, p_i_limit));
+					}
+					
+					/* call recursive to log the complete log message */
+					ilogLarge(p_s_log.substring(p_i_limit), p_i_limit);
+				}
+		   } else {
+			   if ( (de.forestj.lib.Global.get().by_internalLogControl & de.forestj.lib.Global.INFO) == de.forestj.lib.Global.INFO ) {
+					Global.o_instance.ILOG.logp(java.util.logging.Level.INFO, (Thread.currentThread().getStackTrace())[2].getClassName(), (Thread.currentThread().getStackTrace())[2].getMethodName(), p_s_log);
+					
+					/* call other log implementation */
+					if (Global.o_instance.itf_logging != null) {
+						Global.o_instance.itf_logging.OtherImplementation(true, de.forestj.lib.Global.INFO, (Thread.currentThread().getStackTrace())[2].getClassName(), (Thread.currentThread().getStackTrace())[2].getMethodName(), p_s_log);
+					}
+				}
+		   }
+	}
+	
+	/**
 	 * Create internal log message with CONFIG log level, if internal log level is included in logControl field
 	 * 
 	 * @param p_s_log	log message which will be logged

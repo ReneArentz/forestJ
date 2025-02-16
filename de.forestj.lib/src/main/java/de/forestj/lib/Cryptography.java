@@ -44,7 +44,9 @@ public class Cryptography {
 		}
 		
 		/* get 12 bytes for salt from common secret passphrase */
-		this.a_ivLocal = p_s_commonSecretPassphrase.substring(0, 12).getBytes(java.nio.charset.StandardCharsets.UTF_8);
+		byte[] by_utf8 = p_s_commonSecretPassphrase.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+		String s_utf8 = new String(by_utf8, java.nio.charset.StandardCharsets.UTF_8);
+		this.a_ivLocal = s_utf8.substring(0, 12).getBytes(java.nio.charset.StandardCharsets.UTF_8);
 		
 		/* generate secret key for cryptography instance */
 		this.o_secretKeyLocal = Cryptography.generateSecretKey(this.a_ivLocal, p_s_commonSecretPassphrase, p_i_keyLengthOption);
@@ -396,7 +398,9 @@ public class Cryptography {
 		int i_iterationCount = de.forestj.lib.Helper.byteArrayToInt(a_iterationCount);
 		
 		/* create secret key specifications */
-		java.security.spec.KeySpec o_spec = new javax.crypto.spec.PBEKeySpec(p_s_commonSecretPassphrase.toCharArray(), p_a_iv, i_iterationCount, i_keyLength);
+		byte[] by_utf8 = p_s_commonSecretPassphrase.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+		String s_utf8 = new String(by_utf8, java.nio.charset.StandardCharsets.UTF_8);
+		java.security.spec.KeySpec o_spec = new javax.crypto.spec.PBEKeySpec(s_utf8.toCharArray(), p_a_iv, i_iterationCount, i_keyLength);
         /* create secret key factory */
 		javax.crypto.SecretKeyFactory o_secretKeyFactory = javax.crypto.SecretKeyFactory.getInstance(s_keyFactory);
         /* generate secret key byte array */

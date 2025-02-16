@@ -5,7 +5,7 @@
 
 	<groupId>de.forestj</groupId>
 	<artifactId>sandbox</artifactId>
-	<version>1.0.6</version>
+	<version>1.0.7</version>
 	<packaging>jar</packaging>
 
 	<name>sandbox</name>
@@ -102,7 +102,7 @@
 		<dependency>
 			<groupId>de.forestj</groupId>
 			<artifactId>de.forestj.lib</artifactId>
-			<version>1.0.6</version>
+			<version>1.0.7</version>
 		</dependency>
 	</dependencies>
 </project>

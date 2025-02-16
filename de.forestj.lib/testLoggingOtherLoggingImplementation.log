@@ -1,0 +1,6 @@
+[2025-02-16T13:28:16.451523300] [Internal] [CONFIG] [de.forestj.lib.TimerTask] [<init>]   Created TimerTask with interval '1 Sekunde(n)' and start time 'null'
+[2025-02-16T13:28:37.711617200] [Internal] [CONFIG] [de.forestj.lib.TimerTask] [<init>]   Created TimerTask with interval '5 Sekunde(n)' and start time '13:28:47.700448200'
+[2025-02-16T13:28:37.720290300] [Internal] [CONFIG] [de.forestj.lib.TimerTask] [excludeWeekday]   Exclude weekday 'SATURDAY'
+[2025-02-16T13:28:37.730504] [Internal] [CONFIG] [de.forestj.lib.TimerTask] [excludeWeekday]   Exclude weekday 'SUNDAY'
+[2025-02-16T13:28:37.739203700] [Internal] [CONFIG] [de.forestj.lib.Timer] [startTimer]   Start delay calculation with start time '13:28:47.700448200'
+[2025-02-16T13:28:37.747214400] [Internal] [CONFIG] [de.forestj.lib.Timer] [startTimer]   Calculated start delay: '9961 ms'

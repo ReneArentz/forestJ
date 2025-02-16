@@ -250,8 +250,14 @@ public class Helper {
 	public static boolean isTime(String p_s_string) {
 		/* patterns for time formats */
 		java.time.format.DateTimeFormatter o_timeFormatter = java.time.format.DateTimeFormatter.ofPattern(""
+			+ "[HH:mm:ss.SSSSSSSSS]"
+			+ "[HH:mm:ss.SSSSSS]"
+			+ "[HH:mm:ss.SSS]"
 			+ "[HH:mm:ss]"
 			+ "[HH:mm]"
+			+ "[HHmmssSSSSSSSSS]"
+			+ "[HHmmssSSSSSS]"
+			+ "[HHmmssSSS]"
 			+ "[HHmmss]"
 			+ "[HHmm]"
 		);
@@ -396,11 +402,6 @@ public class Helper {
 			}
 		}
 		
-		/* remove milliseconds of time part */
-		if (a_dateAndTimeParts[1].contains(".")) {
-			a_dateAndTimeParts[1] = a_dateAndTimeParts[1].substring(0, a_dateAndTimeParts[1].indexOf("."));
-		}
-		
 		/* remove UTC 'Z' at the end of time part */
 		if (a_dateAndTimeParts[1].endsWith("Z")) {
 			a_dateAndTimeParts[1] = a_dateAndTimeParts[1].substring(0, a_dateAndTimeParts[1].length() - 1);
@@ -431,6 +432,9 @@ public class Helper {
 		
 		/* patterns for time formats */
 		java.time.format.DateTimeFormatter o_timeFormatter = java.time.format.DateTimeFormatter.ofPattern(""
+			+ "[HH:mm:ss.SSSSSSSSS]"
+			+ "[HH:mm:ss.SSSSSS]"
+			+ "[HH:mm:ss.SSS]"
 			+ "[HH:mm:ss]"
 			+ "[HH:mm]"
 		);
@@ -575,8 +579,14 @@ public class Helper {
 		
 		/* patterns for time formats */
 		java.time.format.DateTimeFormatter o_timeFormatter = java.time.format.DateTimeFormatter.ofPattern(""
+			+ "[HH:mm:ss.SSSSSSSSS]"
+			+ "[HH:mm:ss.SSSSSS]"
+			+ "[HH:mm:ss.SSS]"
 			+ "[HH:mm:ss]"
 			+ "[HH:mm]"
+			+ "[HHmmssSSSSSSSSS]"
+			+ "[HHmmssSSSSSS]"
+			+ "[HHmmssSSS]"
 			+ "[HHmmss]"
 			+ "[HHmm]"
 		);
@@ -655,8 +665,14 @@ public class Helper {
 
 		/* patterns for time formats */
 		java.time.format.DateTimeFormatter o_timeFormatter = java.time.format.DateTimeFormatter.ofPattern(""
+			+ "[HH:mm:ss.SSSSSSSSS]"
+			+ "[HH:mm:ss.SSSSSS]"
+			+ "[HH:mm:ss.SSS]"
 			+ "[HH:mm:ss]"
 			+ "[HH:mm]"
+			+ "[HHmmssSSSSSSSSS]"
+			+ "[HHmmssSSSSSS]"
+			+ "[HHmmssSSS]"
 			+ "[HHmmss]"
 			+ "[HHmm]"
 		);
@@ -1443,6 +1459,61 @@ public class Helper {
 	}
 	
 	/**
+	 * checks if a given string matches as an ipv4 multicast address 224.0.0.0 - 239.255.255.255
+	 * 
+	 * @param	p_s_string	String parameter variable
+	 * @return				true - String matches IPv4 Multicast, false - String not matches IPv4 Muticast
+	 */
+	public static boolean isIpv4MulticastAddress(String p_s_string) {
+        if (isIpv4Address(p_s_string)) {
+            String s_firstOctet = p_s_string.split("\\.")[0];
+            int i_firstOctet = 0;
+
+            try {
+                i_firstOctet = Integer.parseInt(s_firstOctet);
+            } catch (Exception o_exc) {
+                return false;
+            }
+
+            if ((i_firstOctet >= 224) && (i_firstOctet <= 239)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+	
+	/**
+	 * checks if a given string matches an ipv6 address
+	 * 
+	 * @param	p_s_string	String parameter variable
+	 * @return				true - String matches IPv6, false - String not matches IPv6
+	 * @see		String
+	 */
+	public static boolean isIpv6Address(String p_s_string) {
+		return matchesRegex(p_s_string, "^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$");
+	}
+	
+	/**
+	 * checks if a given string matches as an ipv6 multicast address
+	 * 
+	 * @param	p_s_string	String parameter variable
+	 * @return				true - String matches IPv6 Multicast, false - String not matches IPv6 Muticast
+	 */
+	public static boolean isIpv6MulticastAddress(String p_s_string) {
+        if (isIpv6Address(p_s_string)) {
+            try {
+            	java.net.InetAddress o_foo = java.net.InetAddress.getByName(p_s_string);
+            	return o_foo.isMulticastAddress();
+            } catch (Exception o_exc) {
+                return false;
+            }
+        }
+
+        return false;
+    }
+	
+	/**
 	 * checks if a given string matches an ipv4 address with suffix
 	 * 
 	 * @param	p_s_string	String parameter variable
@@ -1584,4 +1655,87 @@ public class Helper {
 		
 		return b_foo;
 	}
+	
+	/**
+     * get all ipv4 addresses of all network interfaces of current machine
+     * 
+     * @return 									KeyValuePair list where key holds the name of the network interface and the value the ipv4 address</returns>
+     * @thorws java.net.SocketException			if an I/O error occurs, or if the platform does not have at least one configured network interface
+     */
+    public static java.util.List<java.util.AbstractMap.SimpleEntry<String, String>> GetNetworkInterfacesIpv4() throws java.net.SocketException
+    {
+    	return GetNetworkInterfaces(false);
+    }
+    
+    /**
+     * get all ipv6 addresses of all network interfaces of current machine
+     * 
+     * @return 									KeyValuePair list where key holds the name of the network interface and the value the ipv6 address</returns>
+     * @thorws java.net.SocketException			if an I/O error occurs, or if the platform does not have at least one configured network interface
+     */
+    public static java.util.List<java.util.AbstractMap.SimpleEntry<String, String>> GetNetworkInterfacesIpv6() throws java.net.SocketException
+    {
+    	return GetNetworkInterfaces(true);
+    }
+    
+    /**
+     * get all ip addresses of all network interfaces of current machine
+     * 
+     * @param p_b_trueIPv6falseIPv4				true - search for ipv6 addresses, false - search for ipv4 addresses
+     * @return 									KeyValuePair list where key holds the name of the network interface and the value the ip address</returns>
+     * @thorws java.net.SocketException			if an I/O error occurs, or if the platform does not have at least one configured network interface
+     */
+    private static java.util.List<java.util.AbstractMap.SimpleEntry<String, String>> GetNetworkInterfaces(boolean p_b_trueIPv6falseIPv4) throws java.net.SocketException
+    {
+    	java.util.List<java.util.AbstractMap.SimpleEntry<String, String>> a_networkInterfaces = new java.util.ArrayList<java.util.AbstractMap.SimpleEntry<String, String>>();
+    	
+    	/* iterate all network interfaces */
+    	for (java.net.NetworkInterface o_networkInterface : java.util.Collections.list(java.net.NetworkInterface.getNetworkInterfaces())) {
+    		java.util.Enumeration<java.net.InetAddress> inetAddresses = o_networkInterface.getInetAddresses();
+    		java.util.List<java.net.InetAddress> a_inetAddressesList = java.util.Collections.list(inetAddresses);
+    		
+    		/* network interface must be active and have configured addresses */
+    		if ((o_networkInterface.isUp()) && (a_inetAddressesList.size() > 0)) {
+    			String s_name = o_networkInterface.getName();
+    			String s_ips = "";
+    			
+    			/* iterate unicast ipaddress information */
+    			for (java.net.InetAddress o_inetAddress : a_inetAddressesList) {
+    				/* address must be ipv4 or ipv6 */
+    				if (
+    					((p_b_trueIPv6falseIPv4) && (o_inetAddress instanceof java.net.Inet6Address)) || 
+    					((!p_b_trueIPv6falseIPv4) && (o_inetAddress instanceof java.net.Inet4Address))
+    				) {
+    					String s_foo = o_inetAddress.getHostAddress();
+    					
+    					if (s_foo.contains("%")) {
+    						s_foo = s_foo.substring(0, s_foo.indexOf("%"));
+    					}
+    					
+    					s_ips += s_foo + "|";
+    				}
+    			}
+    		
+              /* delete last pipe */
+              if (s_ips.endsWith("|")) {
+                  s_ips = s_ips.substring(0, s_ips.length() - 1);
+              }
+
+              /* check if we have multiple ip addresses to one network interface */
+              if (s_ips.contains("|")) {
+                  int i = 1;
+
+                  for (String s_ip : s_ips.split("\\|")) {
+                      /* give network interface an additional number for multiple ip address */
+                	  a_networkInterfaces.add(new java.util.AbstractMap.SimpleEntry<String, String>(s_name + " #" + i++, s_ip));
+                  }
+              } else {
+                  /* add network interface name and its ip address */
+                  a_networkInterfaces.add(new java.util.AbstractMap.SimpleEntry<String, String>(s_name, s_ips));
+              }
+    		}
+    	}
+
+        return a_networkInterfaces;
+    }
 }
