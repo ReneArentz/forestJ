@@ -190,7 +190,11 @@ public class HelperTest {
 			"03/31/2020 13:45:32",
 			"03/31/2020 13:45",
 			"2020/31/03 13:45:32",
-			"2020/31/03 13:45"
+			"2020/31/03 13:45",
+			"31-03-2020 13:45:32.576",
+			"31-03-2020T13:45:32.576",
+			"31-03-2020 13:45:32.576Z",
+			"31-03-2020T13:45:32.576Z"
 		};
 		
 		for (String s_testTrue : a_testTrue) {
@@ -223,6 +227,8 @@ public class HelperTest {
 			"2020/31/13 13:45:32",
 			"2020/31/13 13:45",
 			"2020/31/03 53:45:32",
+			"31-03-2020 13:45:32.57",
+			"31-03-2020T13:45:32.5764"
 		};
 		
 		for (String s_testFalse : a_testFalse) {
@@ -321,6 +327,41 @@ public class HelperTest {
 					"2030-03-14T06:02:00".contentEquals(de.forestj.lib.Helper.toDateTimeString(o_localDateTime)),
 					"local date time object[" + de.forestj.lib.Helper.toDateTimeString(o_localDateTime) + "] is equal with toDateTimeString to '2030-03-14T06:02:00'"
 			);
+			
+			o_localDateTime = java.time.LocalDateTime.of(2020, 03, 14, 06, 02, 0, 576000000).atZone(java.time.ZoneId.systemDefault()).withZoneSameInstant(java.time.ZoneId.of("Europe/Berlin")).toLocalDateTime();
+			assertEquals(
+					"2020-03-14T05:02:00.576Z",
+					de.forestj.lib.Helper.toISO8601UTC(o_localDateTime),
+					"local date time object[" + de.forestj.lib.Helper.toISO8601UTC(o_localDateTime) + "] is not equal with toISO8601UTC to '2020-03-14T05:02:00.576Z'"
+			);
+			assertFalse(
+					"2030-03-14T05:02:00.576Z".contentEquals(de.forestj.lib.Helper.toISO8601UTC(o_localDateTime)),
+					"local date time object[" + de.forestj.lib.Helper.toISO8601UTC(o_localDateTime) + "] is equal with toISO8601UTC to '2030-03-14T05:02:00.576Z'"
+			);
+			
+			assertEquals(
+					"Sat, 14 Mar 2020 05:02:00 GMT",
+					de.forestj.lib.Helper.toRFC1123(o_localDateTime),
+					"local date time object[" + de.forestj.lib.Helper.toRFC1123(o_localDateTime) + "] is not equal with toRFC1123 to 'Sat, 14 Mar 2020 05:02:00 GMT'"
+			);
+			assertFalse(
+					"Sat, 14 Mar 2030 05:02:00 GMT".contentEquals(de.forestj.lib.Helper.toRFC1123(o_localDateTime)),
+					"local date time object[" + de.forestj.lib.Helper.toRFC1123(o_localDateTime) + "] is equal with toRFC1123 to 'Sat, 14 Mar 2030 05:02:00 GMT'"
+			);
+			
+			if (b_isDaySavingTime) {
+				o_localDateTime = o_localDateTime.minusHours(1);
+			}
+			
+			assertEquals(
+					"2020-03-14T06:02:00.576",
+					de.forestj.lib.Helper.toDateTimeString(o_localDateTime),
+					"local date time object[" + de.forestj.lib.Helper.toDateTimeString(o_localDateTime) + "] is not equal with toDateTimeString to '2020-03-14T06:02:00.576'"
+			);
+			assertFalse(
+					"2030-03-14T06:02:00.576".contentEquals(de.forestj.lib.Helper.toDateTimeString(o_localDateTime)),
+					"local date time object[" + de.forestj.lib.Helper.toDateTimeString(o_localDateTime) + "] is equal with toDateTimeString to '2030-03-14T06:02:00.576'"
+			);
 		} catch (java.time.DateTimeException o_exc) {
 			fail("Could not parse local date time object to '2020-03-14 06:02[:03]': " + o_exc.getMessage());
 		} catch (Exception o_exc) {
@@ -333,7 +374,8 @@ public class HelperTest {
 				java.time.LocalDateTime.of(2020, 03, 14, 06, 02).atZone(java.time.ZoneId.systemDefault()).withZoneSameInstant(java.time.ZoneId.of("Europe/Berlin")).toLocalDateTime(),
 				java.time.LocalDateTime.of(2020, 03, 14, 06, 02, 03).atZone(java.time.ZoneId.systemDefault()).withZoneSameInstant(java.time.ZoneId.of("Europe/Berlin")).toLocalDateTime(),
 				java.time.LocalDateTime.of(2020, 03, 14, 06, 02, 03).atZone(java.time.ZoneId.systemDefault()).withZoneSameInstant(java.time.ZoneId.of("Europe/Berlin")).toLocalDateTime(),
-				java.time.LocalDateTime.of(2020, 03, 14, 06, 02, 03).atZone(java.time.ZoneId.systemDefault()).withZoneSameInstant(java.time.ZoneId.of("Europe/Berlin")).toLocalDateTime()
+				java.time.LocalDateTime.of(2020, 03, 14, 06, 02, 03).atZone(java.time.ZoneId.systemDefault()).withZoneSameInstant(java.time.ZoneId.of("Europe/Berlin")).toLocalDateTime(),
+				java.time.LocalDateTime.of(2020, 03, 14, 06, 02, 03, 576000000).atZone(java.time.ZoneId.systemDefault()).withZoneSameInstant(java.time.ZoneId.of("Europe/Berlin")).toLocalDateTime()
 			};
 			
 			a_testTrue = new String[] {
@@ -342,36 +384,49 @@ public class HelperTest {
 				"14-03-2020 05:02:03",
 				"14-03-2020T05:02:03",
 				"14-03-2020T05:02:03Z",
+				"14-03-2020T05:02:03.576",
+				
 				"14.03.2020 05:02",
 				"14.03.2020T05:02",
 				"14.03.2020 05:02:03",
 				"14.03.2020T05:02:03",
 				"14.03.2020T05:02:03Z",
+				"14.03.2020T05:02:03.576Z",
+				
 				"14/03/2020 05:02",
 				"14/03/2020T05:02",
 				"14/03/2020 05:02:03",
 				"14/03/2020T05:02:03",
 				"14/03/2020T05:02:03Z",
+				"14/03/2020T05:02:03.576",
+				
 				"03/14/2020 05:02",
 				"03/14/2020T05:02",
 				"03/14/2020 05:02:03",
 				"03/14/2020T05:02:03",
 				"03/14/2020T05:02:03Z",
+				"03/14/2020T05:02:03.576Z",
+				
 				"2020-03-14 05:02",
 				"2020-03-14T05:02",
 				"2020-03-14 05:02:03",
 				"2020-03-14T05:02:03",
 				"2020-03-14T05:02:03Z",
+				"2020-03-14T05:02:03.576",
+				
 				"2020/03/14 05:02",
 				"2020/03/14T05:02",
 				"2020/03/14 05:02:03",
 				"2020/03/14T05:02:03",
 				"2020/03/14T05:02:03Z",
+				"2020/03/14T05:02:03.576Z",
+				
 				"2020/14/03 05:02",
 				"2020/14/03T05:02",
 				"2020/14/03 05:02:03",
 				"2020/14/03T05:02:03",
-				"2020/14/03T05:02:03Z"
+				"2020/14/03T05:02:03Z",
+				"2020/14/03T05:02:03.576",
 			};
 			
 			int i = 0;
@@ -389,7 +444,7 @@ public class HelperTest {
 						"'" + s_testTrue + "' fromDateTimeString() is not equal local date time object '" + a_validLocalDateTime[i] + "'"
 				);
 				
-				if (i == 4) {
+				if (i == 5) {
 					i = 0;
 				} else {
 					i++;
@@ -463,7 +518,8 @@ public class HelperTest {
 				java.time.LocalTime.of(05, 02),
 				java.time.LocalTime.of(05, 02, 03),
 				java.time.LocalTime.of(05, 02, 03),
-				java.time.LocalTime.of(05, 02, 03)
+				java.time.LocalTime.of(05, 02, 03),
+				java.time.LocalTime.of(05, 02, 03, 576000000)
 			};
 			
 			String[] a_testTrue3rd = new String[] {
@@ -472,36 +528,49 @@ public class HelperTest {
 				"05:02:03",
 				"05:02:03",
 				"05:02:03",
+				"05:02:03.576",
+				
 				"05:02",
 				"05:02",
 				"05:02:03",
 				"05:02:03",
 				"05:02:03",
+				"05:02:03.576",
+				
 				"05:02",
 				"05:02",
 				"05:02:03",
 				"05:02:03",
 				"05:02:03",
+				"05:02:03.576",
+				
 				"05:02",
 				"05:02",
 				"05:02:03",
 				"05:02:03",
 				"05:02:03",
+				"05:02:03.576",
+				
 				"05:02",
 				"05:02",
 				"05:02:03",
 				"05:02:03",
 				"05:02:03",
+				"05:02:03.576",
+				
 				"05:02",
 				"05:02",
 				"05:02:03",
 				"05:02:03",
 				"05:02:03",
+				"05:02:03.576",
+				
 				"05:02",
 				"05:02",
 				"05:02:03",
 				"05:02:03",
-				"05:02:03"
+				"05:02:03",
+				"05:02:03.576",
 			};
 			
 			i = 0;
@@ -513,7 +582,7 @@ public class HelperTest {
 						"'" + s_testTrue + "' fromTimeString() is not equal local date time object '" + o_validLocalTimes[i] + "'"
 				);
 				
-				if (i == 4) {
+				if (i == 5) {
 					i = 0;
 				} else {
 					i++;
@@ -525,7 +594,8 @@ public class HelperTest {
 				java.time.LocalDateTime.of(2020, 03, 14, 06, 02).atZone(java.time.ZoneId.systemDefault()).withZoneSameInstant(java.time.ZoneId.of("Europe/Berlin")).toLocalDateTime(),
 				java.time.LocalDateTime.of(2020, 03, 14, 06, 02, 03).atZone(java.time.ZoneId.systemDefault()).withZoneSameInstant(java.time.ZoneId.of("Europe/Berlin")).toLocalDateTime(),
 				java.time.LocalDateTime.of(2020, 03, 14, 06, 02, 03).atZone(java.time.ZoneId.systemDefault()).withZoneSameInstant(java.time.ZoneId.of("Europe/Berlin")).toLocalDateTime(),
-				java.time.LocalDateTime.of(2020, 03, 14, 06, 02, 03).atZone(java.time.ZoneId.systemDefault()).withZoneSameInstant(java.time.ZoneId.of("Europe/Berlin")).toLocalDateTime()
+				java.time.LocalDateTime.of(2020, 03, 14, 06, 02, 03).atZone(java.time.ZoneId.systemDefault()).withZoneSameInstant(java.time.ZoneId.of("Europe/Berlin")).toLocalDateTime(),
+				java.time.LocalDateTime.of(2020, 03, 14, 06, 02, 03, 576000000).atZone(java.time.ZoneId.systemDefault()).withZoneSameInstant(java.time.ZoneId.of("Europe/Berlin")).toLocalDateTime()
 			};
 			
 			a_testFalse = new String[] {
@@ -534,77 +604,91 @@ public class HelperTest {
 				"03-14-2020 05:02:03",
 				"03-14-2020T05:02:03",
 				"03-14-2020T05:02:03Z",
+				"03-14-2020T05:02:03.576Z",
 				"14-03-2020 55:02",
 				"14-03-2020T55:02",
 				"14-03-2020 55:02:03",
 				"14-03-2020T55:02:03",
 				"14-03-2020T55:02:03Z",
+				"03-14-2020T05:02:03.57Z",
 				
 				"03.14.2020 05:02",
 				"03.14.2020T05:02",
 				"03.14.2020 05:02:03",
 				"03.14.2020T05:02:03",
 				"03.14.2020T05:02:03Z",
+				"03.14.2020T05:02:03.576",
 				"14.03.2020 55:02",
 				"14.03.2020T55:02",
 				"14.03.2020 55:02:03",
 				"14.03.2020T55:02:03",
 				"14.03.2020T55:02:03Z",
-								
+				"03.14.2020T05:02:03.57",
+				
 				"14/13/2020 05:02",
 				"14/13/2020T05:02",
 				"14/13/2020 05:02:03",
 				"14/13/2020T05:02:03",
 				"14/13/2020T05:02:03Z",
+				"14/13/2020T05:02:03.576Z",
 				"14/03/2020 55:02",
 				"14/03/2020T55:02",
 				"14/03/2020 55:02:03",
 				"14/03/2020T55:02:03",
 				"14/03/2020T55:02:03Z",
+				"14/13/2020T05:02:03.57Z",
 				
 				"13/14/2020 05:02",
 				"13/14/2020T05:02",
 				"13/14/2020 05:02:03",
 				"13/14/2020T05:02:03",
 				"13/14/2020T05:02:03Z",
+				"13/14/2020T05:02:03.576",
 				"03/14/2020 55:02",
 				"03/14/2020T55:02",
 				"03/14/2020 55:02:03",
 				"03/14/2020T55:02:03",
 				"03/14/2020T55:02:03Z",
+				"13/14/2020T05:02:03.57",
 				
 				"2020-14-03 05:02",
 				"2020-14-03T05:02",
 				"2020-14-03 05:02:03",
 				"2020-14-03T05:02:03",
 				"2020-14-03T05:02:03Z",
+				"2020-14-03T05:02:03.576Z",
 				"2020-03-14 55:02",
 				"2020-03-14T55:02",
 				"2020-03-14 55:02:03",
 				"2020-03-14T55:02:03",
 				"2020-03-14T55:02:03Z",
+				"2020-03-14T05:02:03.57Z",
 				
 				"2020/13/14 05:02",
 				"2020/13/14T05:02",
 				"2020/13/14 05:02:03",
 				"2020/13/14T05:02:03",
 				"2020/13/14T05:02:03Z",
+				"2020/13/14T05:02:03.576",
 				"2020/03/14 55:02",
 				"2020/03/14T55:02",
 				"2020/03/14 55:02:03",
 				"2020/03/14T55:02:03",
 				"2020/03/14T55:02:03Z",
+				"2020/03/14T05:02:03.57",
 				
 				"2020/14/13 05:02",
 				"2020/14/13T05:02",
 				"2020/14/13 05:02:03",
 				"2020/14/13T05:02:03",
 				"2020/14/13T05:02:03Z",
+				"2020/14/13T05:02:03.576Z",
 				"2020/14/03 55:02",
 				"2020/14/03T55:02",
 				"2020/14/03 55:02:03",
 				"2020/14/03T55:02:03",
-				"2020/14/03T55:02:03Z"
+				"2020/14/03T55:02:03Z",
+				"2020/14/03T05:02:03.57Z"
 			};
 			
 			i = 0;
@@ -664,7 +748,7 @@ public class HelperTest {
 					);
 				}
 				
-				if (i == 4) {
+				if (i == 5) {
 					i = 0;
 				} else {
 					i++;
@@ -697,8 +781,29 @@ public class HelperTest {
 					"2030-03-14T06:02:03".contentEquals(de.forestj.lib.Helper.utilDateToDateTimeString(o_date)),
 					"local date time object[" + de.forestj.lib.Helper.utilDateToDateTimeString(o_date) + "] is equal with utilDateToDateTimeString to '2030-03-14T06:02:03'"
 			);
+			
+			o_date = new java.text.SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSS").parse("14.03.2020 06:02:03.576");
+			assertEquals(
+					"2020-03-14T05:02:03Z",
+					de.forestj.lib.Helper.utilDateToISO8601UTC(o_date),
+					"local date time object[" + de.forestj.lib.Helper.utilDateToISO8601UTC(o_date) + "] is not equal with toISO8601UTC to '2020-03-14T05:02:03Z'"
+			);
+			assertFalse(
+					"2030-03-14T05:02:03.576Z".contentEquals(de.forestj.lib.Helper.utilDateToISO8601UTC(o_date)),
+					"local date time object[" + de.forestj.lib.Helper.utilDateToISO8601UTC(o_date) + "] is equal with toISO8601UTC to '2030-03-14T05:02:03.576Z'"
+			);
+			
+			assertEquals(
+					"2020-03-14T06:02:03",
+					de.forestj.lib.Helper.utilDateToDateTimeString(o_date),
+					"local date time object[" + de.forestj.lib.Helper.utilDateToDateTimeString(o_date) + "] is not equal with utilDateToDateTimeString to '2020-03-14T06:02:03Z'"
+			);
+			assertFalse(
+					"2030-03-14T06:02:03.576".contentEquals(de.forestj.lib.Helper.utilDateToDateTimeString(o_date)),
+					"local date time object[" + de.forestj.lib.Helper.utilDateToDateTimeString(o_date) + "] is equal with utilDateToDateTimeString to '2030-03-14T06:02:03.576'"
+			);
 		} catch (java.text.ParseException o_exc) {
-			fail("Could not parse java util date object to '2020-03-14 06:02[:03]': " + o_exc.getMessage());
+			fail("Could not parse java util date object to '2020-03-14 06:02[:03][.576]': " + o_exc.getMessage());
 		} catch (Exception o_exc) {
 			fail(o_exc.getMessage());
 		}
@@ -1185,6 +1290,386 @@ public class HelperTest {
 				a_ipAddressesResults[i],
 				"ip '" + a_ipAddresses[i * 2] + "' is " + ((!a_ipAddressesResults[i]) ? "not" : "") + " within '" + a_ipAddresses[(i * 2) + 1] + "'"
 			);
+		}
+		
+		assertEquals(
+			de.forestj.lib.Helper.isIpv4MulticastAddress("225.4.228.87"),
+            true,
+            "'225.4.228.87' is not an ipv4 multicast address"
+        );
+
+		assertEquals(
+    		de.forestj.lib.Helper.isIpv4MulticastAddress("225.4.228.87/16"),
+            false,
+            "'225.4.228.87/16' is not an ipv4 multicast address"
+        );
+
+		assertEquals(
+    		de.forestj.lib.Helper.isIpv4MulticastAddress("192.4.228.87"),
+            false,
+            "'192.4.228.87' is not an ipv4 multicast address"
+        );
+
+		assertEquals(
+    		de.forestj.lib.Helper.isIpv4MulticastAddress("240.4.228.87"),
+            false,
+            "'240.4.228.87' is not an ipv4 multicast address"
+        );
+
+		assertEquals(
+    		de.forestj.lib.Helper.isIpv4MulticastAddress("239.4.228.87"),
+            true,
+            "'239.4.228.87' is not an ipv4 multicast address"
+        );
+		
+		assertEquals(
+    		de.forestj.lib.Helper.isIpv6Address("2001:0db8:85a3:08d3:1319:8a2e:0370:7347"),
+            true,
+            "'2001:0db8:85a3:08d3:1319:8a2e:0370:7347' is not an ipv6 address"
+        );
+		
+		assertEquals(
+    		de.forestj.lib.Helper.isIpv6Address("fe80::ca32:231b:f27e:b696"),
+            true,
+            "'fe80::ca32:231b:f27e:b696' is not an ipv6 address"
+        );
+		
+		assertEquals(
+    		de.forestj.lib.Helper.isIpv6Address("FE80:CD00:0000:0CDE:1257:0000:211E:729C"),
+            true,
+            "'FE80:CD00:0000:0CDE:1257:0000:211E:729C' is not an ipv6 address"
+        );
+		
+		assertEquals(
+    		de.forestj.lib.Helper.isIpv6Address("fe80::ca32:231b:f27z:b696"),
+            false,
+            "'fe80::ca32:231b:f27z:b696' is an ipv6 address"
+        );
+		
+		assertEquals(
+    		de.forestj.lib.Helper.isIpv6MulticastAddress("FF05::342"),
+            true,
+            "'FF05::342' is not an ipv6 multicast address"
+        );
+		
+		assertEquals(
+    		de.forestj.lib.Helper.isIpv6MulticastAddress("FF05:0:0:0:0:0:0:342"),
+            true,
+            "'FF05:0:0:0:0:0:0:342' is not an ipv6 multicast address"
+        );
+		
+		assertEquals(
+    		de.forestj.lib.Helper.isIpv6MulticastAddress("ff02::2"),
+            true,
+            "'ff02::2' is not an ipv6 multicast address"
+        );
+		
+		assertEquals(
+    		de.forestj.lib.Helper.isIpv6MulticastAddress("FE80:CD00:0000:0CDE:1257:0000:211E:729C"),
+            false,
+            "'FE80:CD00:0000:0CDE:1257:0000:211E:729C' is an ipv6 multicast address"
+        );
+		
+		try {			
+			CompareObject o_compareOne = new CompareObject("One", 1, java.time.LocalTime.of(20, 06, 21), new long[] { 42135792468l, 21135792468l, 12135792468l, 14378135792468l }, new java.util.ArrayList<Short>( java.util.Arrays.asList((short)42, (short)21, (short)12, (short)14378) ), new SubCompareObject(42.125d, true, new java.math.BigDecimal[] { new java.math.BigDecimal("1.602176634"), new java.math.BigDecimal("8.8541878128"), new java.math.BigDecimal("6.62607015"), new java.math.BigDecimal("9.80665"), new java.math.BigDecimal("3.14159265359") }, java.time.LocalDateTime.of(2020, 12, 21, 06, 12, 24)));
+            /* o_compareOne and o_compareTwo are identical */
+            CompareObject o_compareTwo = new CompareObject("One", 1, java.time.LocalTime.of(20, 06, 21), new long[] { 42135792468l, 21135792468l, 12135792468l, 14378135792468l }, new java.util.ArrayList<Short>( java.util.Arrays.asList((short)42, (short)21, (short)12, (short)14378) ), new SubCompareObject(42.125d, true, new java.math.BigDecimal[] { new java.math.BigDecimal("1.602176634"), new java.math.BigDecimal("8.8541878128"), new java.math.BigDecimal("6.62607015"), new java.math.BigDecimal("9.80665"), new java.math.BigDecimal("3.14159265359") }, java.time.LocalDateTime.of(2020, 12, 21, 06, 12, 24)));
+            /* o_compareOne and o_compareThree are not identical -> see LocalTime seconds of CompareObject instance ... it is 12 and not 21 && see Boolean of SubCompareObject instance ... it is false and not true */
+            CompareObject o_compareThree = new CompareObject("One", 1, java.time.LocalTime.of(20, 06, 12), new long[] { 42135792468l, 21135792468l, 12135792468l, 14378135792468l }, new java.util.ArrayList<Short>( java.util.Arrays.asList((short)42, (short)21, (short)12, (short)14378) ), new SubCompareObject(42.125d, false, new java.math.BigDecimal[] { new java.math.BigDecimal("1.602176634"), new java.math.BigDecimal("8.8541878128"), new java.math.BigDecimal("6.62607015"), new java.math.BigDecimal("9.80665"), new java.math.BigDecimal("3.14159265359") }, java.time.LocalDateTime.of(2020, 12, 21, 06, 12, 24)));
+            /* o_compareOne and o_compareFour are not identical, but only with deep comparison -> see LocalDateTime of SubCompareObject instance ... it is 1920 and not 2020 */
+            CompareObject o_compareFour = new CompareObject("One", 1, java.time.LocalTime.of(20, 06, 21), new long[] { 42135792468l, 21135792468l, 12135792468l, 14378135792468l }, new java.util.ArrayList<Short>( java.util.Arrays.asList((short)42, (short)21, (short)12, (short)14378) ), new SubCompareObject(42.125d, true, new java.math.BigDecimal[] { new java.math.BigDecimal("1.602176634"), new java.math.BigDecimal("8.8541878128"), new java.math.BigDecimal("6.62607015"), new java.math.BigDecimal("9.80665"), new java.math.BigDecimal("3.14159265359") }, java.time.LocalDateTime.of(1920, 12, 21, 06, 12, 24)));
+
+            CompareObjectProperties o_compareOneProp = new CompareObjectProperties("One", 1, java.time.LocalTime.of(20, 06, 21), new long[] { 42135792468l, 21135792468l, 12135792468l, 14378135792468l }, new java.util.ArrayList<Short>( java.util.Arrays.asList((short)42, (short)21, (short)12, (short)14378) ), new SubCompareObjectProperties(42.125d, true, new java.math.BigDecimal[] { new java.math.BigDecimal("1.602176634"), new java.math.BigDecimal("8.8541878128"), new java.math.BigDecimal("6.62607015"), new java.math.BigDecimal("9.80665"), new java.math.BigDecimal("3.14159265359") }, java.time.LocalDateTime.of(2020, 12, 21, 06, 12, 24)));
+            /* o_compareOneProp and o_compareTwoProp are identical */
+            CompareObjectProperties o_compareTwoProp = new CompareObjectProperties("One", 1, java.time.LocalTime.of(20, 06, 21), new long[] { 42135792468l, 21135792468l, 12135792468l, 14378135792468l }, new java.util.ArrayList<Short>( java.util.Arrays.asList((short)42, (short)21, (short)12, (short)14378) ), new SubCompareObjectProperties(42.125d, true, new java.math.BigDecimal[] { new java.math.BigDecimal("1.602176634"), new java.math.BigDecimal("8.8541878128"), new java.math.BigDecimal("6.62607015"), new java.math.BigDecimal("9.80665"), new java.math.BigDecimal("3.14159265359") }, java.time.LocalDateTime.of(2020, 12, 21, 06, 12, 24)));
+            /* o_compareOneProp and o_compareThreeProp are not identical -> see LocalTime seconds of CompareObjectProperties instance ... it is 12 and not 21 && see Boolean of SubCompareObjectProperties instance ... it is false and not true */
+            CompareObjectProperties o_compareThreeProp = new CompareObjectProperties("One", 1, java.time.LocalTime.of(20, 06, 12), new long[] { 42135792468l, 21135792468l, 12135792468l, 14378135792468l }, new java.util.ArrayList<Short>( java.util.Arrays.asList((short)42, (short)21, (short)12, (short)14378) ), new SubCompareObjectProperties(42.125d, false, new java.math.BigDecimal[] { new java.math.BigDecimal("1.602176634"), new java.math.BigDecimal("8.8541878128"), new java.math.BigDecimal("6.62607015"), new java.math.BigDecimal("9.80665"), new java.math.BigDecimal("3.14159265359") }, java.time.LocalDateTime.of(2020, 12, 21, 06, 12, 24)));
+            /* o_compareOneProp and o_compareFourProp are not identical, but only with deep comparison -> see LocalDateTime of SubCompareObjectProperties instance ... it is 1920 and not 2020 */
+            CompareObjectProperties o_compareFourProp = new CompareObjectProperties("One", 1, java.time.LocalTime.of(20, 06, 21), new long[] { 42135792468l, 21135792468l, 12135792468l, 14378135792468l }, new java.util.ArrayList<Short>( java.util.Arrays.asList((short)42, (short)21, (short)12, (short)14378) ), new SubCompareObjectProperties(42.125d, true, new java.math.BigDecimal[] { new java.math.BigDecimal("1.602176634"), new java.math.BigDecimal("8.8541878128"), new java.math.BigDecimal("6.62607015"), new java.math.BigDecimal("9.80665"), new java.math.BigDecimal("3.14159265359") }, java.time.LocalDateTime.of(1920, 12, 21, 06, 12, 24)));
+
+            java.util.List<CompareObject> o_listOne = new java.util.ArrayList<CompareObject>
+            (
+            	java.util.Arrays.asList(
+	                o_compareOne,
+	                o_compareTwo,
+	                o_compareThree,
+	                o_compareFour
+	            )
+            );
+            /* o_listOne and o_listTwo are identical */
+            java.util.List<CompareObject> o_listTwo = new java.util.ArrayList<CompareObject>
+            (
+            	java.util.Arrays.asList(
+	                o_compareOne,
+	                o_compareTwo,
+	                o_compareThree,
+	                o_compareFour
+	            )
+            );
+            /* o_listOne and o_listThree are not identical -> see missing fourth element */
+            java.util.List<CompareObject> o_listThree = new java.util.ArrayList<CompareObject>
+            (
+            	java.util.Arrays.asList(
+	                o_compareOne,
+	                o_compareTwo,
+	                o_compareThree
+	            )
+            );
+
+            java.util.List<CompareObjectProperties> o_listOneProp = new java.util.ArrayList<CompareObjectProperties>
+            (
+            	java.util.Arrays.asList(
+	                o_compareOneProp,
+	                o_compareTwoProp,
+	                o_compareThreeProp,
+	                o_compareFourProp
+	            )
+            );
+            /* o_listOneProp and o_listTwoProp are identical */
+            java.util.List<CompareObjectProperties> o_listTwoProp = new java.util.ArrayList<CompareObjectProperties>
+            (
+            	java.util.Arrays.asList(
+	                o_compareOneProp,
+	                o_compareTwoProp,
+	                o_compareThreeProp,
+	                o_compareFourProp
+	            )
+            );
+            /* o_listOne and o_listThreeProp are not identical -> see missing fourth element */
+            java.util.List<CompareObjectProperties> o_listThreeProp = new java.util.ArrayList<CompareObjectProperties>
+            (
+            	java.util.Arrays.asList(
+	                o_compareOneProp,
+	                o_compareTwoProp,
+	                o_compareThreeProp
+	            )
+            );
+            
+            assertTrue(
+                de.forestj.lib.Helper.objectsEqualUsingReflections(o_compareOne, o_compareTwo, false),
+                "o_compareOne[" + o_compareOne + "] is not equal to o_compareTwo[" + o_compareTwo + "]"
+            );
+
+            assertTrue(
+                de.forestj.lib.Helper.objectsEqualUsingReflections(o_compareOneProp, o_compareTwoProp, true),
+                "o_compareOneProp[" + o_compareOneProp + "] is not equal to o_compareTwoProp[" + o_compareTwoProp + "]"
+            );
+
+            assertTrue(
+                de.forestj.lib.Helper.objectsEqualUsingReflections(o_compareOne, o_compareTwo, false, true),
+                "o_compareOne[" + o_compareOne + "] is not equal to o_compareTwo[" + o_compareTwo + "]"
+            );
+
+            assertTrue(
+                de.forestj.lib.Helper.objectsEqualUsingReflections(o_compareOneProp, o_compareTwoProp, true, true),
+                "o_compareOneProp[" + o_compareOneProp + "] is not equal to o_compareTwoProp[" + o_compareTwoProp + "]"
+            );
+
+            assertFalse(
+                de.forestj.lib.Helper.objectsEqualUsingReflections(o_compareOne, o_compareThree, false),
+                "o_compareOne[" + o_compareOne + "] is equal to o_compareThree[" + o_compareThree + "]"
+            );
+
+            assertFalse(
+                de.forestj.lib.Helper.objectsEqualUsingReflections(o_compareOneProp, o_compareThreeProp, true),
+                "o_compareOneProp[" + o_compareOneProp + "] is equal to o_compareThreeProp[" + o_compareThreeProp + "]"
+            );
+
+            assertFalse(
+                de.forestj.lib.Helper.objectsEqualUsingReflections(o_compareOne, o_compareThree, false, true),
+                "o_compareOne[" + o_compareOne + "] is equal to o_compareThree[" + o_compareThree + "]"
+            );
+
+            assertFalse(
+                de.forestj.lib.Helper.objectsEqualUsingReflections(o_compareOneProp, o_compareThreeProp, true, true),
+                "o_compareOneProp[" + o_compareOneProp + "] is equal to o_compareThreeProp[" + o_compareThreeProp + "]"
+            );
+
+            assertTrue(
+                de.forestj.lib.Helper.objectsEqualUsingReflections(o_compareOne, o_compareFour, false),
+                "o_compareOne[" + o_compareOne + "] is not equal to o_compareFour[" + o_compareFour + "]"
+            );
+
+            assertTrue(
+                de.forestj.lib.Helper.objectsEqualUsingReflections(o_compareOneProp, o_compareFourProp, true),
+                "o_compareOneProp[" + o_compareOneProp + "] is not equal to o_compareFourProp[" + o_compareFourProp + "]"
+            );
+
+            assertFalse(
+                de.forestj.lib.Helper.objectsEqualUsingReflections(o_compareOne, o_compareFour, false, true),
+                "o_compareOne[" + o_compareOne + "] is equal to o_compareFour[" + o_compareFour + "]"
+            );
+
+            assertFalse(
+                de.forestj.lib.Helper.objectsEqualUsingReflections(o_compareOneProp, o_compareFourProp, true, true),
+                "o_compareOneProp[" + o_compareOneProp + "] is equal to o_compareFourProp[" + o_compareFourProp + "]"
+            );
+
+            assertTrue(
+                de.forestj.lib.Helper.objectsEqualUsingReflections(o_listOne, o_listTwo, false),
+                "o_listOne[" + o_listOne + "] is not equal to o_listTwo[" + o_listTwo + "]"
+            );
+
+            assertTrue(
+                de.forestj.lib.Helper.objectsEqualUsingReflections(o_listOneProp, o_listTwoProp, true),
+                "o_listOneProp[" + o_listOneProp + "] is not equal to o_listTwoProp[" + o_listTwoProp + "]"
+            );
+
+            assertTrue(
+                de.forestj.lib.Helper.objectsEqualUsingReflections(o_listOne, o_listTwo, false, true),
+                "o_listOne[" + o_listOne + "] is not equal to o_listTwo[" + o_listTwo + "]"
+            );
+
+            assertTrue(
+                de.forestj.lib.Helper.objectsEqualUsingReflections(o_listOneProp, o_listTwoProp, true, true),
+                "o_listOneProp[" + o_listOneProp + "] is not equal to o_listTwoProp[" + o_listTwoProp + "]"
+            );
+
+            assertFalse(
+                de.forestj.lib.Helper.objectsEqualUsingReflections(o_listOne, o_listThree, false),
+                "o_listOne[" + o_listOne + "] is equal to o_listThree[" + o_listThree + "]"
+            );
+
+            assertFalse(
+                de.forestj.lib.Helper.objectsEqualUsingReflections(o_listOneProp, o_listThreeProp, true),
+                "o_listOneProp[" + o_listOneProp + "] is equal to o_listThreeProp[" + o_listThreeProp + "]"
+            );
+
+            assertFalse(
+                de.forestj.lib.Helper.objectsEqualUsingReflections(o_listOne, o_listThree, false, true),
+                "o_listOne[" + o_listOne + "] is equal to o_listThree[" + o_listThree + "]"
+            );
+
+            assertFalse(
+                de.forestj.lib.Helper.objectsEqualUsingReflections(o_listOneProp, o_listThreeProp, true, true),
+                "o_listOneProp[" + o_listOneProp + "] is equal to o_listThreeProp[" + o_listThreeProp + "]"
+            );
+		} catch (Exception o_exc) {
+			fail(o_exc);
+		}
+	}
+
+	public class CompareObject {
+		public String ValueStr;
+		public int ValueInt;
+		public java.time.LocalTime ValueTime;
+		public long[] ValueLongArray;
+		public java.util.List<Short> ValueListShorts;
+		public SubCompareObject ValueSubObject;
+		
+		public CompareObject(String p_s_str, int p_i_int, java.time.LocalTime p_o_localTime, long[] p_a_longArray, java.util.List<Short> p_a_shortList, SubCompareObject p_o_subValue) {
+			this.ValueStr = p_s_str;
+			this.ValueInt = p_i_int;
+			this.ValueTime = p_o_localTime;
+			this.ValueLongArray = p_a_longArray;
+			this.ValueListShorts = p_a_shortList;
+			this.ValueSubObject = p_o_subValue;
+		}
+		
+		@Override
+		public String toString() {
+			return this.ValueStr + "|" + this.ValueInt + "|" + this.ValueTime + "|" + de.forestj.lib.Helper.printArrayList( this.ValueListShorts ) + "|" + de.forestj.lib.Helper.printArrayList( java.util.Arrays.asList( this.ValueLongArray ) ) + "|" + this.ValueSubObject;
+		}
+	}
+	
+	public class SubCompareObject {
+		public double ValueDbl;
+		public boolean ValueBool;
+		public java.math.BigDecimal[] ValueDecimalArray;
+		public java.time.LocalDateTime ValueDateTime;
+		
+		public SubCompareObject(double p_s_str, boolean p_i_int, java.math.BigDecimal[] p_o_localTime, java.time.LocalDateTime p_a_longArray) {
+			this.ValueDbl = p_s_str;
+			this.ValueBool = p_i_int;
+			this.ValueDecimalArray = p_o_localTime;
+			this.ValueDateTime = p_a_longArray;
+		}
+		
+		@Override
+		public String toString() {
+			return this.ValueDbl + "|" + this.ValueBool + "|" + de.forestj.lib.Helper.printArrayList( java.util.Arrays.asList( this.ValueDecimalArray ) ) + "|" + this.ValueDateTime;
+		}
+	}
+	
+	public class CompareObjectProperties {
+		private String ValueStr;
+		private int ValueInt;
+		private java.time.LocalTime ValueTime;
+		private long[] ValueLongArray;
+		private java.util.List<Short> ValueListShorts;
+		private SubCompareObjectProperties ValueSubObject;
+		
+		public String getValueStr() {
+			return this.ValueStr;
+		}
+		
+		public int getValueInt() {
+			return this.ValueInt;
+		}
+		
+		public java.time.LocalTime getValueTime() {
+			return this.ValueTime;
+		}
+		
+		public long[] getValueLongArray() {
+			return this.ValueLongArray;
+		}
+		
+		public java.util.List<Short> getValueListShorts() {
+			return this.ValueListShorts;
+		}
+		
+		public SubCompareObjectProperties getValueSubObject() {
+			return this.ValueSubObject;
+		}
+		
+		public CompareObjectProperties(String p_s_str, int p_i_int, java.time.LocalTime p_o_localTime, long[] p_a_longArray, java.util.List<Short> p_a_shortList, SubCompareObjectProperties p_o_subValue) {
+			this.ValueStr = p_s_str;
+			this.ValueInt = p_i_int;
+			this.ValueTime = p_o_localTime;
+			this.ValueLongArray = p_a_longArray;
+			this.ValueListShorts = p_a_shortList;
+			this.ValueSubObject = p_o_subValue;
+		}
+		
+		@Override
+		public String toString() {
+			return this.ValueStr + "|" + this.ValueInt + "|" + this.ValueTime + "|" + de.forestj.lib.Helper.printArrayList( this.ValueListShorts ) + "|" + de.forestj.lib.Helper.printArrayList( java.util.Arrays.asList( this.ValueLongArray ) ) + "|" + this.ValueSubObject;
+		}
+	}
+	
+	public class SubCompareObjectProperties {
+		private double ValueDbl;
+		private boolean ValueBool;
+		private java.math.BigDecimal[] ValueDecimalArray;
+		private java.time.LocalDateTime ValueDateTime;
+		
+		public double getValueDbl() {
+			return this.ValueDbl;
+		}
+		
+		public boolean getValueBool() {
+			return this.ValueBool;
+		}
+		
+		public java.math.BigDecimal[] getValueDecimalArray() {
+			return this.ValueDecimalArray;
+		}
+		
+		public java.time.LocalDateTime getValueDateTime() {
+			return this.ValueDateTime;
+		}
+		
+		public SubCompareObjectProperties(double p_s_str, boolean p_i_int, java.math.BigDecimal[] p_o_localTime, java.time.LocalDateTime p_a_longArray) {
+			this.ValueDbl = p_s_str;
+			this.ValueBool = p_i_int;
+			this.ValueDecimalArray = p_o_localTime;
+			this.ValueDateTime = p_a_longArray;
+		}
+		
+		@Override
+		public String toString() {
+			return this.ValueDbl + "|" + this.ValueBool + "|" + de.forestj.lib.Helper.printArrayList( java.util.Arrays.asList( this.ValueDecimalArray ) ) + "|" + this.ValueDateTime;
 		}
 	}
 }

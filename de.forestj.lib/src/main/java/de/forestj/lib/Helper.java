@@ -1738,4 +1738,569 @@ public class Helper {
 
         return a_networkInterfaces;
     }
+
+    /*
+     * Comparing two object and all its fields if types are supported
+	 * unsupported field types will be skipped and are not part of the comparison
+	 * 
+	 * supported field types:
+	 * byte, short, int, long, float, double, char, boolean, string,
+	 * java.lang.String, java.lang.Short, java.lang.Byte, java.lang.Integer,
+	 * java.lang.Long, java.lang.Float, java.lang.Double, java.lang.Boolean, 
+	 * java.lang.Character, java.math.BigDecimal, java.util.Date,
+	 * java.time.LocalDateTime, java.time.LocalDate, java.time.LocalTime
+	 * 
+	 * @param p_o_objectOne					first object
+	 * @param p_o_objectTwo					second object
+	 * @param p_b_usePropertyMethods		true - fields will be accessed by property methods (getXXX, setXXX), false - fields will be accesed directly(must be public)
+	 * @return								true - both objects are equal, false - both objects are not equal
+	 * @throws NoSuchFieldException			could not retrieve field type by field name
+	 * @throws NoSuchMethodException		could not retrieve method by method name
+	 * @throws IllegalAccessException		could not invoke method, access violation
+	 * @throws InvocationTargetException 	could not invoke method from object
+	 */
+	public static boolean objectsEqualUsingReflections(Object p_o_objectOne, Object p_o_objectTwo, boolean p_b_usePropertyMethods) throws NoSuchFieldException, NoSuchMethodException, java.lang.reflect.InvocationTargetException, IllegalAccessException {
+		return Helper.objectsEqualUsingReflections(p_o_objectOne, p_o_objectTwo, p_b_usePropertyMethods, false);
+	}
+	
+	/**
+	 * Comparing two object and all its fields if types are supported, only public fields or property methods are supported
+	 * unsupported field types will be skipped and are not part of the comparison
+	 * 
+	 * supported field types:
+	 * byte, short, int, long, float, double, char, boolean, string,
+	 * java.lang.String, java.lang.Short, java.lang.Byte, java.lang.Integer,
+	 * java.lang.Long, java.lang.Float, java.lang.Double, java.lang.Boolean, 
+	 * java.lang.Character, java.math.BigDecimal, java.util.Date,
+	 * java.time.LocalDateTime, java.time.LocalDate, java.time.LocalTime
+	 * 
+	 * @param p_o_objectOne					first object
+	 * @param p_o_objectTwo					second object
+	 * @param p_b_usePropertyMethods		true - fields will be accessed by property methods (getXXX, setXXX), false - fields will be accessed directly(must be public)
+	 * @param p_b_deepComparison			true - accept unsupported field types and compare each accessible filed, false - skip unsupported field types
+	 * @return								true - both objects are equal, false - both objects are not equal
+	 * @throws NoSuchFieldException			could not retrieve field type by field name
+	 * @throws NoSuchMethodException		could not retrieve method by method name
+	 * @throws IllegalAccessException		could not invoke method, access violation
+	 * @throws InvocationTargetException 	could not invoke method from object
+	 */
+	public static boolean objectsEqualUsingReflections(Object p_o_objectOne, Object p_o_objectTwo, boolean p_b_usePropertyMethods, boolean p_b_deepComparison) throws NoSuchFieldException, NoSuchMethodException, java.lang.reflect.InvocationTargetException, IllegalAccessException {
+		if ( (p_o_objectOne == null) && (p_o_objectTwo == null) ) {
+			return true;
+		} else if ( (p_o_objectOne == null) ^ (p_o_objectTwo == null) ) {
+			return false;
+		}
+		
+		de.forestj.lib.Global.ilogMass("compare two objects '" + p_o_objectOne.getClass().getTypeName() + "' and '" + p_o_objectTwo.getClass().getTypeName() + "' with '" + ((p_b_usePropertyMethods) ? "using property methods" : "direct access to fields") + "'" );
+		
+		/* both object parameter must be of same type */
+		if (!p_o_objectOne.getClass().getTypeName().contentEquals(p_o_objectTwo.getClass().getTypeName())) {
+			de.forestj.lib.Global.ilogWarning("both object parameter have not the same type; '" + p_o_objectOne.getClass().getTypeName() + "' != '" + p_o_objectTwo.getClass().getTypeName() + "'");
+			return false;
+		}
+		
+		/* list of allowed types for generic comparison */
+		java.util.List<String> a_allowedTypes = java.util.Arrays.asList("byte", "short", "int", "long", "float", "double", "char", "boolean", "string", "java.lang.String", "java.lang.Short", "java.lang.Byte", "java.lang.Integer", "java.lang.Long", "java.lang.Float", "java.lang.Double", "java.lang.Boolean", "java.lang.Character", "java.math.BigDecimal", "java.util.Date", "java.time.LocalDateTime", "java.time.LocalDate", "java.time.LocalTime");
+		
+		/* if both objects are allowed types, we do not need deep comparison */
+		if (a_allowedTypes.contains(p_o_objectOne.getClass().getTypeName())) {
+			p_b_deepComparison = false;
+		}
+		
+		if (p_o_objectOne instanceof java.util.List) {
+			/* cast parameter objects to array list */
+			@SuppressWarnings("unchecked")
+			java.util.List<Object> o_fooOne = (java.util.List<Object>)p_o_objectOne;
+			@SuppressWarnings("unchecked")
+			java.util.List<Object> o_fooTwo = (java.util.List<Object>)p_o_objectTwo;
+			
+			/* both object parameter as lists must have the same size to be equal */
+			if (o_fooOne.size() != o_fooTwo.size()) {
+				de.forestj.lib.Global.ilogWarning("both object parameter as lists have not the same size; '" + o_fooOne.size() + "' != '" + o_fooTwo.size() + "'");
+				return false;
+			}
+			
+			/* only execute if we have more than one array element */
+			if (o_fooOne.size() > 0) {
+				/* iterate objects in list and encode data to csv recursively */
+				for (int i = 0; i < o_fooOne.size(); i++) {
+					if (!de.forestj.lib.Helper.objectsEqualUsingReflections(o_fooOne.get(i), o_fooTwo.get(i), p_b_usePropertyMethods)) {
+						de.forestj.lib.Global.ilogWarning("both objects in lists are not equal; '" + o_fooOne.get(i).toString() + "' != '" + o_fooTwo.get(i).toString() + "'");
+						return false;
+					}
+				}
+			}
+		} else {
+			/* iterate all fields of parameter object */
+			for (java.lang.reflect.Field o_field : p_o_objectOne.getClass().getDeclaredFields()) {
+				de.forestj.lib.Global.ilogFiner(o_field.getName() + " - " + o_field.getType().getTypeName() + " - [" + java.lang.reflect.Modifier.toString(o_field.getModifiers()) + "]");
+				
+				/* skip fields that starts with 'this$' */
+				if (o_field.getName().startsWith("this$")) {
+					continue;
+				}
+				
+				/* if field of parameter object is of type list */
+				if (o_field.getType().isAssignableFrom(java.util.List.class)) {
+					/* retrieve field type of list */
+					java.lang.reflect.ParameterizedType stringListType = (java.lang.reflect.ParameterizedType)p_o_objectOne.getClass().getDeclaredField(o_field.getName()).getGenericType();
+			        Class<?> o_type = (Class<?>)stringListType.getActualTypeArguments()[0];
+
+			        /* if type of field list is not contained in the list of allowed types, skip this field */
+			        if (!a_allowedTypes.contains(o_type.getTypeName())) {
+			        	if (!p_b_deepComparison) {
+			        		de.forestj.lib.Global.ilogMass("object list generic type '" + o_type.getTypeName() + "' is not supported; object list field will be skipped");
+							continue;
+			        	}
+			        }
+				} else if (o_field.getType().getTypeName().endsWith("[]")) { /* if field array type of parameter object is not contained in the list of allowed types, skip this field */
+					if ((!p_b_deepComparison) && (!a_allowedTypes.contains(o_field.getType().getTypeName().substring(0, o_field.getType().getTypeName().length() - 2)))) {
+		        		de.forestj.lib.Global.ilogMass("object array field type '" + o_field.getType().getTypeName() + "' is not supported; field will be skipped");
+						continue;
+		        	}
+				} else if (!a_allowedTypes.contains(o_field.getType().getTypeName())) { /* if field type of parameter object is not contained in the list of allowed types, skip this field */
+					if (!p_b_deepComparison) {
+		        		de.forestj.lib.Global.ilogMass("object field type '" + o_field.getType().getTypeName() + "' is not supported; field will be skipped");
+						continue;
+		        	}
+				}
+				
+				/* help variable for accessing object field of both parameter objects */
+				Object o_objectOne = null;
+				Object o_objectTwo = null;
+				
+				/* check if we use property methods with invoke to get object data values */
+				if (p_b_usePropertyMethods) {
+					java.lang.reflect.Method o_method = null;
+					
+					/* store get-property-method of java type object */
+					try {
+						o_method = p_o_objectOne.getClass().getDeclaredMethod("get" + o_field.getName());
+					} catch (NoSuchMethodException | SecurityException o_exc) {
+						/* property method does not exist, so we can skip this field */
+						de.forestj.lib.Global.ilogMass("Class instance method[" + "get" + o_field.getName() + "] does not exist for class instance(" + p_o_objectOne.getClass().getTypeName() + ")");
+						continue;
+					}
+					
+					/* invoke get-property-method to get object data of current element */
+					o_objectOne = o_method.invoke(p_o_objectOne);
+					o_objectTwo = o_method.invoke(p_o_objectTwo);
+				} else {
+					/* if field is not public, skip this field */
+					if (!(java.lang.reflect.Modifier.isPublic(o_field.getModifiers()))) {
+						de.forestj.lib.Global.ilogMass("object field is not public; field will be skipped");
+						continue;
+					}
+					
+					/* call field directly to get object data values */
+					try {
+						o_objectOne = p_o_objectOne.getClass().getDeclaredField(o_field.getName()).get(p_o_objectOne);
+						o_objectTwo = p_o_objectTwo.getClass().getDeclaredField(o_field.getName()).get(p_o_objectTwo);
+					} catch (IllegalAccessException o_exc) {
+						throw new IllegalAccessException("Access violation for field[" + o_field.getName() + "], modifiers[" + java.lang.reflect.Modifier.toString(o_field.getModifiers()) + "]: " + o_exc.getMessage());
+					}
+				}
+				
+				/* if both object are string but one is null, check of empty strings */
+				/* if one object is null and the other is an empty string we accept it as equal - setting both to null */
+				if ( ((o_objectOne != null) ^ (o_objectTwo != null)) && ( (o_field.getType().getTypeName().contentEquals("java.lang.String")) || (o_field.getType().getTypeName().toLowerCase().contentEquals("string")) ) ) {
+					if ( (o_objectOne != null) && (isStringEmpty(o_objectOne.toString())) ) {
+						o_objectOne = null;
+					}
+					
+					if ( (o_objectTwo != null) && (isStringEmpty(o_objectTwo.toString())) ) {
+						o_objectTwo = null;
+					}
+				}
+				
+				if ( (o_objectOne == null) ^ (o_objectTwo == null) ) { /* if one object is null but not the other, they are not equal */
+					de.forestj.lib.Global.ilogWarning("one object is null but not the other object '" + ( (o_objectOne == null) ? "null" : o_objectOne.toString() + "[" + o_objectOne.getClass().getTypeName() + "]") + "' != '" + ((o_objectTwo == null) ? "null" : o_objectTwo.toString() + "[" + o_objectTwo.getClass().getTypeName() + "]'"));
+					return false;
+				} else if ( (o_objectOne != null) && (o_objectTwo != null) ) { /* if help variable got access to object field */
+					/* if field of parameter object is of type list */
+					if (o_field.getType().getTypeName().contains("java.util.List")) {
+						/* cast current field of parameter object as list with unknown generic type */
+						java.util.List<?> a_objectsOne = (java.util.List<?>)o_objectOne;
+						java.util.List<?> a_objectsTwo = (java.util.List<?>)o_objectTwo;
+						
+						/* both object arrays must have the same size of elements */
+						if (a_objectsOne.size() != a_objectsTwo.size()) {
+							de.forestj.lib.Global.ilogWarning("both object parameter lists have not the same size '" + a_objectsOne.size() + "' != '" + a_objectsTwo.size() + "'");
+							return false;
+						}
+						
+						/* only execute if we have more than one array element */
+						if (a_objectsOne.size() > 0) {
+							/* iterate objects in list and encode data to csv recursively */
+							for (int i = 0; i < a_objectsOne.size(); i++) {
+								de.forestj.lib.Global.ilogFiner(o_field.getName() + " array element objects equal: " + ( ( (a_objectsOne.get(i) == null) && (a_objectsTwo.get(i) == null) ) || ( ( (a_objectsOne.get(i) != null) && (a_objectsTwo.get(i) != null) ) && (a_objectsOne.get(i).equals(a_objectsTwo.get(i))) ) ) + "\t" + ( (a_objectsOne.get(i) == null) ? "null" : a_objectsOne.get(i).toString() ) + "\t\t" + ( (a_objectsTwo.get(i) == null) ? "null" : a_objectsTwo.get(i).toString() ));
+								
+								if (p_b_deepComparison) {
+					        		/* deep comparison of both objects */
+									if (!Helper.objectsEqualUsingReflections(a_objectsOne.get(i), a_objectsTwo.get(i), p_b_usePropertyMethods, p_b_deepComparison)) {
+										de.forestj.lib.Global.ilogWarning("both list elements for field '" + o_field.getName() + "' are not equal '" +  a_objectsOne.get(i) + "' != '" + a_objectsTwo.get(i) + "'");
+										return false;
+									}
+					        	} else {
+									/* compare each array element of both object arrays or accept if both elements in array are null */
+									if (!( ( (a_objectsOne.get(i) == null) && (a_objectsTwo.get(i) == null) ) || (a_objectsOne.get(i).equals(a_objectsTwo.get(i))) )) {
+										de.forestj.lib.Global.ilogWarning("both object parameter array elements are not equal or not both null '" + ( (a_objectsOne.get(i) == null) ? "null" : a_objectsOne.get(i).toString() ) + "' != '" + ( (a_objectsTwo.get(i) == null) ? "null" : a_objectsTwo.get(i).toString() ) + "'");
+										return false;
+									}
+					        	}
+							}
+						}
+					} else if (o_field.getType().getTypeName().endsWith("[]")) { /* handle usual arrays */
+						/* get array type as string */
+						String s_arrayType = o_objectOne.getClass().getTypeName().substring(0, o_objectOne.getClass().getTypeName().length() - 2);
+						
+						/* check if we can handle this type of array, otherwise this and the whole field will be just skipped */
+						if (a_allowedTypes.contains(s_arrayType)) {
+							s_arrayType = s_arrayType.toLowerCase();
+							
+							if ( (s_arrayType.contentEquals("boolean")) || (s_arrayType.contentEquals("java.lang.boolean")) ) {
+								/* cast current field of parameter object as array */
+								boolean[] a_objectsOne = (boolean[])o_objectOne;
+								boolean[] a_objectsTwo = (boolean[])o_objectTwo;
+								
+								/* both arrays must have the same length */
+								if (a_objectsOne.length != a_objectsTwo.length) {
+									de.forestj.lib.Global.ilogWarning("both arrays for field '" + o_field.getName() + "' have not the same length '" + a_objectsOne.length + " != " + a_objectsTwo.length + "'");
+									return false;
+								}
+								
+								/* check each array element for equality */
+								for (int i = 0; i < a_objectsOne.length; i++) {
+									if (a_objectsOne[i] != a_objectsTwo[i]) {
+										de.forestj.lib.Global.ilogWarning("both array elements for field '" + o_field.getName() + "' are not equal '" +  a_objectsOne[i] + "' != '" + a_objectsTwo[i] + "'");
+										return false;
+									}
+								}
+							} else if ( (s_arrayType.contentEquals("byte")) || (s_arrayType.contentEquals("java.lang.byte")) ) {
+								/* cast current field of parameter object as array */
+								byte[] a_objectsOne = (byte[])o_objectOne;
+								byte[] a_objectsTwo = (byte[])o_objectTwo;
+								
+								/* both arrays must have the same length */
+								if (a_objectsOne.length != a_objectsTwo.length) {
+									de.forestj.lib.Global.ilogWarning("both arrays for field '" + o_field.getName() + "' have not the same length '" + a_objectsOne.length + " != " + a_objectsTwo.length + "'");
+									return false;
+								}
+								
+								/* check each array element for equality */
+								for (int i = 0; i < a_objectsOne.length; i++) {
+									if (a_objectsOne[i] != a_objectsTwo[i]) {
+										de.forestj.lib.Global.ilogWarning("both array elements for field '" + o_field.getName() + "' are not equal '" +  a_objectsOne[i] + "' != '" + a_objectsTwo[i] + "'");
+										return false;
+									}
+								}
+							} else if ( (s_arrayType.contentEquals("char")) || (s_arrayType.contentEquals("java.lang.character")) ) {
+								/* cast current field of parameter object as array */
+								char[] a_objectsOne = (char[])o_objectOne;
+								char[] a_objectsTwo = (char[])o_objectTwo;
+								
+								/* both arrays must have the same length */
+								if (a_objectsOne.length != a_objectsTwo.length) {
+									de.forestj.lib.Global.ilogWarning("both arrays for field '" + o_field.getName() + "' have not the same length '" + a_objectsOne.length + " != " + a_objectsTwo.length + "'");
+									return false;
+								}
+								
+								/* check each array element for equality */
+								for (int i = 0; i < a_objectsOne.length; i++) {
+									if (a_objectsOne[i] != a_objectsTwo[i]) {
+										de.forestj.lib.Global.ilogWarning("both array elements for field '" + o_field.getName() + "' are not equal '" +  a_objectsOne[i] + "' != '" + a_objectsTwo[i] + "'");
+										return false;
+									}
+								}
+							} else if ( (s_arrayType.contentEquals("float")) || (s_arrayType.contentEquals("java.lang.float")) ) {
+								/* cast current field of parameter object as array */
+								float[] a_objectsOne = (float[])o_objectOne;
+								float[] a_objectsTwo = (float[])o_objectTwo;
+								
+								/* both arrays must have the same length */
+								if (a_objectsOne.length != a_objectsTwo.length) {
+									de.forestj.lib.Global.ilogWarning("both arrays for field '" + o_field.getName() + "' have not the same length '" + a_objectsOne.length + " != " + a_objectsTwo.length + "'");
+									return false;
+								}
+								
+								/* check each array element for equality */
+								for (int i = 0; i < a_objectsOne.length; i++) {
+									if (a_objectsOne[i] != a_objectsTwo[i]) {
+										de.forestj.lib.Global.ilogWarning("both array elements for field '" + o_field.getName() + "' are not equal '" +  a_objectsOne[i] + "' != '" + a_objectsTwo[i] + "'");
+										return false;
+									}
+								}
+							} else if ( (s_arrayType.contentEquals("double")) || (s_arrayType.contentEquals("java.lang.double")) ) {
+								/* cast current field of parameter object as array */
+								double[] a_objectsOne = (double[])o_objectOne;
+								double[] a_objectsTwo = (double[])o_objectTwo;
+								
+								/* both arrays must have the same length */
+								if (a_objectsOne.length != a_objectsTwo.length) {
+									de.forestj.lib.Global.ilogWarning("both arrays for field '" + o_field.getName() + "' have not the same length '" + a_objectsOne.length + " != " + a_objectsTwo.length + "'");
+									return false;
+								}
+								
+								/* check each array element for equality */
+								for (int i = 0; i < a_objectsOne.length; i++) {
+									if (a_objectsOne[i] != a_objectsTwo[i]) {
+										de.forestj.lib.Global.ilogWarning("both array elements for field '" + o_field.getName() + "' are not equal '" +  a_objectsOne[i] + "' != '" + a_objectsTwo[i] + "'");
+										return false;
+									}
+								}
+							} else if ( (s_arrayType.contentEquals("short")) || (s_arrayType.contentEquals("java.lang.short")) ) {
+								/* cast current field of parameter object as array */
+								short[] a_objectsOne = (short[])o_objectOne;
+								short[] a_objectsTwo = (short[])o_objectTwo;
+								
+								/* both arrays must have the same length */
+								if (a_objectsOne.length != a_objectsTwo.length) {
+									de.forestj.lib.Global.ilogWarning("both arrays for field '" + o_field.getName() + "' have not the same length '" + a_objectsOne.length + " != " + a_objectsTwo.length + "'");
+									return false;
+								}
+								
+								/* check each array element for equality */
+								for (int i = 0; i < a_objectsOne.length; i++) {
+									if (a_objectsOne[i] != a_objectsTwo[i]) {
+										de.forestj.lib.Global.ilogWarning("both array elements for field '" + o_field.getName() + "' are not equal '" +  a_objectsOne[i] + "' != '" + a_objectsTwo[i] + "'");
+										return false;
+									}
+								}
+							} else if ( (s_arrayType.contentEquals("int")) || (s_arrayType.contentEquals("java.lang.integer")) ) {
+								/* cast current field of parameter object as array */
+								int[] a_objectsOne = (int[])o_objectOne;
+								int[] a_objectsTwo = (int[])o_objectTwo;
+								
+								/* both arrays must have the same length */
+								if (a_objectsOne.length != a_objectsTwo.length) {
+									de.forestj.lib.Global.ilogWarning("both arrays for field '" + o_field.getName() + "' have not the same length '" + a_objectsOne.length + " != " + a_objectsTwo.length + "'");
+									return false;
+								}
+								
+								/* check each array element for equality */
+								for (int i = 0; i < a_objectsOne.length; i++) {
+									if (a_objectsOne[i] != a_objectsTwo[i]) {
+										de.forestj.lib.Global.ilogWarning("both array elements for field '" + o_field.getName() + "' are not equal '" +  a_objectsOne[i] + "' != '" + a_objectsTwo[i] + "'");
+										return false;
+									}
+								}
+							} else if ( (s_arrayType.contentEquals("long")) || (s_arrayType.contentEquals("java.lang.long")) ) {
+								/* cast current field of parameter object as array */
+								long[] a_objectsOne = (long[])o_objectOne;
+								long[] a_objectsTwo = (long[])o_objectTwo;
+								
+								/* both arrays must have the same length */
+								if (a_objectsOne.length != a_objectsTwo.length) {
+									de.forestj.lib.Global.ilogWarning("both arrays for field '" + o_field.getName() + "' have not the same length '" + a_objectsOne.length + " != " + a_objectsTwo.length + "'");
+									return false;
+								}
+								
+								/* check each array element for equality */
+								for (int i = 0; i < a_objectsOne.length; i++) {
+									if (a_objectsOne[i] != a_objectsTwo[i]) {
+										de.forestj.lib.Global.ilogWarning("both array elements for field '" + o_field.getName() + "' are not equal '" +  a_objectsOne[i] + "' != '" + a_objectsTwo[i] + "'");
+										return false;
+									}
+								}
+							} else if ( (s_arrayType.contentEquals("string")) || (s_arrayType.contentEquals("java.lang.string")) ) {
+								/* cast current field of parameter object as array */
+								String[] a_objectsOne = (String[])o_objectOne;
+								String[] a_objectsTwo = (String[])o_objectTwo;
+								
+								/* both arrays must have the same length */
+								if (a_objectsOne.length != a_objectsTwo.length) {
+									de.forestj.lib.Global.ilogWarning("both arrays for field '" + o_field.getName() + "' have not the same length '" + a_objectsOne.length + " != " + a_objectsTwo.length + "'");
+									return false;
+								}
+								
+								/* check each array element for equality */
+								for (int i = 0; i < a_objectsOne.length; i++) {
+									/* both array elements are null */
+									if ( (a_objectsOne[i] == null) && (a_objectsTwo[i] == null) ) {
+										continue;
+									}
+									
+									/* if one array element is null but not the other, they are not equal */
+									if ( (a_objectsOne[i] == null) ^ (a_objectsTwo[i] == null) ) {
+										de.forestj.lib.Global.ilogWarning("for field '" + o_field.getName() + "' one array element is null but not the other array element '" + ( (a_objectsOne[i] == null) ? "null" : a_objectsOne[i] + "[" + a_objectsOne[i].getClass().getTypeName() + "]") + "' != '" + ((a_objectsTwo[i] == null) ? "null" : a_objectsTwo[i] + "[" + a_objectsTwo.getClass().getTypeName() + "]") + "'");
+										return false;
+									}
+									
+									if (!a_objectsOne[i].contentEquals(a_objectsTwo[i])) {
+										de.forestj.lib.Global.ilogWarning("both array elements for field '" + o_field.getName() + "' are not equal '" +  a_objectsOne[i] + "' != '" + a_objectsTwo[i] + "'");
+										return false;
+									}
+								}
+							} else if (s_arrayType.contentEquals("java.util.date")) {
+								/* cast current field of parameter object as array */
+								java.util.Date[] a_objectsOne = (java.util.Date[])o_objectOne;
+								java.util.Date[] a_objectsTwo = (java.util.Date[])o_objectTwo;
+								
+								/* both arrays must have the same length */
+								if (a_objectsOne.length != a_objectsTwo.length) {
+									de.forestj.lib.Global.ilogWarning("both arrays for field '" + o_field.getName() + "' have not the same length '" + a_objectsOne.length + " != " + a_objectsTwo.length + "'");
+									return false;
+								}
+								
+								/* check each array element for equality */
+								for (int i = 0; i < a_objectsOne.length; i++) {
+									/* both array elements are null */
+									if ( (a_objectsOne[i] == null) && (a_objectsTwo[i] == null) ) {
+										continue;
+									}
+									
+									/* if one array element is null but not the other, they are not equal */
+									if ( (a_objectsOne[i] == null) ^ (a_objectsTwo[i] == null) ) {
+										de.forestj.lib.Global.ilogWarning("for field '" + o_field.getName() + "' one array element is null but not the other array element '" + ( (a_objectsOne[i] == null) ? "null" : a_objectsOne[i].toString() + "[" + a_objectsOne[i].getClass().getTypeName() + "]") + "' != '" + ((a_objectsTwo[i] == null) ? "null" : a_objectsTwo[i].toString() + "[" + a_objectsTwo.getClass().getTypeName() + "]") + "'");
+										return false;
+									}
+									
+									if (!a_objectsOne[i].equals(a_objectsTwo[i])) {
+										de.forestj.lib.Global.ilogWarning("both array elements for field '" + o_field.getName() + "' are not equal '" +  a_objectsOne[i] + "' != '" + a_objectsTwo[i] + "'");
+										return false;
+									}
+								}
+							} else if (s_arrayType.contentEquals("java.time.localtime")) {
+								/* cast current field of parameter object as array */
+								java.time.LocalTime[] a_objectsOne = (java.time.LocalTime[])o_objectOne;
+								java.time.LocalTime[] a_objectsTwo = (java.time.LocalTime[])o_objectTwo;
+								
+								/* both arrays must have the same length */
+								if (a_objectsOne.length != a_objectsTwo.length) {
+									de.forestj.lib.Global.ilogWarning("both arrays for field '" + o_field.getName() + "' have not the same length '" + a_objectsOne.length + " != " + a_objectsTwo.length + "'");
+									return false;
+								}
+								
+								/* check each array element for equality */
+								for (int i = 0; i < a_objectsOne.length; i++) {
+									/* both array elements are null */
+									if ( (a_objectsOne[i] == null) && (a_objectsTwo[i] == null) ) {
+										continue;
+									}
+									
+									/* if one array element is null but not the other, they are not equal */
+									if ( (a_objectsOne[i] == null) ^ (a_objectsTwo[i] == null) ) {
+										de.forestj.lib.Global.ilogWarning("for field '" + o_field.getName() + "' one array element is null but not the other array element '" + ( (a_objectsOne[i] == null) ? "null" : a_objectsOne[i].toString() + "[" + a_objectsOne[i].getClass().getTypeName() + "]") + "' != '" + ((a_objectsTwo[i] == null) ? "null" : a_objectsTwo[i].toString() + "[" + a_objectsTwo.getClass().getTypeName() + "]") + "'");
+										return false;
+									}
+									
+									if (!a_objectsOne[i].equals(a_objectsTwo[i])) {
+										de.forestj.lib.Global.ilogWarning("both array elements for field '" + o_field.getName() + "' are not equal '" +  a_objectsOne[i] + "' != '" + a_objectsTwo[i] + "'");
+										return false;
+									}
+								}
+							} else if (s_arrayType.contentEquals("java.time.localdate")) {
+								/* cast current field of parameter object as array */
+								java.time.LocalDate[] a_objectsOne = (java.time.LocalDate[])o_objectOne;
+								java.time.LocalDate[] a_objectsTwo = (java.time.LocalDate[])o_objectTwo;
+								
+								/* both arrays must have the same length */
+								if (a_objectsOne.length != a_objectsTwo.length) {
+									de.forestj.lib.Global.ilogWarning("both arrays for field '" + o_field.getName() + "' have not the same length '" + a_objectsOne.length + " != " + a_objectsTwo.length + "'");
+									return false;
+								}
+								
+								/* check each array element for equality */
+								for (int i = 0; i < a_objectsOne.length; i++) {
+									/* both array elements are null */
+									if ( (a_objectsOne[i] == null) && (a_objectsTwo[i] == null) ) {
+										continue;
+									}
+									
+									/* if one array element is null but not the other, they are not equal */
+									if ( (a_objectsOne[i] == null) ^ (a_objectsTwo[i] == null) ) {
+										de.forestj.lib.Global.ilogWarning("for field '" + o_field.getName() + "' one array element is null but not the other array element '" + ( (a_objectsOne[i] == null) ? "null" : a_objectsOne[i].toString() + "[" + a_objectsOne[i].getClass().getTypeName() + "]") + "' != '" + ((a_objectsTwo[i] == null) ? "null" : a_objectsTwo[i].toString() + "[" + a_objectsTwo.getClass().getTypeName() + "]") + "'");
+										return false;
+									}
+									
+									if (!a_objectsOne[i].equals(a_objectsTwo[i])) {
+										de.forestj.lib.Global.ilogWarning("both array elements for field '" + o_field.getName() + "' are not equal '" +  a_objectsOne[i] + "' != '" + a_objectsTwo[i] + "'");
+										return false;
+									}
+								}
+							} else if (s_arrayType.contentEquals("java.time.localdatetime")) {
+								/* cast current field of parameter object as array */
+								java.time.LocalDateTime[] a_objectsOne = (java.time.LocalDateTime[])o_objectOne;
+								java.time.LocalDateTime[] a_objectsTwo = (java.time.LocalDateTime[])o_objectTwo;
+								
+								/* both arrays must have the same length */
+								if (a_objectsOne.length != a_objectsTwo.length) {
+									de.forestj.lib.Global.ilogWarning("both arrays for field '" + o_field.getName() + "' have not the same length '" + a_objectsOne.length + " != " + a_objectsTwo.length + "'");
+									return false;
+								}
+								
+								/* check each array element for equality */
+								for (int i = 0; i < a_objectsOne.length; i++) {
+									/* both array elements are null */
+									if ( (a_objectsOne[i] == null) && (a_objectsTwo[i] == null) ) {
+										continue;
+									}
+									
+									/* if one array element is null but not the other, they are not equal */
+									if ( (a_objectsOne[i] == null) ^ (a_objectsTwo[i] == null) ) {
+										de.forestj.lib.Global.ilogWarning("for field '" + o_field.getName() + "' one array element is null but not the other array element '" + ( (a_objectsOne[i] == null) ? "null" : a_objectsOne[i].toString() + "[" + a_objectsOne[i].getClass().getTypeName() + "]") + "' != '" + ((a_objectsTwo[i] == null) ? "null" : a_objectsTwo[i].toString() + "[" + a_objectsTwo.getClass().getTypeName() + "]") + "'");
+										return false;
+									}
+									
+									if (!a_objectsOne[i].equals(a_objectsTwo[i])) {
+										de.forestj.lib.Global.ilogWarning("both array elements for field '" + o_field.getName() + "' are not equal '" +  a_objectsOne[i] + "' != '" + a_objectsTwo[i] + "'");
+										return false;
+									}
+								}
+							} else if (s_arrayType.contentEquals("java.math.bigdecimal")) {
+								/* cast current field of parameter object as array */
+								java.math.BigDecimal[] a_objectsOne = (java.math.BigDecimal[])o_objectOne;
+								java.math.BigDecimal[] a_objectsTwo = (java.math.BigDecimal[])o_objectTwo;
+								
+								/* both arrays must have the same length */
+								if (a_objectsOne.length != a_objectsTwo.length) {
+									de.forestj.lib.Global.ilogWarning("both arrays for field '" + o_field.getName() + "' have not the same length '" + a_objectsOne.length + " != " + a_objectsTwo.length + "'");
+									return false;
+								}
+								
+								/* check each array element for equality */
+								for (int i = 0; i < a_objectsOne.length; i++) {
+									/* both array elements are null */
+									if ( (a_objectsOne[i] == null) && (a_objectsTwo[i] == null) ) {
+										continue;
+									}
+									
+									/* if one array element is null but not the other, they are not equal */
+									if ( (a_objectsOne[i] == null) ^ (a_objectsTwo[i] == null) ) {
+										de.forestj.lib.Global.ilogWarning("for field '" + o_field.getName() + "' one array element is null but not the other array element '" + ( (a_objectsOne[i] == null) ? "null" : a_objectsOne[i].toString() + "[" + a_objectsOne[i].getClass().getTypeName() + "]") + "' != '" + ((a_objectsTwo[i] == null) ? "null" : a_objectsTwo[i].toString() + "[" + a_objectsTwo.getClass().getTypeName() + "]") + "'");
+										return false;
+									}
+									
+									if (!a_objectsOne[i].equals(a_objectsTwo[i])) {
+										de.forestj.lib.Global.ilogWarning("both array elements for field '" + o_field.getName() + "' are not equal '" +  a_objectsOne[i] + "' != '" + a_objectsTwo[i] + "'");
+										return false;
+									}
+								}	
+							}
+						}
+					} else {
+						de.forestj.lib.Global.ilogFiner(o_field.getName() + " objects equal: " + o_objectOne.equals(o_objectTwo) + "\t" + o_objectOne.toString() + "\t\t" + o_objectTwo.toString());
+						
+						/* only execute deep comparison if both objects are not allowed types */
+						if ( (p_b_deepComparison) && (!(a_allowedTypes.contains(o_objectOne.getClass().getTypeName()))) ) {
+							/* deep comparison of both objects */
+							if (!Helper.objectsEqualUsingReflections(o_objectOne, o_objectTwo, p_b_usePropertyMethods, p_b_deepComparison)) {
+								return false;
+							}
+			        	} else {
+							/* check if field values of both parameter objects are equal */
+							if (!o_objectOne.equals(o_objectTwo)) {
+								de.forestj.lib.Global.ilogWarning("both object parameter are not equal '" + o_objectOne.toString() + "' != '" + o_objectTwo.toString() + "'");
+								return false;
+							}
+			        	}
+					}
+				} else {
+					de.forestj.lib.Global.ilogFiner(o_field.getName() + " objects equal: true\tnull\t\tnull");
+				}
+			}
+		}
+		
+		return true;
+	}
 }

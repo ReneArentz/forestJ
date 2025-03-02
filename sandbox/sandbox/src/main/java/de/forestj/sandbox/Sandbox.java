@@ -8,6 +8,7 @@ public class Sandbox {
 		
 		try {
 			int i_input = -1;
+			String s_currentDirectory = de.forestj.lib.io.File.getCurrentDirectory();
 			
 			do {
 				System.out.println("++++++++++++++++++++++++++++++++");
@@ -20,6 +21,7 @@ public class Sandbox {
 				System.out.println("[2] test ConsoleProgressBar");
 				System.out.println("[3] test JVMMemoryInfo");
 				System.out.println("[4] test Sorts");
+				System.out.println("[5] test ZipProgressBar");
 				System.out.println("[0] quit");
 				
 				System.out.println("");
@@ -36,6 +38,8 @@ public class Sandbox {
 					JVMMemoryInfoTest.testJVMMemoryInfo();
 				} else if (i_input == 4) {
 					SortsTest.testSorts();
+				} else if (i_input == 5) {
+					ZipTest.testZipProgressBar(s_currentDirectory);
 				}
 				
 				if ( (i_input >= 1) && (i_input <= 13) ) {
