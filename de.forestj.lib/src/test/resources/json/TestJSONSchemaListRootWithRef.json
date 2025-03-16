@@ -1,0 +1,234 @@
+{
+	"$id": "https://example.com/define.schema.json",
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"description": "An example of handling a complex class structure with JSON",
+	
+	"definitions": {
+		"ShipToRef": {
+			"type": "object",
+			"mapping": "ShipTo:de.forestj.lib.test.io.Data$ShipTo",
+			"properties": {
+				"NameJSON" : {
+					"type": "string",
+					"mapping": "Name"
+				},
+				"StreetJSON" : {
+					"type": "string",
+					"mapping": "Street"
+				},
+				"NumberJSON" : {
+					"type": "integer",
+					"mapping": "Number"
+				},
+				"CityJSON" : {
+					"type": "string",
+					"mapping": "City"
+				},
+				"CountryJSON" : {
+					"type": "string",
+					"mapping": "Country"
+				},
+				"DeliveredJSON" : {
+					"type": "string",
+					"mapping": "Delivered"
+				},
+				"StoredJSON" : {
+					"type": "string",
+					"mapping": "Stored"
+				},
+				"HighPriorityJSON" : {
+					"type": "boolean",
+					"mapping": "HighPriority"
+				}
+			}
+		},
+	
+		"ShipFromRef": {
+			"type": "object",
+			"mapping": "ShipFrom:de.forestj.lib.test.io.Data$ShipFrom",
+			"properties": {
+				"DeliveredByJSON" : {
+					"type": "string",
+					"mapping": "DeliveredBy"
+				},
+				"DeliveredCountryJSON" : {
+					"type": "string",
+					"mapping": "DeliveredCountry"
+				},
+				"ShipViaJSON" : {
+					"type": "integer",
+					"mapping": "ShipVia"
+				},
+				"ShipRegistered" : {
+					"type": "string",
+					"mapping": "ShipRegistered"
+				}
+			}
+		},
+		
+		"ShipSiteRef": {
+			"type": "object",
+			"mapping": "ShipSite:de.forestj.lib.test.io.Data$ShipSite",
+			"properties": {
+				"SiteNameJSON" : {
+					"type": "string",
+					"mapping": "SiteName"
+				},
+				"BuildingJSON" : {
+					"type": "string",
+					"mapping": "Building"
+				}
+			}
+		},
+		
+		"ShipLocationRef": {
+			"type": "object",
+			"mapping": "ShipLocation:de.forestj.lib.test.io.Data$ShipLocation",
+			"properties": {
+				"LocNameJSON" : {
+					"type": "string",
+					"mapping": "LocName"
+				},
+				"LocFloorJSON" : {
+					"type": "integer",
+					"mapping": "LocFloor"
+				},
+				"LocRackJSON" : {
+					"type": "integer",
+					"mapping": "LocRack",
+					"minimum": 0,
+					"maximum": 100
+				}
+			}
+		},
+	
+		"ShipMoreInfoRef": {
+			"type": "object",
+			"mapping": "ShipMoreInfo:de.forestj.lib.test.io.Data$ShipMoreInfo",
+			"properties": {
+				"MoreNoteJSON" : {
+					"type": "string",
+					"mapping": "MoreNote"
+				},
+				"ShipFromJSON": { "$ref": "#/definitions/ShipFromRef" },
+				"ShipSiteJSON": { "$ref": "#/definitions/ShipSiteRef" },
+				"ShipLocationJSON": { "$ref": "#/definitions/ShipLocationRef" }
+			}
+		},
+		
+		"ShipItemInfoRef": {
+			"type": "object",
+			"mapping": "ShipItemInfo:de.forestj.lib.test.io.Data$ShipItemInfo",
+			"properties": {
+				"DevelopmentJSON" : {
+					"type": "string",
+					"mapping": "Development"
+				},
+				"ConstructionJSON" : {
+					"type": "string",
+					"mapping": "Construction"
+				},
+				"ImplementationJSON" : {
+					"type": "string",
+					"mapping": "Implementation"
+				}
+			}
+		},
+		
+		"ShipItemRef": {
+			"type": "object",
+			"mapping": "de.forestj.lib.test.io.Data$ShipItem",
+			"properties": {
+				"TitleJSON" : {
+					"type": "string",
+					"mapping": "Title"
+				},
+				"NoteJSON" : {
+					"type": "string",
+					"mapping": "Note",
+					"minLength": 4,
+					"maxLength": 100
+				},
+				"ManufacturedTimeJSON" : {
+					"type": "string",
+					"mapping": "ManufacturedTime"
+				},
+				"QuantityJSON" : {
+					"type": "integer",
+					"mapping": "Quantity"
+				},
+				"PriceJSON" : {
+					"type": "number",
+					"mapping": "Price"
+				},
+				"CurrencyJSON" : {
+					"type": "string",
+					"mapping": "Currency",
+					"pattern": "EUR|USD|GBP"
+				},
+				"SkontoJSON" : {
+					"type": "number",
+					"mapping": "Skonto"
+				},
+				"SomeDecimalsJSON" : {
+					"type": "array",
+					"mapping": "SomeDecimals",
+					"items" : {
+						"type": "number[]"
+					}
+				},
+				"ShipItemInfoJSON": { "$ref": "#/definitions/ShipItemInfoRef" }
+			}
+		},
+		
+		"ShipItemsRef": {
+			"type": "array",
+			"mapping": "ShipItems:java.util.List",
+			"items": {
+				"$ref": "#/definitions/ShipItemRef"
+			},
+			"minItems": 0,
+			"maxItems": 5
+		},
+		
+		"ShipOrderRef": {
+			"type": "object",
+			"mapping": "de.forestj.lib.test.io.Data$ShipOrder",
+			"properties": {
+				"OrderIdJSON" : {
+					"type": "string",
+					"mapping": "OrderId"
+				},
+				"OrderPersonJSON" : {
+					"type": "string",
+					"mapping": "OrderPerson"
+				},
+				"OrderDateJSON" : {
+					"type": "string",
+					"mapping": "OrderDate"
+				},
+				"OverallPriceJSON" : {
+					"type": "number",
+					"mapping": "OverallPrice"
+				},
+				"ShipToJSON": { "$ref": "#/definitions/ShipToRef" },
+				"ShipMoreInfoJSON": { "$ref": "#/definitions/ShipMoreInfoRef" },
+				"SomeBoolsJSON" : {
+					"type": "array",
+					"mapping": "SomeBools",
+					"items" : {
+						"type": "boolean[]"
+					}
+				},
+				"ShipItemsJSON": { "$ref": "#/definitions/ShipItemsRef" }
+			},
+			"required": ["OrderIdJSON"]
+		}
+	},
+	"type": "array",
+	"mapping": "java.util.List",
+	"items": {
+		"$ref": "#/definitions/ShipOrderRef"
+	},
+	"maxItems": 10
+}
