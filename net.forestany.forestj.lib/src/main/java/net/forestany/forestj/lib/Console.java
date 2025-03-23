@@ -1,4 +1,4 @@
-package de.forestj.lib;
+package net.forestany.forestj.lib;
 
 /**
  * 
@@ -12,6 +12,13 @@ public class Console {
 	/* Properties */
 	
 	/* Methods */
+	
+	/**
+	 * empty constructor
+	 */
+	public Console() {
+		
+	}
 	
 	/**
 	 * get string line from console input
@@ -851,7 +858,6 @@ public class Console {
 	 * 
 	 * @return					date interval string value
 	 * @see		String
-	 * @see		de.forestj.lib.DateInterval
 	 */
 	public static String consoleInputDateInterval() {
 		return consoleInputDateInterval("", null, "The entered value is not of type date interval.");
@@ -863,7 +869,6 @@ public class Console {
 	 * @return						date interval string value
 	 * @param	p_s_caption			caption text before user can enter a date interval string value
 	 * @see		String
-	 * @see		de.forestj.lib.DateInterval
 	 */
 	public static String consoleInputDateInterval(String p_s_caption) {
 		return consoleInputDateInterval(p_s_caption, null, "The entered value is not of type date interval.");
@@ -877,7 +882,6 @@ public class Console {
 	 * @param	p_s_errorMessage	overwrite standard english error message
 	 * @param	p_s_regex			manual regex criteria
 	 * @see		String
-	 * @see		de.forestj.lib.DateInterval
 	 */
 	public static String consoleInputDateInterval(String p_s_caption, String p_s_regex, String p_s_errorMessage) {
 		return consoleInputDateInterval(p_s_caption, p_s_regex, p_s_errorMessage, "Please enter a value.");
@@ -892,7 +896,6 @@ public class Console {
 	 * @param	p_s_inputErrorMessage	overwrite standard english input error message
 	 * @param	p_s_regex				manual regex criteria
 	 * @see		String
-	 * @see		de.forestj.lib.DateInterval
 	 */
 	public static String consoleInputDateInterval(String p_s_caption, String p_s_regex, String p_s_errorMessage, String p_s_inputErrorMessage) {
 		if (Helper.isStringEmpty(p_s_errorMessage)) {

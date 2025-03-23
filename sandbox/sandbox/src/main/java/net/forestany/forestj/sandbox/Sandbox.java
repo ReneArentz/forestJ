@@ -1,6 +1,6 @@
-package de.forestj.sandbox;
+package net.forestany.forestj.sandbox;
 
-import de.forestj.sandbox.util.*;
+import net.forestany.forestj.sandbox.util.*;
 
 public class Sandbox {
 	public static void main(String[] args) {
@@ -21,7 +21,7 @@ public class Sandbox {
 				
 				System.out.println("");
 				
-				i_input = de.forestj.lib.Console.consoleInputInteger("Enter menu number[1-11;0]: ", "Invalid input.", "Please enter a value[1-11;0].");
+				i_input = net.forestany.forestj.lib.Console.consoleInputInteger("Enter menu number[1-11;0]: ", "Invalid input.", "Please enter a value[1-11;0].");
 				
 				System.out.println("");
 				
@@ -32,7 +32,7 @@ public class Sandbox {
 				if ( (i_input >= 1) && (i_input <= 12) ) {
 					System.out.println("");
 					
-					de.forestj.lib.Console.consoleInputString("Press any key to continue . . . ", true);
+					net.forestany.forestj.lib.Console.consoleInputString("Press any key to continue . . . ", true);
 					
 					System.out.println("");
 				}

@@ -1,4 +1,4 @@
-package de.forestj.lib;
+package net.forestany.forestj.lib;
 /**
  * 
  * Collection of static methods to help most often used program sequences which are helpful.
@@ -8,9 +8,21 @@ public class Helper {
 	
 	/* Constants */
 	
+	/**
+	 * uppercase characters
+	 */
 	public static final String UPPERCASE_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	/**
+	 * lowercase characters
+	 */
     public static final String LOWERCASE_CHARACTERS = UPPERCASE_CHARACTERS.toLowerCase(java.util.Locale.ROOT);
+    /**
+     * digits characters
+     */
     public static final String DIGITS_CHARACTERS = "0123456789";
+    /**
+     * alphanumeric characters
+     */
     public static final String ALPHANUMERIC_CHARACTERS = UPPERCASE_CHARACTERS + LOWERCASE_CHARACTERS + DIGITS_CHARACTERS;
 	
 	/* Fields */
@@ -19,6 +31,13 @@ public class Helper {
 	
 	/* Methods */
 	
+    /**
+	 * empty constructor
+	 */
+	public Helper() {
+		
+	}
+    
 	/**
 	 * checks if a given string is empty
 	 * 
@@ -172,7 +191,7 @@ public class Helper {
 	 * checks if a given string matches a regular expression
 	 * 
 	 * @param	p_s_string	String parameter variable
-	 * @param	p_s_string	String regular expression parameter variable
+	 * @param	p_s_regex	String regular expression parameter variable
 	 * @return				true - String matches Regex, false - String not matches Regex
 	 * @see		String
 	 */
@@ -183,9 +202,9 @@ public class Helper {
 	/**
 	 * returns amount of sub strings within a string
 	 * 
-	 * @param	p_s_string	String parameter variable
-	 * @param	p_s_string	Sub-String parameter variable
-	 * @return				amount of sub string within string parameter
+	 * @param	p_s_string		String parameter variable
+	 * @param	p_s_subString	Sub-String parameter variable
+	 * @return					amount of sub string within string parameter
 	 * @see		String
 	 * @see		Integer
 	 */
@@ -340,7 +359,7 @@ public class Helper {
 	/**
 	 * convert a local date time object to a iso-8601 utc conform date string
 	 * 
-	 * @param	p_o_date						DateTime parameter variable
+	 * @param	p_o_datetime					DateTime parameter variable
 	 * @return									iso-8601 utc conform date string
 	 * @see		java.time.LocalDateTime
 	 * @see		String
@@ -455,9 +474,9 @@ public class Helper {
 	/**
 	 * convert a iso-8601 utc conform date string to a java util date object
 	 * 
-	 * @param	p_s_string						iso-8601 utc conform date string
+	 * @param	p_s_date						iso-8601 utc conform date string
 	 * @return									local date time object
-	 * @throws ParseException					cannot convert string, details in exception message
+	 * @throws java.text.ParseException			cannot convert string, details in exception message
 	 * @see		String
 	 * @see		java.util.Date
 	 */
@@ -471,7 +490,7 @@ public class Helper {
 	/**
 	 * convert a local date time object to a iso-8601 conform date time string, but keep local timezone - no 'Z'
 	 * 
-	 * @param	p_o_date						DateTime parameter variable
+	 * @param	p_o_datetime					DateTime parameter variable
 	 * @return									iso-8601 conform date time string
 	 * @see		java.time.LocalDateTime
 	 * @see		String
@@ -669,9 +688,9 @@ public class Helper {
 	/**
 	 * convert a iso-8601 conform date string to a java util date object, but keep local timezone - no 'Z'
 	 * 
-	 * @param	p_s_string						iso-8601 conform date string
+	 * @param	p_s_date						iso-8601 conform date string
 	 * @return									local date time object
-	 * @throws ParseException					cannot convert string, details in exception message
+	 * @throws java.text.ParseException			cannot convert string, details in exception message
 	 * @see		String
 	 * @see		java.util.Date
 	 */
@@ -697,8 +716,8 @@ public class Helper {
 	/**
 	 * creates a random double value between min..max parameter value
 	 * 
-	 * @param	p_i_min		minimal double range
-	 * @param	p_i_max		maximal double range
+	 * @param	p_d_min		minimal double range
+	 * @param	p_d_max		maximal double range
 	 * @return				random double value
 	 * @see		Double
 	 */
@@ -775,7 +794,7 @@ public class Helper {
 	/**
 	 * converts a short to a byte array
 	 * 
-	 * @param	p_sh_integer	short value
+	 * @param	p_sh_short		short value
 	 * @return					byte array, length 1..2 - null if invalid short value
 	 * @see		Byte
 	 * @see		Short
@@ -941,7 +960,7 @@ public class Helper {
 		}
 		
 		byte[] a_return = new byte[p_i_nBytes];
-		byte[] a_longToByteArray = de.forestj.lib.Helper.longToByteArray(p_l_amount);
+		byte[] a_longToByteArray = net.forestany.forestj.lib.Helper.longToByteArray(p_l_amount);
 		
 		for (int i = p_i_nBytes; i > 0; i--) {
 			if ((a_longToByteArray.length - i) < 0) {
@@ -1139,11 +1158,11 @@ public class Helper {
 	/**
 	 * hash byte array with hash-algorithm
 	 * 
-	 * @param	p_s_algorithm				hash-algorithm: 'SHA-256', 'SHA-384', 'SHA-512'
-	 * @param	p_a_bytes					byte array
-	 * @return								String value
-	 * @throws	IllegalArgumentException	if hash-algorithm is not 'SHA-256', 'SHA-384' or 'SHA-512'
-	 * @throws  NoSuchAlgorithmException 	wrong algorithm to hash byte array
+	 * @param	p_s_algorithm								hash-algorithm: 'SHA-256', 'SHA-384', 'SHA-512'
+	 * @param	p_a_bytes									byte array
+	 * @return												String value
+	 * @throws	IllegalArgumentException					if hash-algorithm is not 'SHA-256', 'SHA-384' or 'SHA-512'
+	 * @throws  java.security.NoSuchAlgorithmException 		wrong algorithm to hash byte array
 	 * @see		Byte
 	 * @see		String
 	 */
@@ -1159,8 +1178,9 @@ public class Helper {
 	/**
 	 * convert byte array to hex string
 	 * 
-	 * @param	p_a_hashbytes	byte array
-	 * @return					String value
+	 * @param	p_a_hashbytes				byte array
+	 * @param 	p_b_printEachByteAsHex		true - each byte as hex value, false - just as byte value
+	 * @return								String value
 	 * @see		Byte
 	 * @see		String
 	 */
@@ -1219,6 +1239,7 @@ public class Helper {
 	/**
 	 * concatenate all generic list elements within a string, separated by delimiter char
 	 * 
+	 * @param 	<T>				type of list element
 	 * @param	p_a_list		generic list
 	 * @param	p_c_delimiter	delimiter
 	 * @return					integer index of search object, -1 if object has not been found
@@ -1251,6 +1272,7 @@ public class Helper {
 	/**
 	 * get index of object in a generic list, not duplicate safe
 	 * 
+	 * @param 	<T>				type of list element
 	 * @param	p_a_list		generic list
 	 * @param	p_o_search		object to be searched
 	 * @return					integer index of search object, -1 if object has not been found
@@ -1282,10 +1304,11 @@ public class Helper {
 	/**
 	 * check if an index is valid for a generic list
 	 * 
-	 * @param	p_a_list		generic list
-	 * @param	p_i_index		integer index
-	 * @return					true - parameter index is valid, false - parameter index is not valid
-	 * @throws	IllegalArgumentException
+	 * @param 	<T>								type of list element
+	 * @param	p_a_list						generic list
+	 * @param	p_i_index						integer index
+	 * @return									true - parameter index is valid, false - parameter index is not valid
+	 * @throws	IllegalArgumentException		list parameter is null
 	 * @see		java.util.List
 	 * @see		Integer
 	 */
@@ -1304,10 +1327,9 @@ public class Helper {
 	/**
 	 * format a duration object value to a duration string (-)HH:mm:ss
 	 * 
-	 * @param	p_o_duration	duration value
-	 * @param	p_i_index		integer index
-	 * @return					duration String value
-	 * @throws	IllegalArgumentException
+	 * @param	p_o_duration						duration value
+	 * @return										duration String value
+	 * @throws	IllegalArgumentException			duration parameter is null
 	 * @see		java.time.Duration
 	 * @see		String
 	 */
@@ -1332,7 +1354,6 @@ public class Helper {
 	 * generates a random string using ALPHANUMERIC_CHARACTERS
 	 * 
 	 * @param p_i_length			length of the generated random string
-	 * @param p_s_validCharacters	a string of all valid characters which should be used within random generation
 	 * @return String
 	 * @see java.security.SecureRandom
 	 */
@@ -1358,7 +1379,7 @@ public class Helper {
     	/* for each character which should be generate to length p_i_length */
         for (int i = 0; i < a_buffer.length; i++) {
         	/* generate a new character out of our valid character array */
-            a_buffer[i] = a_validCharacters[de.forestj.lib.Global.get().SecureRandom.nextInt(a_validCharacters.length)];
+            a_buffer[i] = a_validCharacters[net.forestany.forestj.lib.Global.get().SecureRandom.nextInt(a_validCharacters.length)];
         }
         
         /* return generate character array buffer as string */
@@ -1388,15 +1409,15 @@ public class Helper {
 	public static String disguiseSubstring(String p_s_value, String p_s_start, String p_s_end, char p_c_disguiseCharacter) throws IllegalArgumentException {
 		String s_return = "";
 		
-		if (de.forestj.lib.Helper.isStringEmpty(p_s_value)) {
+		if (net.forestany.forestj.lib.Helper.isStringEmpty(p_s_value)) {
 			throw new IllegalArgumentException("String value where substring should be disguised is empty or null");
 		}
 		
-		if (de.forestj.lib.Helper.isStringEmpty(p_s_start)) {
+		if (net.forestany.forestj.lib.Helper.isStringEmpty(p_s_start)) {
 			throw new IllegalArgumentException("String value where start of substring is recognized is empty or null");
 		}
 		
-		if (de.forestj.lib.Helper.isStringEmpty(p_s_end)) {
+		if (net.forestany.forestj.lib.Helper.isStringEmpty(p_s_end)) {
 			throw new IllegalArgumentException("String value where end of substring is recognized is empty or null");
 		}
 		

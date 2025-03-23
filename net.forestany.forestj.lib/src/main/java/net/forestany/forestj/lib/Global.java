@@ -1,4 +1,4 @@
-package de.forestj.lib;
+package net.forestany.forestj.lib;
 
 /**
  * 
@@ -11,6 +11,9 @@ public class Global {
 	
 	private static Global o_instance;
 	
+	/**
+	 * java.security.SecureRandom instance
+	 */
 	public java.security.SecureRandom SecureRandom;
 	
 	/* Properties */
