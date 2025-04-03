@@ -1,3 +1,3 @@
-module de.forestj.sandbox {
-	requires transitive de.forestj.lib;
+module net.forestany.forestj.sandbox {
+	requires transitive net.forestany.forestj;
 }
