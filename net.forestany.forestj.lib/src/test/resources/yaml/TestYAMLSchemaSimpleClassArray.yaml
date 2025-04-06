@@ -1,0 +1,32 @@
+---
+type: array
+mapping: java.util.List
+items:
+    SimpleClassRef:
+        type: object
+        mapping: net.forestany.forestj.lib.test.io.Data$SimpleClass
+        properties:
+            ValueA:
+                type: string
+                mapping: ValueA
+            ValueB:
+                type: string
+                mapping: ValueB
+            ValueC:
+                type: string
+                mapping: ValueC
+            ValueD:
+                type: array
+                mapping: ValueD
+                items:
+                    type: integer
+            ValueE:
+                type: array
+                mapping: ValueE
+                items:
+                    type: number[]
+        required:
+          -  ValueA
+          -  ValueB
+minItems: 1
+...
