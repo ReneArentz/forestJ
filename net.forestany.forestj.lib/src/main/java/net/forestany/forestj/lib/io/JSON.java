@@ -55,7 +55,7 @@ public class JSON {
 	/**
 	 * set line break characters
 	 * 
-	 * @param p_s_lineBreak					determine line break characters for reading and writing yaml files
+	 * @param p_s_lineBreak					determine line break characters for reading and writing json files
 	 * @throws IllegalArgumentException		must have at least a length of '1'
 	 */
 	public void setLineBreak(String p_s_lineBreak) {
@@ -2198,7 +2198,7 @@ public class JSON {
 	}
 	
 	/**
-	 * Recursive method to validate yaml content string
+	 * Recursive method to validate json content string
 	 * 
 	 * @param p_o_jsonDataElement			current json data element
 	 * @param p_o_jsonSchemaElement			current json schema element with additional information for decoding
@@ -2895,7 +2895,7 @@ public class JSON {
 				}
 			} else {
 				/* create or retrieve object list data */
-				if (p_o_object == null) { /* create a new object instance of yaml array element */
+				if (p_o_object == null) { /* create a new object instance of json array element */
 															net.forestany.forestj.lib.Global.ilogFiner(this.printIndentation() + "p_o_object == null, create new array list");
 					
 					/* create list object */
@@ -3312,8 +3312,8 @@ public class JSON {
 	 * Method to set primitive array property field of an object with simple object value, so no cast will be done
 	 * 
 	 * @param p_s_mapping					mapping class and type hint to cast value to object's primitive array field
-	 * @param p_o_object					object parameter where yaml data will be decoded and cast into object fields
-	 * @param p_o_objectValue				object value of yaml element from file line
+	 * @param p_o_object					object parameter where json data will be decoded and cast into object fields
+	 * @param p_o_objectValue				object value of json element from file line
 	 * @throws NoSuchFieldException			could not retrieve field type by field name
 	 * @throws NoSuchMethodException		could not retrieve method by method name
 	 * @throws InvocationTargetException 	could not invoke method from object
