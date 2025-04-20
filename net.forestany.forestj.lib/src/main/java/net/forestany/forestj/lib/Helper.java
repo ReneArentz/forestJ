@@ -1,4 +1,5 @@
 package net.forestany.forestj.lib;
+
 /**
  * 
  * Collection of static methods to help most often used program sequences which are helpful.

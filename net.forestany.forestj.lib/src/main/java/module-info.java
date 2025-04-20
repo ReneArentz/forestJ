@@ -6,4 +6,5 @@ module net.forestany.forestj {
 	
 	exports net.forestany.forestj.lib;
 	exports net.forestany.forestj.lib.io;
+	exports net.forestany.forestj.lib.sqlcore;
 }

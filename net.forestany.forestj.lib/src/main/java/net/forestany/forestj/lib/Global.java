@@ -102,6 +102,14 @@ public class Global {
 	 * delegate field for other log functionality
 	 */
 	public Global.IDelegate itf_logging = null;
+	/**
+	 * global base-gateway setting
+	 */
+	public net.forestany.forestj.lib.sqlcore.BaseGateway BaseGateway;
+	/**
+	 * global base instance
+	 */
+	public net.forestany.forestj.lib.sqlcore.Base Base;
 	
 	/* Properties */
 	
