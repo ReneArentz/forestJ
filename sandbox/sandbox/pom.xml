@@ -5,7 +5,7 @@
 
 	<groupId>net.forestany.forestj</groupId>
 	<artifactId>sandbox</artifactId>
-	<version>1.0.12</version>
+	<version>1.0.13</version>
 	<packaging>jar</packaging>
 
 	<name>sandbox</name>
@@ -105,7 +105,17 @@
 		<dependency>
 			<groupId>net.forestany.forestj</groupId>
 			<artifactId>fJ-lib</artifactId>
-			<version>1.0.12</version>
+			<version>1.0.13</version>
+		</dependency>
+		<dependency>
+			<groupId>net.forestany.forestj.ai</groupId>
+			<artifactId>fJ-ai-lib</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>net.forestany.forestj.net</groupId>
+			<artifactId>fJ-net-lib</artifactId>
+			<version>1.0.0</version>
 		</dependency>
 	</dependencies>
 </project>

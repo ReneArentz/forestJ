@@ -22,6 +22,9 @@ public class Sandbox {
 				System.out.println("[3] test JVMMemoryInfo");
 				System.out.println("[4] test Sorts");
 				System.out.println("[5] test ZipProgressBar");
+				System.out.println("[6] test AI");
+				System.out.println("[7] test WebRequestProgressBar");
+				
 				System.out.println("[0] quit");
 				
 				System.out.println("");
@@ -40,6 +43,10 @@ public class Sandbox {
 					SortsTest.testSorts();
 				} else if (i_input == 5) {
 					ZipTest.testZipProgressBar(s_currentDirectory);
+				} else if (i_input == 6) {
+					AITest.testAIMenu(s_currentDirectory);
+				} else if (i_input == 7) {
+					WebRequestTest.testWebRequestProgressBar(s_currentDirectory, "https://corretto.aws/downloads/latest/amazon-corretto-17-x64-windows-jdk.zip");
 				}
 								
 				if ( (i_input >= 1) && (i_input <= 13) ) {

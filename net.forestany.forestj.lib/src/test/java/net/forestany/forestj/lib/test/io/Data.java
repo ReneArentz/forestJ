@@ -833,7 +833,6 @@ public class Data implements java.io.Serializable {
 			this.Stored = p_o_value;
 		}
 		
-		
 		public boolean getHighPriority() {
 			return this.HighPriority;
 		}
