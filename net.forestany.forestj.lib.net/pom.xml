@@ -15,7 +15,7 @@
 	<version>1.0.0</version>
 	<packaging>jar</packaging>
 
-	<name>forestj ai library</name>
+	<name>forestj net library</name>
 	<description>Custom-built network library with advanced features for socket programming, enabling smooth communication across networks.</description>
 	<url>https://www.forestany.net</url>
 

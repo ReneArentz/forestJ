@@ -24,7 +24,8 @@ public class Sandbox {
 				System.out.println("[5] test ZipProgressBar");
 				System.out.println("[6] test AI");
 				System.out.println("[7] test WebRequestProgressBar");
-				
+				System.out.println("[8] test FTPS");
+				System.out.println("[9] test SFTP");
 				System.out.println("[0] quit");
 				
 				System.out.println("");
@@ -47,6 +48,10 @@ public class Sandbox {
 					AITest.testAIMenu(s_currentDirectory);
 				} else if (i_input == 7) {
 					WebRequestTest.testWebRequestProgressBar(s_currentDirectory, "https://corretto.aws/downloads/latest/amazon-corretto-17-x64-windows-jdk.zip");
+				} else if (i_input == 8) {
+					FTPSTest.testFTPS(s_currentDirectory, "172.28.234.246", 12221, "user", "user");
+				} else if (i_input == 9) {
+					SFTPTest.testSFTP(s_currentDirectory, "172.28.234.246", 2222, "user", "user");
 				}
 								
 				if ( (i_input >= 1) && (i_input <= 13) ) {
