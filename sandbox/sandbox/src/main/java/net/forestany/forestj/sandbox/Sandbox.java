@@ -26,6 +26,7 @@ public class Sandbox {
 				System.out.println("[7] test WebRequestProgressBar");
 				System.out.println("[8] test FTPS");
 				System.out.println("[9] test SFTP");
+				System.out.println("[10] test Mail");
 				System.out.println("[0] quit");
 				
 				System.out.println("");
@@ -52,6 +53,8 @@ public class Sandbox {
 					FTPSTest.testFTPS(s_currentDirectory, "172.28.234.246", 12221, "user", "user");
 				} else if (i_input == 9) {
 					SFTPTest.testSFTP(s_currentDirectory, "172.28.234.246", 2222, "user", "user");
+				} else if (i_input == 10) {
+					MailTest.testMail(s_currentDirectory, "172.18.2.75");
 				}
 								
 				if ( (i_input >= 1) && (i_input <= 13) ) {

@@ -9,7 +9,7 @@ module net.forestany.forestj.lib.net {
 	//exports net.forestany.forestj.lib.net.https.dynm;
 	//exports net.forestany.forestj.lib.net.https.rest;
 	//exports net.forestany.forestj.lib.net.https.soap;
-	//exports net.forestany.forestj.lib.net.msg;
+	exports net.forestany.forestj.lib.net.msg;
 	//exports net.forestany.forestj.lib.net.sock;
 	//exports net.forestany.forestj.lib.net.sock.com;
 	//exports net.forestany.forestj.lib.net.sock.recv;

@@ -5,7 +5,7 @@
 
 	<groupId>net.forestany.forestj</groupId>
 	<artifactId>Parent</artifactId>
-	<version>1.5</version>
+	<version>1.6</version>
 	<packaging>pom</packaging>
 
 	<name>Parent</name>
@@ -184,12 +184,12 @@
 			<dependency>
 				<groupId>net.forestany.forestj.net</groupId>
 				<artifactId>fJ-net-lib</artifactId>
-				<version>1.0.0</version>
+				<version>1.0.1</version>
 			</dependency>
 			<dependency>
 				<groupId>net.forestany.forestj.test</groupId>
 				<artifactId>fJ-nettest</artifactId>
-				<version>1.0.0</version>
+				<version>1.0.1</version>
 			</dependency>
 			<dependency>
 				<groupId>net.forestany.forestj.net.ftp</groupId>
@@ -199,6 +199,11 @@
 			<dependency>
 				<groupId>net.forestany.forestj.net.sftp</groupId>
 				<artifactId>fJ-net-sftp</artifactId>
+				<version>1.0.0</version>
+			</dependency>
+			<dependency>
+				<groupId>net.forestany.forestj.net.mail</groupId>
+				<artifactId>fJ-net-mail</artifactId>
 				<version>1.0.0</version>
 			</dependency>
 		</dependencies>
