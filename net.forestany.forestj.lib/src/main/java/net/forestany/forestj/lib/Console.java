@@ -124,7 +124,7 @@ public class Console {
 				try {
 					s_foo = new String(o_console.readPassword());
 				} catch (Exception o_exc) {
-					/* if exception catched, keep string line empty */
+					/* if exception caught, keep string line empty */
 					s_foo = "";
 					/* exit input loop */
 					b_loop = false;

@@ -380,56 +380,56 @@ public class MessageObject {
 	
 	
 	/**
-	 * get signed byte
+	 * get unsigned byte
 	 * 
 	 * @return byte
 	 */
-	public byte getSignedByte() {
+	public byte getUnsignedByte() {
 		return this.UnsignedByte;
 	}
 	
 	/**
-	 * set signed byte
+	 * set unsigned byte
 	 * 
 	 * @param p_by_value byte
 	 */
-	public void setSignedByte(byte p_by_value) {
+	public void setUnsignedByte(byte p_by_value) {
 		this.UnsignedByte = p_by_value;
 	}
 	
 	/**
-	 * get signed byte array
+	 * get unsigned byte array
 	 * 
 	 * @return byte[]
 	 */
-	public byte[] getSignedByteArray() {
+	public byte[] getUnsignedByteArray() {
 		return this.UnsignedByteArray;
 	}
 	
 	/**
-	 * set signed byte array
+	 * set unsigned byte array
 	 * 
 	 * @param p_a_value bte[]
 	 */
-	public void setSignedByteArray(byte[] p_a_value) {
+	public void setUnsignedByteArray(byte[] p_a_value) {
 		this.UnsignedByteArray = p_a_value;
 	}
 	
 	/**
-	 * get signed byte list
+	 * get unsigned byte list
 	 * 
 	 * @return java.util.List&lt;Byte&gt;
 	 */
-	public java.util.List<Byte> getSignedByteList() {
+	public java.util.List<Byte> getUnsignedByteList() {
 		return this.UnsignedByteList;
 	}
 	
 	/**
-	 * set signed byte list
+	 * set unsigned byte list
 	 * 
 	 * @param p_a_value java.util.List&lt;Byte&gt;
 	 */
-	public void setSignedByteList(java.util.List<Byte> p_a_value) {
+	public void setUnsignedByteList(java.util.List<Byte> p_a_value) {
 		this.UnsignedByteList = p_a_value;
 	}
 	
@@ -1391,9 +1391,9 @@ public class MessageObject {
 		this.setByteArray(new byte[] { 1, 3, 5, (byte)133, 42, 0, (byte)102 });
 		this.setByteList(java.util.Arrays.asList( (byte)1, (byte)3, (byte)5, (byte)133, (byte)42, (byte)0, null, (byte)102 ));
 		
-		this.setSignedByte((byte)42);
-		this.setSignedByteArray(new byte[] { 1, 3, 5, (byte)-10, 42, 0, (byte)-102 });
-		this.setSignedByteList(java.util.Arrays.asList( (byte)1, (byte)3, (byte)5, (byte)-10, (byte)42, (byte)0, null, (byte)-102 ));
+		this.setUnsignedByte((byte)0);
+		this.setUnsignedByteArray(null);
+		this.setUnsignedByteList(new java.util.ArrayList<Byte>());
 		
 		this.setChar((char)242);
 		this.setCharArray(new char[] { 65, 70, 75, 133, 85, 0, 243 });
@@ -1520,9 +1520,9 @@ public class MessageObject {
 		this.setByteArray(null);
 		this.setByteList(new java.util.ArrayList<Byte>());
 		
-		this.setSignedByte((byte)0);
-		this.setSignedByteArray(null);
-		this.setSignedByteList(new java.util.ArrayList<Byte>());
+		this.setUnsignedByte((byte)0);
+		this.setUnsignedByteArray(null);
+		this.setUnsignedByteList(new java.util.ArrayList<Byte>());
 		
 		this.setChar((char)0);
 		this.setCharArray(null);

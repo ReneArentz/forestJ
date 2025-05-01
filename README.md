@@ -23,6 +23,9 @@ forestJ framework will be released under the **GPLv3 license** and the **MIT lic
 
 ## Releases
 
+### fJ-net-lib 1.0.2 (stable)
+Added advanced features for socket programming, like TCP/UDP socket tasks with TLS support, enabling smooth communication across networks. *05/2025*
+
 ### fJ-net-mail 1.0.0 (stable) + fJ-net-lib 1.0.1 (stable)
 Implementation to use mail protocols(IMAP, POP3, SMTP). Added functionality for message boxes and network message marshalling. *04/2025*
 

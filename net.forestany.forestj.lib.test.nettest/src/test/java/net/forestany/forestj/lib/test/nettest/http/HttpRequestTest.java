@@ -23,7 +23,7 @@ public class HttpRequestTest {
 	 * there is an explicit switch, if logging should be used or not. Request.setUseLog(boolean):
 	 * somehow I encounter a state where active logging leads to ssl handshake exception
 	 */
-	/* @org.junit.jupiter.api.Disabled */
+	/*@org.junit.jupiter.api.Disabled*/
 	@Test
 	public void testHttpRequestNoProxy() {
 		try {
