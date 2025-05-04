@@ -1,0 +1,6 @@
+localIp = 192.168.178.23
+serverPort = 12365
+udpMulticastTTL = 5
+udpMulticastNetworkInterfaceName = wireless_32774
+udpMulticastIp = FF05:0:0:0:0:0:0:342
+udpMulticastPort = 12805

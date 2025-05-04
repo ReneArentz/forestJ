@@ -9,9 +9,7 @@ import org.junit.jupiter.api.Test;
  */
 public class HttpRequestTest {
 	/**
-	 * if this unit test fails completely, there is an issue with https://httpbin.org/ or no outgoing internet connection
-	 * maybe httpbin must be run locally to run the unit test
-	 * maybe the used proxy does not exist anymore
+	 * httpbin must be run locally to run the unit test, or try to reach 'https://httpbin.org/'
 	 * 
 	 * each test run for http requests and other ssl context/proxy settings must be in a separate test method, because somehow
 	 * the affect of previous test will affect the next test ssl context
@@ -28,7 +26,15 @@ public class HttpRequestTest {
 	public void testHttpRequestNoProxy() {
 		try {
 			/* System.setProperty("https.protocols", "TLSv1.2"); */
-			String s_httpBinUrl = "https://httpbin.org/";
+			//String s_httpBinUrl = "https://httpbin.org/";
+			String s_httpBinUrl = "https://172.24.91.23/";
+			
+			/**
+			 * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			 * DO NOT USE THIS METHOD IN PRODUCTION SYSTEMS
+			 * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			 */
+			trustAnyCertificates();
 			
 			runHttpRequests(s_httpBinUrl, null, 80, false); /* using no proxy */
 		} catch (Exception o_exc) {
@@ -39,35 +45,65 @@ public class HttpRequestTest {
 	/**
 	 * test with a proxy server
 	 */
-	@org.junit.jupiter.api.Disabled
-	@Test
-	public void testHttpRequestProxy() {
-		try {
-			/* System.setProperty("https.protocols", "TLSv1.2"); */
-			String s_httpBinUrl = "https://httpbin.org/";
-			
-			runHttpRequests(s_httpBinUrl, "38.242.238.254", 2509, false); /* using proxy */
-		} catch (Exception o_exc) {
-			fail(o_exc.getMessage());
-		}
-	}
+//	@org.junit.jupiter.api.Disabled
+//	@Test
+//	public void testHttpRequestProxy() {
+//		try {
+//			/* System.setProperty("https.protocols", "TLSv1.2"); */
+//			//String s_httpBinUrl = "https://httpbin.org/";
+//			String s_httpBinUrl = "https://172.24.91.114/";
+//			
+//			runHttpRequests(s_httpBinUrl, "38.242.238.254", 2509, false); /* using proxy */
+//		} catch (Exception o_exc) {
+//			fail(o_exc.getMessage());
+//		}
+//	}
 	
 	/**
 	 * test with another proxy server
 	 */
-	@org.junit.jupiter.api.Disabled
-	@Test
-	public void testHttpRequestProxyAlternative() {
-		try {
-			/* System.setProperty("https.protocols", "TLSv1.2"); */
-			String s_httpBinUrl = "https://httpbin.org/";
-					
-			runHttpRequests(s_httpBinUrl, "103.114.53.2", 8080, false); /* using proxy alternative */
-		} catch (Exception o_exc) {
-			fail(o_exc.getMessage());
-		}
-	}
+//	@org.junit.jupiter.api.Disabled
+//	@Test
+//	public void testHttpRequestProxyAlternative() {
+//		try {
+//			/* System.setProperty("https.protocols", "TLSv1.2"); */
+//			//String s_httpBinUrl = "https://httpbin.org/";
+//			String s_httpBinUrl = "https://172.24.91.114/";
+//					
+//			runHttpRequests(s_httpBinUrl, "103.114.53.2", 8080, false); /* using proxy alternative */
+//		} catch (Exception o_exc) {
+//			fail(o_exc.getMessage());
+//		}
+//	}
 
+	private void trustAnyCertificates() throws Exception {
+		javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(new javax.net.ssl.HostnameVerifier(){ 
+            public boolean verify(String hostname, javax.net.ssl.SSLSession session) { 
+                return true; 
+            }
+        }); 
+		
+		javax.net.ssl.SSLContext context = javax.net.ssl.SSLContext.getInstance("TLSv1.3"); 
+		
+        context.init(null, new javax.net.ssl.X509TrustManager[] {
+    		new javax.net.ssl.X509TrustManager() { 
+                public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws java.security.cert.CertificateException {
+                	
+                }
+                
+                public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws java.security.cert.CertificateException {
+                	
+                }
+                
+                public java.security.cert.X509Certificate[] getAcceptedIssuers() { 
+                    return new java.security.cert.X509Certificate[0]; 
+                }
+            }
+		}, new java.security.SecureRandom()); 
+        
+        javax.net.ssl.HttpsURLConnection.setDefaultSSLSocketFactory(context.getSocketFactory()); 
+	}
+	
 	private void runHttpRequests(String s_httpBinUrl, String s_proxyAddress, int i_proxyPort, boolean p_b_useLog) throws Exception {
 		if (p_b_useLog) {
 			net.forestany.forestj.lib.Global.get().resetLog();

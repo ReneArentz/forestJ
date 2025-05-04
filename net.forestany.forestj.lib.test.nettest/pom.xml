@@ -6,17 +6,17 @@
 	<parent>
 		<groupId>net.forestany.forestj</groupId>
 		<artifactId>Parent</artifactId>
-		<version>1.7</version>
+		<version>1.8</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
 	<groupId>net.forestany.forestj.test</groupId>
 	<artifactId>fJ-nettest</artifactId>
-	<version>1.0.2</version>
+	<version>1.0.3</version>
 	<packaging>jar</packaging>
 
-	<name>forestj sql test</name>
-	<description>Test classes and resources for net modules.</description>
+	<name>forestj net test</name>
+	<description>Test classes and resources for network modules.</description>
 	<url>https://www.forestany.net</url>
 
 	<build>

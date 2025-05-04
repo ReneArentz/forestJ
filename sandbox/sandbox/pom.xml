@@ -51,8 +51,7 @@
 							<transformers>
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>
-										net.forestany.forestj.sandbox.Sandbox</mainClass>
+									<mainClass>net.forestany.forestj.sandbox.Sandbox</mainClass>
 								</transformer>
 							</transformers>
 							<filters>
@@ -115,7 +114,12 @@
 		<dependency>
 			<groupId>net.forestany.forestj.net</groupId>
 			<artifactId>fJ-net-lib</artifactId>
-			<version>1.0.1</version>
+			<version>1.0.3</version>
+		</dependency>
+		<dependency>
+			<groupId>net.forestany.forestj.test</groupId>
+			<artifactId>fJ-nettest</artifactId>
+			<version>1.0.3</version>
 		</dependency>
 		<dependency>
 			<groupId>net.forestany.forestj.net.ftp</groupId>
@@ -130,6 +134,16 @@
 		<dependency>
 			<groupId>net.forestany.forestj.net.mail</groupId>
 			<artifactId>fJ-net-mail</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>net.forestany.forestj.net</groupId>
+			<artifactId>fJ-net-sql-pool</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>net.forestany.forestj.sql</groupId>
+			<artifactId>fJ-sql-mariadb</artifactId>
 			<version>1.0.0</version>
 		</dependency>
 	</dependencies>

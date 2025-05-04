@@ -1627,10 +1627,9 @@ public class Marshall {
 		/* check first two bytes for amount of fields - if they are both zero, we have not an object with fields but just a primitive supported variable */
 		if ( (p_a_data.length > 1) && (p_a_data[0] == 0) && (p_a_data[1] == 0) ) {
 			/* if we expect net.forestany.forestj.lib.net.sock.com.NullValue class as primitive, we return null */
-			//TODO uncomment
-			//if (p_o_class == net.forestany.forestj.lib.net.sock.com.NullValue.class) {
-			//	return null;
-			//}
+			if (p_o_class == net.forestany.forestj.lib.net.sock.com.NullValue.class) {
+				return null;
+			}
 			
 			/* handle primitive supported type */
 			if (Marshall.a_allowedTypes.contains(p_o_class)) {

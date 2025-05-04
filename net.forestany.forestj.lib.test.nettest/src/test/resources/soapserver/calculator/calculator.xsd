@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:fAny="http://www.forestany.net" xsi:schemaLocation="http://www.forestany.net ./forestAnyXML.xsd" elementFormDefault="qualified" attributeFormDefault="unqualified" targetNamespace="http://www.forestany.net">
+    <xs:element name="param_1" type="xs:double" fAny:mapping="param1"/>
+    <xs:element name="param_2" type="xs:double" fAny:mapping="param2"/>
+    <xs:element name="result" type="xs:double" fAny:mapping="result"/>
+    
+    <xs:complexType name="Add" fAny:mapping="net.forestany.forestj.lib.test.nettest.sock.https.Calculator$Add">
+        <xs:sequence>
+            <xs:element ref="param_1"/>
+            <xs:element ref="param_2"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="AddResult" fAny:mapping="net.forestany.forestj.lib.test.nettest.sock.https.Calculator$AddResult">
+        <xs:sequence>
+            <xs:element ref="result"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="Subtract" fAny:mapping="net.forestany.forestj.lib.test.nettest.sock.https.Calculator$Subtract">
+        <xs:sequence>
+            <xs:element ref="param_1"/>
+            <xs:element ref="param_2"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="SubtractResult" fAny:mapping="net.forestany.forestj.lib.test.nettest.sock.https.Calculator$SubtractResult">
+        <xs:sequence>
+            <xs:element ref="result"/>
+        </xs:sequence>
+    </xs:complexType>   
+
+    <xs:complexType name="Multiply" fAny:mapping="net.forestany.forestj.lib.test.nettest.sock.https.Calculator$Multiply">
+        <xs:sequence>
+            <xs:element ref="param_1"/>
+            <xs:element ref="param_2"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="MultiplyResult" fAny:mapping="net.forestany.forestj.lib.test.nettest.sock.https.Calculator$MultiplyResult">
+        <xs:sequence>
+            <xs:element ref="result"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="Divide" fAny:mapping="net.forestany.forestj.lib.test.nettest.sock.https.Calculator$Divide">
+        <xs:sequence>
+            <xs:element ref="param_1"/>
+            <xs:element ref="param_2"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="DivideResult" fAny:mapping="net.forestany.forestj.lib.test.nettest.sock.https.Calculator$DivideResult">
+        <xs:sequence>
+            <xs:element ref="result"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>

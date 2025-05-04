@@ -1,6 +1,8 @@
 package net.forestany.forestj.sandbox;
 
 import net.forestany.forestj.sandbox.util.*;
+import net.forestany.forestj.sandbox.util.net.*;
+import net.forestany.forestj.sandbox.util.net.https.*;
 
 public class Sandbox {
 	public static void main(String[] args) {
@@ -9,6 +11,25 @@ public class Sandbox {
 		try {
 			int i_input = -1;
 			String s_currentDirectory = net.forestany.forestj.lib.io.File.getCurrentDirectory();
+			
+			net.forestany.forestj.lib.Global.get().resetLog();
+			
+			net.forestany.forestj.lib.LoggingConfig o_loggingConfigAll = new net.forestany.forestj.lib.LoggingConfig();
+			o_loggingConfigAll.setLevel(java.util.logging.Level.WARNING);
+			o_loggingConfigAll.setUseConsole(true);
+			
+			o_loggingConfigAll.setConsoleLevel(java.util.logging.Level.WARNING);
+			;
+			//o_loggingConfigAll.setUseFile(true);
+			//o_loggingConfigAll.setFileLevel(java.util.logging.Level.WARNING);
+			//o_loggingConfigAll.setFilePath("C:\\Users\\Public\\Documents\\");
+			//o_loggingConfigAll.setFileLimit(1000000); // ~ 1.0 MB
+			//o_loggingConfigAll.setFileCount(25);
+			
+			o_loggingConfigAll.loadConfig();
+			
+			net.forestany.forestj.lib.Global.get().by_logControl = net.forestany.forestj.lib.Global.OFF;
+			net.forestany.forestj.lib.Global.get().by_internalLogControl = net.forestany.forestj.lib.Global.SEVERE + net.forestany.forestj.lib.Global.WARNING;
 			
 			do {
 				System.out.println("++++++++++++++++++++++++++++++++");
@@ -27,11 +48,15 @@ public class Sandbox {
 				System.out.println("[8] test FTPS");
 				System.out.println("[9] test SFTP");
 				System.out.println("[10] test Mail");
+				System.out.println("[11] test Net");
+				System.out.println("[12] test TinyHttps");
+				System.out.println("[13] list active network interfaces");
+				System.out.println("[14] net chat lobby");
 				System.out.println("[0] quit");
 				
 				System.out.println("");
 				
-				i_input = net.forestany.forestj.lib.Console.consoleInputInteger("Enter menu number[1-13;0]: ", "Invalid input.", "Please enter a value[1-13;0].");
+				i_input = net.forestany.forestj.lib.Console.consoleInputInteger("Enter menu number[1-14;0]: ", "Invalid input.", "Please enter a value[1-14;0].");
 				
 				System.out.println("");
 				
@@ -55,9 +80,30 @@ public class Sandbox {
 					SFTPTest.testSFTP(s_currentDirectory, "172.28.234.246", 2222, "user", "user");
 				} else if (i_input == 10) {
 					MailTest.testMail(s_currentDirectory, "172.18.2.75");
+				} else if (i_input == 10) {
+					MailTest.testMail(s_currentDirectory, "172.19.54.177");
+				} else if (i_input == 11) {
+					NetTest.testNetMenu(s_currentDirectory);
+				} else if (i_input == 12) {
+					HttpsTest.testTinyHttpsMenu(s_currentDirectory);
+				} else if (i_input == 13) {
+					System.out.println("IPv4:");
+					
+					for (java.util.AbstractMap.SimpleEntry<String, String> a_networkInterface : net.forestany.forestj.lib.Helper.GetNetworkInterfacesIpv4()) {
+						System.out.println(a_networkInterface.getKey() + "\t" + a_networkInterface.getValue());
+					}
+					
+					System.out.println("");
+					System.out.println("IPv6:");
+					
+					for (java.util.AbstractMap.SimpleEntry<String, String> a_networkInterface : net.forestany.forestj.lib.Helper.GetNetworkInterfacesIpv6()) {
+						System.out.println(a_networkInterface.getKey() + "\t" + a_networkInterface.getValue());
+					}
+				} else if (i_input == 14) {
+					NetChatLobbyTest.testNetChatLobbyMenu(s_currentDirectory);
 				}
 								
-				if ( (i_input >= 1) && (i_input <= 13) ) {
+				if ( (i_input >= 1) && (i_input <= 14) ) {
 					System.out.println("");
 					
 					net.forestany.forestj.lib.Console.consoleInputString("Press any key to continue . . . ", true);
