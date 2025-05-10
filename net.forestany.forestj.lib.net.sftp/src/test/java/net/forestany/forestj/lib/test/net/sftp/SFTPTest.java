@@ -28,7 +28,7 @@ public class SFTPTest {
 			String s_fileKnownHosts = net.forestany.forestj.lib.io.File.getCurrentDirectory() + net.forestany.forestj.lib.io.File.DIR + "src" + net.forestany.forestj.lib.io.File.DIR + "test" + net.forestany.forestj.lib.io.File.DIR + "resources" + net.forestany.forestj.lib.io.File.DIR + "sftp" + net.forestany.forestj.lib.io.File.DIR + "known_hosts";
 			
 			net.forestany.forestj.lib.net.sftp.TunnelCredentials o_sshTunnelCredentials = new net.forestany.forestj.lib.net.sftp.TunnelCredentials(
-				"172.28.226.9",
+				"172.24.91.23",
 				2223,
 				22,
 				"userssh",
@@ -36,7 +36,7 @@ public class SFTPTest {
 				s_sshFileAuthentication
 			);
 			
-			runSftp("172.28.234.246", 2222, "user", "user", s_sftpFileAuthentication, s_fileKnownHosts, "/", o_sshTunnelCredentials);
+			runSftp("172.24.87.100", 2222, "user", "user", s_sftpFileAuthentication, s_fileKnownHosts, "/", o_sshTunnelCredentials);
 		} catch (Exception o_exc) {
 			net.forestany.forestj.lib.Global.logException(o_exc);
 			fail(o_exc.getMessage());

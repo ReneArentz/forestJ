@@ -23,6 +23,9 @@ forestJ framework will be released under the **GPLv3 license** and the **MIT lic
 
 ## Releases
 
+### 1.0.15 (stable)
+All modules updated to the latest version. *05/2025*
+
 ### fJ-net-lib 1.0.3 (stable) + fJ-net-sql-pool 1.0.0 (stable)
 Implementation of a tiny HTTP 1.1 server and client with TLS support. Working modules for dynamic web application, SOAP service and REST service. Configuration class for tiny HTTP(S)/SOAP/REST server instance with SQL pool integration. *05/2025*
 

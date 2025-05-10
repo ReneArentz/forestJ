@@ -6,13 +6,13 @@
 	<parent>
 		<groupId>net.forestany.forestj</groupId>
 		<artifactId>Parent</artifactId>
-		<version>1.4</version>
+		<version>1.9</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
 	<groupId>net.forestany.forestj.net.sftp</groupId>
 	<artifactId>fJ-net-sftp</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 	<packaging>jar</packaging>
 
 	<name>forestj net sftp</name>
@@ -105,7 +105,7 @@
 		<dependency>
 		    <groupId>com.github.mwiede</groupId>
 		    <artifactId>jsch</artifactId>
-		    <version>0.2.25</version>
+		    <version>0.2.26</version>
 		</dependency>
 	</dependencies>
 

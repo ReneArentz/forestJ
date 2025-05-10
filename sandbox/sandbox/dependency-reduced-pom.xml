@@ -4,7 +4,7 @@
   <groupId>net.forestany.forestj</groupId>
   <artifactId>sandbox</artifactId>
   <name>sandbox</name>
-  <version>1.0.14</version>
+  <version>1.0.15</version>
   <url>https://www.forestany.net</url>
   <build>
     <resources>

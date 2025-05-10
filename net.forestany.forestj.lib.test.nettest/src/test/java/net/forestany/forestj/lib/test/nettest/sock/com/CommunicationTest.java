@@ -17,7 +17,7 @@ public class CommunicationTest {
 	/**
 	 * method to test socket communication
 	 */
-	@org.junit.jupiter.api.Disabled
+	/*@org.junit.jupiter.api.Disabled*/
 	@Test
 	public void testCommunicationMultipleTimes() {
 		try {

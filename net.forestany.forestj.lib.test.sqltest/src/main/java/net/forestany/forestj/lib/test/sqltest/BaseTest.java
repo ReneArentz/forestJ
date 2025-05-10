@@ -17,7 +17,7 @@ public class BaseTest {
 	 * base host ip
 	 */
 	//public static final String s_baseHost = "172.28.234.162";
-	public static final String s_baseHost = "172.28.226.144";
+	public static final String s_baseHost = "172.24.88.58";
 	
 	/**
 	 * method to test base instances

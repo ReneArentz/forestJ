@@ -17,7 +17,7 @@ public class FTPTest {
 		try {
 			net.forestany.forestj.lib.LoggingConfig.initiateTestLogging();
 			
-			runFtp("172.28.234.246", 12220, "user", "user", "/");
+			runFtp("172.24.87.100", 12220, "user", "user", "/");
 		} catch (Exception o_exc) {
 			fail(o_exc.getMessage());
 		}

@@ -23,7 +23,7 @@ public class MailTest {
 			String s_testDirectory = s_currentDirectory + net.forestany.forestj.lib.io.File.DIR + "testMail" + net.forestany.forestj.lib.io.File.DIR;
 			String s_resourcesDirectory = s_currentDirectory + net.forestany.forestj.lib.io.File.DIR + "src" + net.forestany.forestj.lib.io.File.DIR + "test" + net.forestany.forestj.lib.io.File.DIR + "resources" + net.forestany.forestj.lib.io.File.DIR + "mail" + net.forestany.forestj.lib.io.File.DIR;
 		
-			MailLoginData o_mailLoginData = new MailLoginData(s_resourcesDirectory, "172.18.2.75", "172.18.2.75");
+			MailLoginData o_mailLoginData = new MailLoginData(s_resourcesDirectory, "172.24.87.179", "172.24.87.179");
 			
 			runMail(s_testDirectory, s_resourcesDirectory, o_mailLoginData);
 		} catch (Exception o_exc) {
