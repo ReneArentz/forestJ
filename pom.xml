@@ -5,7 +5,7 @@
 
 	<groupId>net.forestany.forestj</groupId>
 	<artifactId>Parent</artifactId>
-	<version>1.9</version>
+	<version>1.10</version>
 	<packaging>pom</packaging>
 
 	<name>Parent</name>
@@ -134,42 +134,42 @@
 			<dependency>
 				<groupId>net.forestany.forestj.sql</groupId>
 				<artifactId>fJ-sql-lib</artifactId>
-				<version>1.0.1</version>
+				<version>1.0.2</version>
 			</dependency>
 			<dependency>
 				<groupId>net.forestany.forestj.test</groupId>
 				<artifactId>fJ-sqltest</artifactId>
-				<version>1.0.1</version>
+				<version>1.0.2</version>
 			</dependency>
 			<dependency>
 				<groupId>net.forestany.forestj.sql</groupId>
 				<artifactId>fJ-sql-mariadb</artifactId>
-				<version>1.0.1</version>
+				<version>1.0.2</version>
 			</dependency>
 			<dependency>
 				<groupId>net.forestany.forestj.sql</groupId>
 				<artifactId>fJ-sql-mssql</artifactId>
-				<version>1.0.1</version>
+				<version>1.0.2</version>
 			</dependency>
 			<dependency>
 				<groupId>net.forestany.forestj.sql</groupId>
 				<artifactId>fJ-sql-nosqlmdb</artifactId>
-				<version>1.0.1</version>
+				<version>1.0.2</version>
 			</dependency>
 			<dependency>
 				<groupId>net.forestany.forestj.sql</groupId>
 				<artifactId>fJ-sql-oracle</artifactId>
-				<version>1.0.1</version>
+				<version>1.0.2</version>
 			</dependency>
 			<dependency>
 				<groupId>net.forestany.forestj.sql</groupId>
 				<artifactId>fJ-sql-pgsql</artifactId>
-				<version>1.0.1</version>
+				<version>1.0.2</version>
 			</dependency>
 			<dependency>
 				<groupId>net.forestany.forestj.sql</groupId>
 				<artifactId>fJ-sql-sqlite</artifactId>
-				<version>1.0.1</version>
+				<version>1.0.2</version>
 			</dependency>
 			<dependency>
 				<groupId>net.forestany.forestj.sql</groupId>

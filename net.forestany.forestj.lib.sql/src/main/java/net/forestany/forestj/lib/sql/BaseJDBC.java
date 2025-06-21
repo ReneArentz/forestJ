@@ -335,6 +335,15 @@ public class BaseJDBC extends Base {
 		}
 		
 		try {
+			/* date time formatter instance with datetime format for later use */
+			java.time.format.DateTimeFormatter dtf_datetime_instance = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+			/* date time formatter instance with date format for later use */
+			java.time.format.DateTimeFormatter dtf_date_instance = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+			/* date time formatter instance with time format for later use */
+			java.time.format.DateTimeFormatter dtf_time_instance = java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss");
+
 			/* if transaction flag is set, begin transaction */
 			if (p_b_autoTransaction) {
 				this.o_currentConnection.setAutoCommit(false);
@@ -408,7 +417,7 @@ public class BaseJDBC extends Base {
 							
 							/* use setTimestamp for ORACLE */
 							if (this.e_baseGateway == BaseGateway.ORACLE) {
-								this.o_currentPreparedStatement.setTimestamp(j + 1, java.sql.Timestamp.valueOf((java.time.LocalDateTime)o_foo));
+								this.o_currentPreparedStatement.setTimestamp(j + 1, java.sql.Timestamp.valueOf( dtf_datetime_instance.format((java.time.LocalDateTime)o_foo) ));
 							} else {
 								this.o_currentPreparedStatement.setObject(j + 1, (java.time.LocalDateTime)o_foo);
 							}
@@ -416,7 +425,7 @@ public class BaseJDBC extends Base {
 							net.forestany.forestj.lib.Global.ilogFinest("add 'localdate' value to prepared statement" + ((net.forestany.forestj.lib.Global.get().getLogCompleteSqlQuery()) ? " [" + o_foo.toString() + "]" : ""));
 							
 							if (this.e_baseGateway == BaseGateway.ORACLE) {
-								this.o_currentPreparedStatement.setDate(j + 1, java.sql.Date.valueOf((java.time.LocalDate)o_foo));
+								this.o_currentPreparedStatement.setDate(j + 1, java.sql.Date.valueOf( dtf_date_instance.format((java.time.LocalDate)o_foo) ));
 							} else {
 								this.o_currentPreparedStatement.setObject(j + 1, (java.time.LocalDate)o_foo);
 							}
@@ -427,7 +436,7 @@ public class BaseJDBC extends Base {
 							if (this.e_baseGateway == BaseGateway.MSSQL) {
 								this.o_currentPreparedStatement.setString(j + 1, o_foo.toString());
 							} else if (this.e_baseGateway == BaseGateway.ORACLE) {
-								this.o_currentPreparedStatement.setTime(j + 1, java.sql.Time.valueOf((java.time.LocalTime)o_foo));
+								this.o_currentPreparedStatement.setTime(j + 1, java.sql.Time.valueOf( dtf_time_instance.format((java.time.LocalTime)o_foo) ));
 							} else {
 								this.o_currentPreparedStatement.setObject(j + 1, (java.time.LocalTime)o_foo);
 							}
@@ -481,7 +490,7 @@ public class BaseJDBC extends Base {
 					this.o_currentConnection.rollback();
 					this.o_currentConnection.setAutoCommit(true);
 				} catch (java.sql.SQLException o_excRollback) {
-					throw new IllegalAccessException("Could not rollback transaction; SQLState=" + o_excRollback.getSQLState() + "; ErrorCode=" + o_excRollback.getErrorCode() + "; Message=" + o_excRollback.getMessage());
+					throw new IllegalAccessException("Could not rollback transaction; SQLState=" + o_excRollback.getSQLState() + "; ErrorCode=" + o_excRollback.getErrorCode() + "; Message=" + o_excRollback.getMessage() + " - - - " + "The query could not be executed; SQLState=" + o_exc.getSQLState() + "; ErrorCode=" + o_exc.getErrorCode() + "; Message=" + o_exc.getMessage() + "; Query=" + this.s_query);
 				}
 			}
 			
@@ -496,7 +505,7 @@ public class BaseJDBC extends Base {
 					this.o_currentConnection.rollback();
 					this.o_currentConnection.setAutoCommit(true);
 				} catch (java.sql.SQLException o_excRollback) {
-					throw new IllegalAccessException("Could not rollback transaction; SQLState=" + o_excRollback.getSQLState() + "; ErrorCode=" + o_excRollback.getErrorCode() + "; Message=" + o_excRollback.getMessage());
+					throw new IllegalAccessException("Could not rollback transaction; SQLState=" + o_excRollback.getSQLState() + "; ErrorCode=" + o_excRollback.getErrorCode() + "; Message=" + o_excRollback.getMessage() + " - - - " + "The query could not be executed or has no valid result.");
 				}
 			}
 			
@@ -638,6 +647,12 @@ public class BaseJDBC extends Base {
 	private java.util.LinkedHashMap<String, Object> fetchRow() throws java.sql.SQLException {
 		java.util.LinkedHashMap<String, Object> o_row = new java.util.LinkedHashMap<String, Object>();
 		
+		/* date time formatter instance with datetime format for later use */
+		java.time.format.DateTimeFormatter dtf_datetime_instance = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+		
+		/* date time formatter instance with time format for later use */
+		java.time.format.DateTimeFormatter dtf_time_instance = java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss");
+
 		for (int i = 0; i < this.o_currentResultMetaData.getColumnCount(); i++) {
 			int i_type = this.o_currentResultMetaData.getColumnType(i + 1);
 			String s_name = this.o_currentResultMetaData.getColumnName(i + 1);
@@ -723,10 +738,10 @@ public class BaseJDBC extends Base {
 							o_row.put(s_name, null);
 						} else if (net.forestany.forestj.lib.Helper.isDateTime(s_value)) {
 							if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("get column TIME value with java.sql.Time.valueOf + net.forestany.forestj.lib.Helper.fromDateTimeString");
-							o_row.put(s_name, java.sql.Time.valueOf( net.forestany.forestj.lib.Helper.fromDateTimeString(s_value).toLocalTime() ) );
+							o_row.put(s_name, java.sql.Time.valueOf( dtf_time_instance.format(net.forestany.forestj.lib.Helper.fromDateTimeString(s_value).toLocalTime()) ));
 						} else if (net.forestany.forestj.lib.Helper.isTime(s_value)) {
 							if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("get column TIME value with java.sql.Time.valueOf + net.forestany.forestj.lib.Helper.fromTimeString");
-							o_row.put(s_name, java.sql.Time.valueOf( net.forestany.forestj.lib.Helper.fromTimeString(s_value) ) );
+							o_row.put(s_name, java.sql.Time.valueOf( dtf_time_instance.format(net.forestany.forestj.lib.Helper.fromTimeString(s_value)) ));
 						} else {
 							throw new java.sql.SQLException("Invalid datetime or time format for SQLITE");
 						}
@@ -744,10 +759,10 @@ public class BaseJDBC extends Base {
 							o_row.put(s_name, null);
 						} else if (net.forestany.forestj.lib.Helper.isDateTime(s_value)) {
 							if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("get column DATETIME value with java.sql.Timestamp.valueOf + net.forestany.forestj.lib.Helper.fromDateTimeString");
-							o_row.put(s_name, java.sql.Timestamp.valueOf( net.forestany.forestj.lib.Helper.fromDateTimeString(s_value) ) );
+							o_row.put(s_name, java.sql.Timestamp.valueOf( dtf_datetime_instance.format(net.forestany.forestj.lib.Helper.fromDateTimeString(s_value)) ));
 						} else if (net.forestany.forestj.lib.Helper.isDate(s_value)) {
 							if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("get column DATE value with java.sql.Timestamp.valueOf + java.time.LocalDateTime.of + net.forestany.forestj.lib.Helper.fromDateString");
-							o_row.put(s_name, java.sql.Timestamp.valueOf( java.time.LocalDateTime.of( net.forestany.forestj.lib.Helper.fromDateString(s_value), java.time.LocalTime.of(0, 0, 0) ) ) );
+							o_row.put(s_name, java.sql.Timestamp.valueOf( dtf_datetime_instance.format(java.time.LocalDateTime.of( net.forestany.forestj.lib.Helper.fromDateString(s_value), java.time.LocalTime.of(0, 0, 0))) ));
 						} else {
 							throw new java.sql.SQLException("Invalid datetime or date format for SQLITE");
 						}
@@ -760,7 +775,7 @@ public class BaseJDBC extends Base {
 				case -104: /* INTERVALDS for ORACLE */
 					if (this.e_baseGateway == BaseGateway.SQLITE) {
 						if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("get column TIME value with result.getString with support of java.sql.Time.valueOf + net.forestany.forestj.lib.Helper.fromTimeString");
-						o_row.put(s_name, java.sql.Time.valueOf( net.forestany.forestj.lib.Helper.fromTimeString(this.o_currentResult.getString(s_name)) ) );
+						o_row.put(s_name, java.sql.Time.valueOf( dtf_time_instance.format(net.forestany.forestj.lib.Helper.fromTimeString(this.o_currentResult.getString(s_name))) ));
 					} else if (this.e_baseGateway == BaseGateway.ORACLE) {
 						/* it is complicated with ORACLE times */
 						String s_temp = this.o_currentResult.getString(s_name);
@@ -824,7 +839,7 @@ public class BaseJDBC extends Base {
 							}
 							
 							if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("get column value with java.sql.Time.valueOf + net.forestany.forestj.lib.Helper.fromTimeString - oracle is complicated");
-							o_row.put(s_name, java.sql.Time.valueOf( net.forestany.forestj.lib.Helper.fromTimeString(s_temp) ));
+							o_row.put(s_name, java.sql.Time.valueOf( dtf_time_instance.format(net.forestany.forestj.lib.Helper.fromTimeString(s_temp)) ));
 						}
 					} else {
 						if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("get column value with result.getTime");
@@ -834,7 +849,7 @@ public class BaseJDBC extends Base {
 				case java.sql.Types.TIMESTAMP:
 					if (this.e_baseGateway == BaseGateway.SQLITE) {
 						if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("get column TIMESTAMP value with result.getString with support of java.sql.Timestamp.valueOf + net.forestany.forestj.lib.Helper.fromDateTimeString");
-						o_row.put(s_name, java.sql.Timestamp.valueOf( net.forestany.forestj.lib.Helper.fromDateTimeString(this.o_currentResult.getString(s_name)) ) );
+						o_row.put(s_name, java.sql.Timestamp.valueOf( dtf_datetime_instance.format(net.forestany.forestj.lib.Helper.fromDateTimeString(this.o_currentResult.getString(s_name))) ));
 					} else {
 						if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("get column value with result.getTimestamp");
 						o_row.put(s_name, this.o_currentResult.getTimestamp(s_name));

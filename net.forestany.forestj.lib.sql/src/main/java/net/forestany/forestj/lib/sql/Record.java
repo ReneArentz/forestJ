@@ -64,7 +64,11 @@ public abstract class Record<T> {
 	 * amount records
 	 */
 	protected int AmountRecords = 0;
-	
+	/**
+	 * auto transaction flag
+	 */
+	public boolean AutoTransaction = true;
+
 	/**
 	 * list of columns
 	 */
@@ -556,7 +560,7 @@ public abstract class Record<T> {
 												net.forestany.forestj.lib.Global.ilogFiner("execute query");
 		
 		/* execute select query */
-		java.util.List<java.util.LinkedHashMap<String, Object>> a_rows = (this.OtherBaseSource != null) ? this.OtherBaseSource.OtherBaseSourceImplementation(o_querySelect) : net.forestany.forestj.lib.Global.get().Base.fetchQuery(o_querySelect);
+		java.util.List<java.util.LinkedHashMap<String, Object>> a_rows = (this.OtherBaseSource != null) ? this.OtherBaseSource.OtherBaseSourceImplementation(o_querySelect) : net.forestany.forestj.lib.Global.get().Base.fetchQuery(o_querySelect, this.AutoTransaction);
 		
 												net.forestany.forestj.lib.Global.ilogFiner("executed query");
 		
@@ -829,7 +833,7 @@ public abstract class Record<T> {
 												net.forestany.forestj.lib.Global.ilogFiner("execute query");
 		
 		/* execute select queries and get all rows */
-		java.util.List<java.util.LinkedHashMap<String, Object>> a_rows = (this.OtherBaseSource != null) ? this.OtherBaseSource.OtherBaseSourceImplementation(o_querySelect) : net.forestany.forestj.lib.Global.get().Base.fetchQuery(o_querySelect);
+		java.util.List<java.util.LinkedHashMap<String, Object>> a_rows = (this.OtherBaseSource != null) ? this.OtherBaseSource.OtherBaseSourceImplementation(o_querySelect) : net.forestany.forestj.lib.Global.get().Base.fetchQuery(o_querySelect, this.AutoTransaction);
 		
 												net.forestany.forestj.lib.Global.ilogFiner("executed query");
 		
@@ -966,7 +970,7 @@ public abstract class Record<T> {
 												net.forestany.forestj.lib.Global.ilogFiner("execute query");
 		
 		/* execute select query and get result */
-		java.util.List<java.util.LinkedHashMap<String, Object>> a_rows = (this.OtherBaseSource != null) ? this.OtherBaseSource.OtherBaseSourceImplementation(o_querySelect) : net.forestany.forestj.lib.Global.get().Base.fetchQuery(o_querySelect);
+		java.util.List<java.util.LinkedHashMap<String, Object>> a_rows = (this.OtherBaseSource != null) ? this.OtherBaseSource.OtherBaseSourceImplementation(o_querySelect) : net.forestany.forestj.lib.Global.get().Base.fetchQuery(o_querySelect, this.AutoTransaction);
 		
 												net.forestany.forestj.lib.Global.ilogFiner("executed query");
 		
@@ -1153,7 +1157,7 @@ public abstract class Record<T> {
 					/* iterate each unique field/column */
 					for (int i = 0; i < a_uniques.length; i++) {
 						/* gather all unique field/column values */
-						s_uniqueValues = this.getColumnValue(s_unique).toString() + ", ";
+						s_uniqueValues = this.getColumnValue(a_uniques[i]).toString() + ", ";
 					}
 					
 					/* remove last ', ' separator */
@@ -1213,7 +1217,7 @@ public abstract class Record<T> {
 												net.forestany.forestj.lib.Global.ilogFiner("execute insert query");
 		
 		/* execute insert query and get result */
-		java.util.List<java.util.LinkedHashMap<String, Object>> a_rows = (this.OtherBaseSource != null) ? this.OtherBaseSource.OtherBaseSourceImplementation(o_queryInsert) : net.forestany.forestj.lib.Global.get().Base.fetchQuery(o_queryInsert);
+		java.util.List<java.util.LinkedHashMap<String, Object>> a_rows = (this.OtherBaseSource != null) ? this.OtherBaseSource.OtherBaseSourceImplementation(o_queryInsert) : net.forestany.forestj.lib.Global.get().Base.fetchQuery(o_queryInsert, this.AutoTransaction);
 		
 												net.forestany.forestj.lib.Global.ilogFiner("insert query executed");
 		
@@ -1499,7 +1503,7 @@ public abstract class Record<T> {
 						/* iterate each unique field/column */
 						for (int i = 0; i < a_uniques.length; i++) {
 							/* gather all unique field/column values */
-							s_uniqueValues = this.getColumnValue(s_unique).toString() + ", ";
+							s_uniqueValues = this.getColumnValue(a_uniques[i]).toString() + ", ";
 						}
 						
 						/* remove last ', ' separator */
@@ -1581,7 +1585,7 @@ public abstract class Record<T> {
 												net.forestany.forestj.lib.Global.ilogFiner("execute query update");
 		
 		/* execute update query and get result */
-		java.util.List<java.util.LinkedHashMap<String, Object>> a_rows = (this.OtherBaseSource != null) ? this.OtherBaseSource.OtherBaseSourceImplementation(o_queryUpdate) : net.forestany.forestj.lib.Global.get().Base.fetchQuery(o_queryUpdate);
+		java.util.List<java.util.LinkedHashMap<String, Object>> a_rows = (this.OtherBaseSource != null) ? this.OtherBaseSource.OtherBaseSourceImplementation(o_queryUpdate) : net.forestany.forestj.lib.Global.get().Base.fetchQuery(o_queryUpdate, this.AutoTransaction);
 		
 												net.forestany.forestj.lib.Global.ilogFiner("executed query update");
 		
@@ -1664,7 +1668,7 @@ public abstract class Record<T> {
 												net.forestany.forestj.lib.Global.ilogFiner("execute query delete");
 		
 		/* execute delete query and get result */
-		java.util.List<java.util.LinkedHashMap<String, Object>> a_rows = (this.OtherBaseSource != null) ? this.OtherBaseSource.OtherBaseSourceImplementation(o_queryDelete) : net.forestany.forestj.lib.Global.get().Base.fetchQuery(o_queryDelete);
+		java.util.List<java.util.LinkedHashMap<String, Object>> a_rows = (this.OtherBaseSource != null) ? this.OtherBaseSource.OtherBaseSourceImplementation(o_queryDelete) : net.forestany.forestj.lib.Global.get().Base.fetchQuery(o_queryDelete, this.AutoTransaction);
 		
 												net.forestany.forestj.lib.Global.ilogFiner("executed query delete");
 		
@@ -1716,7 +1720,7 @@ public abstract class Record<T> {
 												net.forestany.forestj.lib.Global.ilogFiner("execute query truncate");
 		
 		/* execute truncate query and get result */
-		java.util.List<java.util.LinkedHashMap<String, Object>> a_rows = (this.OtherBaseSource != null) ? this.OtherBaseSource.OtherBaseSourceImplementation(o_queryTruncate) : net.forestany.forestj.lib.Global.get().Base.fetchQuery(o_queryTruncate);
+		java.util.List<java.util.LinkedHashMap<String, Object>> a_rows = (this.OtherBaseSource != null) ? this.OtherBaseSource.OtherBaseSourceImplementation(o_queryTruncate) : net.forestany.forestj.lib.Global.get().Base.fetchQuery(o_queryTruncate, this.AutoTransaction);
 		
 												net.forestany.forestj.lib.Global.ilogFiner("executed query truncate");
 		
