@@ -538,6 +538,12 @@ public class BaseNoSQLMDB extends Base {
 			}
 		}
 		
+		/* date time formatter instance with datetime format for later use */
+		java.time.format.DateTimeFormatter dtf_datetime_instance = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+		/* date time formatter instance with time format for later use */
+		java.time.format.DateTimeFormatter dtf_time_instance = java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss");
+
 		/* iterate adjusted document to create row object */
 		for (java.util.Map.Entry<String, Object> o_entry : o_adjustedDocument.entrySet()) {
 			/* column name */
@@ -603,11 +609,11 @@ public class BaseNoSQLMDB extends Base {
 						if (s_utcValue.startsWith("1970-01-01")) { /* we have a time value */
 							/* create java.sql.Time object with local date time's local time value */
 							if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("get column value with java.sql.Time.valueOf + java.util.Date.class.cast + net.forestany.forestj.lib.Helper.utilDateToISO8601UTC + net.forestany.forestj.lib.Helper.fromDateTimeString");
-							o_row.put(s_column, java.sql.Time.valueOf( o_localDateTime.toLocalTime() ));
+							o_row.put(s_column, java.sql.Time.valueOf( dtf_time_instance.format(o_localDateTime.toLocalTime()) ));
 						} else { /* normal timestamp */
-							/* create java.sql.Time object with local date time value */
+							/* create java.sql.Timestamp object with local date time value */
 							if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("get column value with java.sql.Timestamp.valueOf + java.util.Date.class.cast + net.forestany.forestj.lib.Helper.utilDateToISO8601UTC + net.forestany.forestj.lib.Helper.fromDateTimeString");
-							o_row.put(s_column, java.sql.Timestamp.valueOf( o_localDateTime ));
+							o_row.put(s_column, java.sql.Timestamp.valueOf( dtf_datetime_instance.format(o_localDateTime) ));
 						}
 					} else {
 						b_excDate = true;

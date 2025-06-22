@@ -321,13 +321,13 @@ public abstract class Record<T> {
 			
 			if (this.getClass().getDeclaredField(p_s_column).getType().getTypeName().contentEquals("java.time.LocalDateTime")) {
 				/* if we have column field with type java.time.LocalDateTime we have to do a cast from java.sql.Timestamp */
-				o_value = (java.sql.Timestamp.class.cast(o_value)).toLocalDateTime();
+				o_value = net.forestany.forestj.lib.Helper.fromDateTimeString( net.forestany.forestj.lib.Helper.utilDateToDateTimeString( java.sql.Timestamp.class.cast(o_value) ) );
 			} else if (this.getClass().getDeclaredField(p_s_column).getType().getTypeName().contentEquals("java.time.LocalDate")) { 
 				/* if we have column field with type java.time.LocalDate we have to do a cast from java.sql.Timestamp */
-				o_value = (java.sql.Timestamp.class.cast(o_value)).toLocalDateTime().toLocalDate();
+				o_value = net.forestany.forestj.lib.Helper.fromDateTimeString( net.forestany.forestj.lib.Helper.utilDateToDateTimeString( java.sql.Timestamp.class.cast(o_value) ) ).toLocalDate();
 			} else if (this.getClass().getDeclaredField(p_s_column).getType().getTypeName().contentEquals("java.time.LocalTime")) {
 				/* if we have column field with type java.time.LocalTime we have to do a cast from java.sql.Timestamp */
-				o_value = (java.sql.Time.class.cast(o_value)).toLocalTime();
+				o_value = net.forestany.forestj.lib.Helper.fromDateTimeString( net.forestany.forestj.lib.Helper.utilDateToDateTimeString( java.sql.Time.class.cast(o_value) ) ).toLocalTime();
 			} else if ( (this.getClass().getDeclaredField(p_s_column).getType().getTypeName().toLowerCase().contains("bigdecimal")) && (o_value.getClass().getTypeName().toLowerCase().contains("string")) ) {
 				/* recognize empty null value for java.math.BigDecimal */
 				if ( (o_value.toString().length() == 0) || (o_value.toString().contentEquals("NULL")) ) {

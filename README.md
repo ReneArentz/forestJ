@@ -23,7 +23,7 @@ forestJ framework will be released under the **GPLv3 license** and the **MIT lic
 
 ## Releases
 
-### fJ-sql-lib 1.0.2 (stable) + fJ-sql-mariadb 1.0.2 (stable) + fJ-sql-mssql 1.0.2 (stable) + fJ-sql-nosqlmdb 1.0.2 (stable) + fJ-sql-oracle 1.0.2 (stable) + fJ-sql-pgsql 1.0.2 (stable) + fJ-sql-sqlite 1.0.2 (stable)
+### fJ-sql-lib 1.0.3 (stable) + fJ-sql-mariadb 1.0.3 (stable) + fJ-sql-mssql 1.0.3 (stable) + fJ-sql-nosqlmdb 1.0.3 (stable) + fJ-sql-oracle 1.0.3 (stable) + fJ-sql-pgsql 1.0.3 (stable) + fJ-sql-sqlite 1.0.3 (stable)
 Added control of auto transaction within Record class. Bug fixed in connection with java.sql.Timestamp, java.sql.Date and java.sql.Time. *06/2025*
 
 ### 1.0.15 (stable)
