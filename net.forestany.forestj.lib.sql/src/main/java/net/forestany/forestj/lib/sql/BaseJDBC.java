@@ -696,7 +696,7 @@ public class BaseJDBC extends Base {
 					break;
 				case java.sql.Types.INTEGER:
 				case java.sql.Types.ROWID:
-					if ( (this.e_baseGateway == BaseGateway.SQLITE) && (s_type.equals("BIT")) ) {
+					if ( (this.e_baseGateway == BaseGateway.SQLITE) && (s_type != null) && (s_type.equals("BIT")) ) {
 						if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("get column value with result.getBoolean");
 						o_row.put(s_name, this.o_currentResult.getBoolean(s_name));
 					} else {
@@ -710,7 +710,7 @@ public class BaseJDBC extends Base {
 					break;
 				case java.sql.Types.BIT:
 				case java.sql.Types.BOOLEAN:
-					if ( (this.e_baseGateway == BaseGateway.MARIADB) && (s_type.equals("BIT")) ) {
+					if ( (this.e_baseGateway == BaseGateway.MARIADB) && (s_type != null) && (s_type.equals("BIT")) ) {
 						if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("get column value with result.getBoolean");
 						o_row.put(s_name, this.o_currentResult.getBoolean(s_name));
 					} else {
@@ -730,7 +730,7 @@ public class BaseJDBC extends Base {
 				case java.sql.Types.NVARCHAR:
 				case java.sql.Types.LONGVARCHAR:
 				case java.sql.Types.CLOB:
-					if ( (this.e_baseGateway == BaseGateway.SQLITE) && (s_type.equals("TIME")) ) {
+					if ( (this.e_baseGateway == BaseGateway.SQLITE) && (s_type != null) && (s_type.equals("TIME")) ) {
 						String s_value = this.o_currentResult.getString(s_name);
 						
 						if ( (s_value == null) || (s_value.length() < 1) ) {

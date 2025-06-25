@@ -1309,7 +1309,10 @@ public abstract class Record<T> {
 														net.forestany.forestj.lib.Global.ilogFinest("check if field/column '" + s_column + "' has changed");
 				
 				/* compare field/column value of current record and stored image record as this record was retrieved at least once */
-				if ( !this.getColumnValue(s_column).equals(this.getClass().cast(this.o_recordImage).getColumnValue(s_column)) ) {
+				if (!(
+					( (this.getColumnValue(s_column) == null) && (this.getClass().cast(this.o_recordImage).getColumnValue(s_column) == null) ) ||
+					( (this.getColumnValue(s_column) != null) && (this.getColumnValue(s_column).equals(this.getClass().cast(this.o_recordImage).getColumnValue(s_column))) )
+				)) {
 															net.forestany.forestj.lib.Global.ilogFinest("field/column '" + s_column + "' has changed");
 					
 					/* values are not equal, so at least one field has changed */
@@ -1337,7 +1340,10 @@ public abstract class Record<T> {
 													net.forestany.forestj.lib.Global.ilogFinest("check if primary field/column '" + s_primary + "' has changed");
 			
 			/* compare field/column value of current record and stored image record as this record was retrieved at least once */
-			if ( !this.getColumnValue(s_primary).equals(this.getClass().cast(this.o_recordImage).getColumnValue(s_primary)) ) {
+			if (!(
+				( (this.getColumnValue(s_primary) == null) && (this.getClass().cast(this.o_recordImage).getColumnValue(s_primary) == null) ) ||
+				( (this.getColumnValue(s_primary) != null) && (this.getColumnValue(s_primary).equals(this.getClass().cast(this.o_recordImage).getColumnValue(s_primary))) )
+			)) {
 														net.forestany.forestj.lib.Global.ilogFinest("primary field/column '" + s_primary + "' has changed");
 				
 				/* values are not equal, so at least one primary field has changed */
@@ -1425,7 +1431,10 @@ public abstract class Record<T> {
 				/* iterate each unique key field/column */
 				for (int i = 0; i < a_uniques.length; i++) {
 					/* compare field/column value of current record and stored image record as this record was retrieved at least once */
-					if ( !this.getColumnValue(a_uniques[i]).equals(this.getClass().cast(this.o_recordImage).getColumnValue(a_uniques[i])) ) {
+					if (!(
+						( (this.getColumnValue(a_uniques[i]) == null) && (this.getClass().cast(this.o_recordImage).getColumnValue(a_uniques[i]) == null) ) ||
+						( (this.getColumnValue(a_uniques[i]) != null) && (this.getColumnValue(a_uniques[i]).equals(this.getClass().cast(this.o_recordImage).getColumnValue(a_uniques[i]))) )
+					)) {
 																net.forestany.forestj.lib.Global.ilogFiner("unique constraint values changed: '" + s_unique + "'");
 						
 						/* add unique key to list */
@@ -1437,7 +1446,10 @@ public abstract class Record<T> {
 				}
 			} else {
 				/* compare field/column value of current record and stored image record as this record was retrieved at least once */
-				if ( !this.getColumnValue(s_unique).equals(this.getClass().cast(this.o_recordImage).getColumnValue(s_unique)) ) {
+				if (!(
+					( (this.getColumnValue(s_unique) == null) && (this.getClass().cast(this.o_recordImage).getColumnValue(s_unique) == null) ) ||
+					( (this.getColumnValue(s_unique) != null) && (this.getColumnValue(s_unique).equals(this.getClass().cast(this.o_recordImage).getColumnValue(s_unique))) )
+				)) {
 															net.forestany.forestj.lib.Global.ilogFiner("unique constraint value changed: '" + s_unique + "'");
 					
 					/* add unique key to list */
