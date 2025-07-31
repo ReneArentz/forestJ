@@ -665,19 +665,28 @@ public class BaseJDBC extends Base {
 				/* ORACLE: NUMBER(38,9) is a DECIMAL */
 				i_type = java.sql.Types.DECIMAL;
 			} else if ((this.e_baseGateway == BaseGateway.ORACLE) && (i_type == 2) && (this.o_currentResultMetaData.getPrecision(i + 1) == 38) && (this.o_currentResultMetaData.getScale(i + 1) == 0)) {
-				/* ORACLE: NUMBER(38,0) is a INTEGER */
+				/* ORACLE: NUMBER(38,0) is a sepcial case and handled as an INTEGER */
 				i_type = java.sql.Types.INTEGER;
-			} else if ((this.e_baseGateway == BaseGateway.ORACLE) && (i_type == 2) && (this.o_currentResultMetaData.getPrecision(i + 1) == 5) && (this.o_currentResultMetaData.getScale(i + 1) == 0)) {
-				/* ORACLE: NUMBER(5,0) is a SMALLINT */
+			} else if ((this.e_baseGateway == BaseGateway.ORACLE) && (i_type == 2) && (this.o_currentResultMetaData.getPrecision(i + 1) > 0) && (this.o_currentResultMetaData.getPrecision(i + 1) < 6) && (this.o_currentResultMetaData.getScale(i + 1) == 0)) {
+				/* ORACLE: NUMBER(1-5,0) is a SMALLINT */
 				i_type = java.sql.Types.SMALLINT;
+			} else if ((this.e_baseGateway == BaseGateway.ORACLE) && (i_type == 2) && (this.o_currentResultMetaData.getPrecision(i + 1) > 5) && (this.o_currentResultMetaData.getPrecision(i + 1) < 10) && (this.o_currentResultMetaData.getScale(i + 1) == 0)) {
+				/* ORACLE: NUMBER(6-9,0) is a INTEGER */
+				i_type = java.sql.Types.INTEGER;
+			} else if ((this.e_baseGateway == BaseGateway.ORACLE) && (i_type == 2) && (this.o_currentResultMetaData.getPrecision(i + 1) > 9) && (this.o_currentResultMetaData.getScale(i + 1) == 0)) {
+				/* ORACLE: NUMBER(10-99,0) is a BIGINT */
+				i_type = java.sql.Types.BIGINT;
 			} else if ((this.e_baseGateway == BaseGateway.ORACLE) && (i_type == java.sql.Types.CHAR) && (this.o_currentResultMetaData.getPrecision(i + 1) == 1) && (this.o_currentResultMetaData.getScale(i + 1) == 0)) {
 				/* ORACLE: CHAR(1,0) is a BOOLEAN */
 				i_type = java.sql.Types.BOOLEAN;
 			} else if ((this.e_baseGateway == BaseGateway.ORACLE) && (i_type == 2) && (this.o_currentResultMetaData.getPrecision(i + 1) == 126) && (this.o_currentResultMetaData.getScale(i + 1) == -127)) {
 				/* ORACLE: NUMBER(126,-127) is a FLOAT */
 				i_type = java.sql.Types.DOUBLE;
+			} else if ((this.e_baseGateway == BaseGateway.ORACLE) && (i_type == 2) && (this.o_currentResultMetaData.getPrecision(i + 1) > 1) && (this.o_currentResultMetaData.getScale(i + 1) != 0)) {
+				/* ORACLE: NUMBER(greater one, not zero) is a DECIMAL */
+				i_type = java.sql.Types.DECIMAL;
 			} else if ((this.e_baseGateway == BaseGateway.ORACLE) && (i_type == 2)) {
-				/* ORACLE: Any other NUMBER is a INTEGER */
+				/* ORACLE: Any other NUMBER is an INTEGER */
 				i_type = java.sql.Types.INTEGER;
 			} else if ((this.e_baseGateway == BaseGateway.ORACLE) && (i_type == java.sql.Types.LONGVARCHAR)) {
 				/* ORACLE: ANY other LONGVARCHAR is a BIGINT */
@@ -717,7 +726,7 @@ public class BaseJDBC extends Base {
 						if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("get column value with result.getString");
 						String s_foo = this.o_currentResult.getString(s_name);
 						
-						if (s_foo.contentEquals("1")) { /* read char '1' as true */
+						if ((s_foo != null) && (s_foo.contentEquals("1"))) { /* read char '1' as true */
 							o_row.put(s_name, true);
 						} else { /* otherwise everything else as false */
 							o_row.put(s_name, false);

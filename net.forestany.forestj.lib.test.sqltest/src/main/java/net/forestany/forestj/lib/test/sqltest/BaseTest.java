@@ -225,7 +225,13 @@ public class BaseTest {
 										}
 									}
 								} else if (k == l++) { /* Int */
-									assertEquals(Integer.valueOf(1337), Integer.class.cast(o_object), "object[" + o_object.toString() + "] is not equal to '1337'");
+									/* thanks to oracle NUMBER(Precision, Scale), a NUMBER(10, 0) can be an integer or a long; so we always use getLong in BaseJDBC */
+									if (o_glob.BaseGateway == net.forestany.forestj.lib.sqlcore.BaseGateway.ORACLE) {
+										/* cast long to int will fail, so we must parse it */
+										assertEquals(Integer.valueOf(1337), Integer.parseInt(o_object.toString()), "object[" + o_object.toString() + "] is not equal to '1337'");
+									} else {
+										assertEquals(Integer.valueOf(1337), Integer.class.cast(o_object), "object[" + o_object.toString() + "] is not equal to '1337'");
+									}
 								} else if (k == l++) { /* BigInt */
 									if (j == 0) {
 										assertEquals(Long.valueOf("1234567890123"), Long.class.cast(o_object), "object[" + o_object.toString() + "] is not equal to '1234567890123'");

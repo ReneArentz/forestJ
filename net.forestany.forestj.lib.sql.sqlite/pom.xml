@@ -6,13 +6,13 @@
 	<parent>
 		<groupId>net.forestany.forestj</groupId>
 		<artifactId>Parent</artifactId>
-		<version>1.12</version>
+		<version>1.14</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
 	<groupId>net.forestany.forestj.sql</groupId>
 	<artifactId>fJ-sql-sqlite</artifactId>
-	<version>1.0.4</version>
+	<version>1.0.6</version>
 	<packaging>jar</packaging>
 
 	<name>forestj sql sqlite</name>

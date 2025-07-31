@@ -340,7 +340,7 @@ public abstract class Record<T> {
 				} else {
 					o_value = (Object)true;
 				}
-			} else if ( (net.forestany.forestj.lib.Global.get().BaseGateway == BaseGateway.NOSQLMDB) && (this.getClass().getDeclaredField(p_s_column).getType().getTypeName().toLowerCase().contains("short")) && ( (o_value.getClass().getTypeName().toLowerCase().contains("integer")) || (o_value.getClass().getTypeName().toLowerCase().contains("long")) ) ) {
+			} else if ( (net.forestany.forestj.lib.Global.get().BaseGateway == BaseGateway.NOSQLMDB) && (this.getClass().getDeclaredField(p_s_column).getType().getTypeName().toLowerCase().contains("short")) && ( (o_value.getClass().getTypeName().toLowerCase().contains("int")) || (o_value.getClass().getTypeName().toLowerCase().contains("long")) ) ) {
 				/* nosqlmdb does not support short or smallint, only int32 and long - so we must transpose int value to short value */
 				o_value = (Object)Short.valueOf(o_value.toString());
 			}
@@ -434,19 +434,49 @@ public abstract class Record<T> {
 		/* iterate each column in row */
 		o_row.forEach( (s_column, o_value) -> {
 			try {
+				Object o_foo = o_value;
+
 														if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("check if field exists '" + s_column + "'");
 				
 				/* check if column exists as field in current record class */
 				if (fieldExists(s_column)) {
+					/* thanks to oracle NUMBER(Precision, Scale), a NUMBER(10, 0) can be an integer or a long; so we always use getLong in BaseJDBC */
+					if (
+						(net.forestany.forestj.lib.Global.get().BaseGateway == BaseGateway.ORACLE) && 
+						(this.getClass().getDeclaredField("Column" + s_column).getType().getTypeName().toLowerCase().contains("int")) && 
+						(o_foo != null) && 
+						(o_foo.getClass().getTypeName().toLowerCase().contains("long")) && 
+						(net.forestany.forestj.lib.Helper.isInteger(o_foo.toString()))
+					) {
+																if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("parsing long as integer for field '" + s_column + "'");
+
+						/* storing long value into integer will not work, but if isInteger was successful we can parse it as integer */
+						o_foo = (Object)Integer.parseInt(o_foo.toString());
+					}
+
+					/* thanks to oracle NUMBER(Precision, Scale), a NUMBER(5, 0) can be a short or an integer; so we always use getInt in BaseJDBC */
+					if (
+						(net.forestany.forestj.lib.Global.get().BaseGateway == BaseGateway.ORACLE) && 
+						(this.getClass().getDeclaredField("Column" + s_column).getType().getTypeName().toLowerCase().contains("short")) && 
+						(o_foo != null) && 
+						(o_foo.getClass().getTypeName().toLowerCase().contains("int")) && 
+						(net.forestany.forestj.lib.Helper.isShort(o_foo.toString()))
+					) {
+																if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("parsing integer as short for field '" + s_column + "'");
+
+						/* storing integer value into short will not work, but if isShort was successful we can parse it as short */
+						o_foo = (Object)Short.parseShort(o_foo.toString());
+					}
+
 															if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("set column value for record object");
 					
 					/* set column value in current record class */
-					this.setColumnValue(s_column, o_value);
+					this.setColumnValue(s_column, o_foo);
 					
 															if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("set column value for record image");
 					
 					/* set column value in record image */
-					(this.getClass().cast(this.o_recordImage)).setColumnValue(s_column, o_value);
+					(this.getClass().cast(this.o_recordImage)).setColumnValue(s_column, o_foo);
 				} else {
 					net.forestany.forestj.lib.Global.ilogWarning(s_column + " does not exist");
 				}
