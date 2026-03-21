@@ -48,6 +48,11 @@ public class ZIP {
 	public static long getSize(String p_s_sourceLocation) throws IllegalArgumentException, java.io.IOException, IllegalStateException {
 		long l_return = 0;
 		
+		/* check if source location is set */
+    	if (net.forestany.forestj.lib.Helper.isStringEmpty(p_s_sourceLocation)) {
+    		throw new IllegalArgumentException("Invalid source location - null or empty");
+    	}
+
 		/* check if source location ends with '.zip' */
     	if (!p_s_sourceLocation.endsWith(".zip")) {
     		throw new IllegalArgumentException("Invalid source location[" + p_s_sourceLocation + "] - must end with '.zip'");
@@ -131,6 +136,11 @@ public class ZIP {
 	public static boolean checkArchive(String p_s_sourceLocation, ZIP.IDelegate p_itf_delegate) throws IllegalArgumentException, java.io.IOException, IllegalStateException {
 		boolean b_return = true;
 		
+		/* check if source location is set */
+    	if (net.forestany.forestj.lib.Helper.isStringEmpty(p_s_sourceLocation)) {
+    		throw new IllegalArgumentException("Invalid source location - null or empty");
+    	}
+
 		/* check if source location ends with '.zip' */
     	if (!p_s_sourceLocation.endsWith(".zip")) {
     		throw new IllegalArgumentException("Source location[" + p_s_sourceLocation + "] must end with '.zip'");
@@ -247,6 +257,11 @@ public class ZIP {
 	 * @see Long
 	 */
 	public static void zip(String p_s_sourceLocation, String p_s_destinationLocation, ZIP.IDelegate p_itf_delegate) throws IllegalArgumentException, java.io.IOException, IllegalStateException {
+		/* check if destination location is set */
+    	if (net.forestany.forestj.lib.Helper.isStringEmpty(p_s_destinationLocation)) {
+    		throw new IllegalArgumentException("Invalid destination location - null or empty");
+    	}
+
 		/* check if destination location ends with '.zip' */
 		if (!p_s_destinationLocation.endsWith(".zip")) {
     		throw new IllegalArgumentException("Destination location[" + p_s_destinationLocation + "] must end with '.zip'");
@@ -281,8 +296,7 @@ public class ZIP {
             	}
             	
             	/* skip zip file we want to create, if it is in our source location itself */
-                if (o_listingElement.getFullName().contentEquals(p_s_destinationLocation))
-                {
+                if ((o_listingElement.getFullName() != null) && (o_listingElement.getFullName().contentEquals(p_s_destinationLocation))) {
                     continue;
                 }
             	
@@ -292,7 +306,7 @@ public class ZIP {
             											net.forestany.forestj.lib.Global.ilogMass("start zipping file to archive '" + o_zipEntry.getName() + "'");
             	
             	/* overwrite zip entry file name, if we have multiple files and recursive directories */
-            	if (!o_listingElement.getFullName().contentEquals(p_s_sourceLocation)) {
+            	if ((o_listingElement.getFullName() != null) && (!o_listingElement.getFullName().contentEquals(p_s_sourceLocation))) {
             		o_zipEntry = new java.util.zip.ZipEntry(o_listingElement.getFullName().substring(p_s_sourceLocation.length()));
             	}
             	
@@ -403,7 +417,12 @@ public class ZIP {
 	 * @see Long
 	 */
     public static void unzip(String p_s_sourceLocation, String p_s_destinationLocation, boolean p_b_createDestinationPath, boolean p_b_deleteSourceLocation, ZIP.IDelegate p_itf_delegate) throws IllegalArgumentException, java.io.IOException, IllegalStateException {
-    	/* check if source location ends with '.zip' */
+    	/* check if source location is set */
+    	if (net.forestany.forestj.lib.Helper.isStringEmpty(p_s_sourceLocation)) {
+    		throw new IllegalArgumentException("Invalid source location - null or empty");
+    	}
+
+		/* check if source location ends with '.zip' */
     	if (!p_s_sourceLocation.endsWith(".zip")) {
     		throw new IllegalArgumentException("Source location[" + p_s_sourceLocation + "] must end with '.zip'");
     	}
@@ -456,7 +475,7 @@ public class ZIP {
             	String s_pathParentFolder = java.nio.file.Paths.get(p_s_destinationLocation + net.forestany.forestj.lib.io.File.DIR + o_zipEntry.getName()).toFile().getParent();
             	
             	/* check if path to parent folder ends with directory separator */
-            	if (!s_pathParentFolder.endsWith(net.forestany.forestj.lib.io.File.DIR)) {
+            	if ((s_pathParentFolder != null) && (!s_pathParentFolder.endsWith(net.forestany.forestj.lib.io.File.DIR))) {
             		s_pathParentFolder += net.forestany.forestj.lib.io.File.DIR;
             	}
             	

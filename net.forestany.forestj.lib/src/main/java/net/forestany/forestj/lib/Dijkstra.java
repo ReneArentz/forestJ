@@ -84,12 +84,12 @@ public class Dijkstra<T> {
 	 */
 	public void add(T p_o_node, T p_o_to, int p_i_weight) {
 		/* add node to mapping */
-		if (!this.a_mapping.contains(p_o_node)) {
+		if ((this.a_mapping != null) && (!this.a_mapping.contains(p_o_node))) {
 			this.a_mapping.add(p_o_node);
 		}
 		
 		/* add to node value to mapping */
-		if (!this.a_mapping.contains(p_o_to)) {
+		if ((this.a_mapping != null) && (!this.a_mapping.contains(p_o_to))) {
 			this.a_mapping.add(p_o_to);
 		}
 		
@@ -134,7 +134,7 @@ public class Dijkstra<T> {
 		}
 		
 		/* set path to own node to 0 */
-		if (this.a_mapping.contains(p_o_startNode)) {
+		if ((this.a_mapping != null) && (this.a_mapping.contains(p_o_startNode))) {
 			a_shortestPaths[this.a_mapping.indexOf(p_o_startNode)] = 0;
 													net.forestany.forestj.lib.Global.ilogMass("start node '" + p_o_startNode + "' shortest path is '0'");
 		}

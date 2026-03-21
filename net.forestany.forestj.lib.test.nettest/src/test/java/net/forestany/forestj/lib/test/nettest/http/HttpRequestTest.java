@@ -27,7 +27,7 @@ public class HttpRequestTest {
 		try {
 			/* System.setProperty("https.protocols", "TLSv1.2"); */
 			//String s_httpBinUrl = "https://httpbin.org/";
-			String s_httpBinUrl = "https://172.24.91.23/";
+			String s_httpBinUrl = "https://192.168.122.153/";
 			
 			/**
 			 * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -51,7 +51,7 @@ public class HttpRequestTest {
 //		try {
 //			/* System.setProperty("https.protocols", "TLSv1.2"); */
 //			//String s_httpBinUrl = "https://httpbin.org/";
-//			String s_httpBinUrl = "https://172.24.91.114/";
+//			String s_httpBinUrl = "https://192.168.122.153/";
 //			
 //			runHttpRequests(s_httpBinUrl, "38.242.238.254", 2509, false); /* using proxy */
 //		} catch (Exception o_exc) {
@@ -68,7 +68,7 @@ public class HttpRequestTest {
 //		try {
 //			/* System.setProperty("https.protocols", "TLSv1.2"); */
 //			//String s_httpBinUrl = "https://httpbin.org/";
-//			String s_httpBinUrl = "https://172.24.91.114/";
+//			String s_httpBinUrl = "https://192.168.122.153/";
 //					
 //			runHttpRequests(s_httpBinUrl, "103.114.53.2", 8080, false); /* using proxy alternative */
 //		} catch (Exception o_exc) {
@@ -190,8 +190,13 @@ public class HttpRequestTest {
 		
 		assertEquals(o_webRequestPost.getResponseCode(), 200, "Response code is not '200', it is '" + o_webRequestPost.getResponseCode() + "'");
 		assertEquals(o_webRequestPost.getResponseMessage(), "OK", "Response code is not 'OK', it is '" + o_webRequestPost.getResponseMessage() + "'");
-		assertTrue(s_response.contains("\"args\": {},   \"data\": \"\",   \"files\": {    \"file1\": \"[\\r\\n  {\\r\\n    \\\"ProductID\\\": 1,\\r\\n    \\\"ProductName\\\": \\\"Chais\\\",\\r\\n    \\\"SupplierID\\\": 1,\\r\\n    \\\"CategoryID\\\": 1,\\r\\n    \\\"Unit\\\": \\\"10 boxes x 20 bags\\\",\\r\\n    \\\"Price\\\": 18\\r\\n  },\\r\\n"), "Response message does not contain expected string");
 		
+		if (net.forestany.forestj.lib.io.File.NEWLINE.length() == 1) { /* running under linux */
+			assertTrue(s_response.contains("\"args\": {},   \"data\": \"\",   \"files\": {    \"file1\": \"[\\n  {\\n    \\\"ProductID\\\": 1,\\n    \\\"ProductName\\\": \\\"Chais\\\",\\n    \\\"SupplierID\\\": 1,\\n    \\\"CategoryID\\\": 1,\\n    \\\"Unit\\\": \\\"10 boxes x 20 bags\\\",\\n    \\\"Price\\\": 18\\n  },\\n"), "Response message does not contain expected string");
+		} else { /* running under windows */
+			assertTrue(s_response.contains("\"args\": {},   \"data\": \"\",   \"files\": {    \"file1\": \"[\\r\\n  {\\r\\n    \\\"ProductID\\\": 1,\\r\\n    \\\"ProductName\\\": \\\"Chais\\\",\\r\\n    \\\"SupplierID\\\": 1,\\r\\n    \\\"CategoryID\\\": 1,\\r\\n    \\\"Unit\\\": \\\"10 boxes x 20 bags\\\",\\r\\n    \\\"Price\\\": 18\\r\\n  },\\r\\n"), "Response message does not contain expected string");
+		}
+
 		/* ******** */
 		/* 5th test */
 		/* ******** */
@@ -206,9 +211,14 @@ public class HttpRequestTest {
 		
 		assertEquals(o_webRequestPost.getResponseCode(), 200, "Response code is not '200', it is '" + o_webRequestPost.getResponseCode() + "'");
 		assertEquals(o_webRequestPost.getResponseMessage(), "OK", "Response code is not 'OK', it is '" + o_webRequestPost.getResponseMessage() + "'");
-		assertTrue(s_response.contains("\"args\": {},   \"data\": \"\",   \"files\": {    \"file1\": \"[\\r\\n  {\\r\\n    \\\"ProductID\\\": 1,\\r\\n    \\\"ProductName\\\": \\\"Chais\\\",\\r\\n    \\\"SupplierID\\\": 1,\\r\\n    \\\"CategoryID\\\": 1,\\r\\n    \\\"Unit\\\": \\\"10 boxes x 20 bags\\\",\\r\\n    \\\"Price\\\": 18\\r\\n  },\\r\\n"), "Response message does not contain expected string");
 		assertTrue(s_response.contains("\"form\": {    \"param_1\": \"Hello World!\",     \"param_2\": \"1234.56\"  }"), "Response message does not contain expected string");
 			
+		if (net.forestany.forestj.lib.io.File.NEWLINE.length() == 1) { /* running under linux */
+			assertTrue(s_response.contains("\"args\": {},   \"data\": \"\",   \"files\": {    \"file1\": \"[\\n  {\\n    \\\"ProductID\\\": 1,\\n    \\\"ProductName\\\": \\\"Chais\\\",\\n    \\\"SupplierID\\\": 1,\\n    \\\"CategoryID\\\": 1,\\n    \\\"Unit\\\": \\\"10 boxes x 20 bags\\\",\\n    \\\"Price\\\": 18\\n  },\\n"), "Response message does not contain expected string");
+		} else { /* running under windows */
+			assertTrue(s_response.contains("\"args\": {},   \"data\": \"\",   \"files\": {    \"file1\": \"[\\r\\n  {\\r\\n    \\\"ProductID\\\": 1,\\r\\n    \\\"ProductName\\\": \\\"Chais\\\",\\r\\n    \\\"SupplierID\\\": 1,\\r\\n    \\\"CategoryID\\\": 1,\\r\\n    \\\"Unit\\\": \\\"10 boxes x 20 bags\\\",\\r\\n    \\\"Price\\\": 18\\r\\n  },\\r\\n"), "Response message does not contain expected string");
+		}
+
 		/* ******** */
 		/* 6th test */
 		/* ******** */

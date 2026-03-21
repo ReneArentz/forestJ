@@ -6,13 +6,13 @@
 	<parent>
 		<groupId>net.forestany.forestj</groupId>
 		<artifactId>Parent</artifactId>
-		<version>1.9</version>
+		<version>1.16</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
 	<groupId>net.forestany.forestj.net.mail</groupId>
 	<artifactId>fJ-net-mail</artifactId>
-	<version>1.0.1</version>
+	<version>1.0.2</version>
 	<packaging>jar</packaging>
 
 	<name>forestj net mail</name>
@@ -105,7 +105,7 @@
 		<dependency>
 			<groupId>org.eclipse.angus</groupId>
 			<artifactId>jakarta.mail</artifactId>
-			<version>2.0.3</version>
+			<version>2.1.0-M1</version>
 		</dependency>
 	</dependencies>
 

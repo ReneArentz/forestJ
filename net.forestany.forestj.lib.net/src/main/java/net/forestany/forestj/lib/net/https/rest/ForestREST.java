@@ -53,7 +53,7 @@ public abstract class ForestREST {
 		
 		/* check for valid extension in configured allowed list */
 		for (java.util.Map.Entry<String, String> o_allowExtension : this.getSeed().getConfig().getAllowExtensionList().entrySet()) {
-			if (o_allowExtension.getKey().endsWith(p_s_fileExtension)) {
+			if ((o_allowExtension.getKey() != null) && (o_allowExtension.getKey().endsWith(p_s_fileExtension))) {
 				/* file extension found in allow list */
 				s_extension = o_allowExtension.getKey();
 				break;
@@ -89,14 +89,16 @@ public abstract class ForestREST {
 		this.o_seed = p_o_value;
 		this.s_responseContentType = null;
 		
-		if (this.getSeed().getRequestHeader().getMethod().contentEquals("GET")) {
-			return this.handleGET();
-		} else if (this.getSeed().getRequestHeader().getMethod().contentEquals("POST")) {
-			return this.handlePOST();
-		} else if (this.getSeed().getRequestHeader().getMethod().contentEquals("PUT")) {
-			return this.handlePUT();
-		} else if (this.getSeed().getRequestHeader().getMethod().contentEquals("DELETE")) {
-			return this.handleDELETE();
+		if (this.getSeed().getRequestHeader().getMethod() != null) {
+			if (this.getSeed().getRequestHeader().getMethod().contentEquals("GET")) {
+				return this.handleGET();
+			} else if (this.getSeed().getRequestHeader().getMethod().contentEquals("POST")) {
+				return this.handlePOST();
+			} else if (this.getSeed().getRequestHeader().getMethod().contentEquals("PUT")) {
+				return this.handlePUT();
+			} else if (this.getSeed().getRequestHeader().getMethod().contentEquals("DELETE")) {
+				return this.handleDELETE();
+			}
 		}
 		
 		throw new Exception("HTTP method " + this.getSeed().getRequestHeader().getMethod() + " with Mode " + this.getSeed().getConfig().getMode() + " not implemented");

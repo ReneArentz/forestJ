@@ -302,11 +302,11 @@ abstract public class Task<T> implements Runnable {
  	 * set amount cycles tolerating delay
  	 * 
  	 * @param p_i_amountCyclesToleratingDelay int
- 	 * @throws IllegalArgumentException must be at least '1', must be lower than '100'
+ 	 * @throws IllegalArgumentException must be at least '0', must be lower than '100'
  	 */
  	public void setAmountCyclesToleratingDelay(int p_i_amountCyclesToleratingDelay) throws IllegalArgumentException  {
-		if (p_i_amountCyclesToleratingDelay < 1) {
-			throw new IllegalArgumentException("Amount of cycles tolerating delay (1 cycle = " + net.forestany.forestj.lib.net.sock.task.Task.TOLERATING_DELAY_IN_MS + "ms) must be at least '1', but was set to '" + p_i_amountCyclesToleratingDelay + "'");
+		if (p_i_amountCyclesToleratingDelay < 0) {
+			throw new IllegalArgumentException("Amount of cycles tolerating delay (1 cycle = " + net.forestany.forestj.lib.net.sock.task.Task.TOLERATING_DELAY_IN_MS + "ms) must be at least '0', but was set to '" + p_i_amountCyclesToleratingDelay + "'");
 		} else if (p_i_amountCyclesToleratingDelay > 100) {
 			throw new IllegalArgumentException("Amount of cycles tolerating delay (1 cycle = " + net.forestany.forestj.lib.net.sock.task.Task.TOLERATING_DELAY_IN_MS + "ms) must be lower than '100 (" + (net.forestany.forestj.lib.net.sock.task.Task.TOLERATING_DELAY_IN_MS * 100) + "ms)', but was set to '" + p_i_amountCyclesToleratingDelay + "'");
 		} else {

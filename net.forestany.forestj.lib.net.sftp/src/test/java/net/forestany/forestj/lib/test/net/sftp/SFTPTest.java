@@ -28,7 +28,7 @@ public class SFTPTest {
 			String s_fileKnownHosts = net.forestany.forestj.lib.io.File.getCurrentDirectory() + net.forestany.forestj.lib.io.File.DIR + "src" + net.forestany.forestj.lib.io.File.DIR + "test" + net.forestany.forestj.lib.io.File.DIR + "resources" + net.forestany.forestj.lib.io.File.DIR + "sftp" + net.forestany.forestj.lib.io.File.DIR + "known_hosts";
 			
 			net.forestany.forestj.lib.net.sftp.TunnelCredentials o_sshTunnelCredentials = new net.forestany.forestj.lib.net.sftp.TunnelCredentials(
-				"172.24.91.23",
+				"192.168.122.168",
 				2223,
 				22,
 				"userssh",
@@ -36,7 +36,7 @@ public class SFTPTest {
 				s_sshFileAuthentication
 			);
 			
-			runSftp("172.24.87.100", 2222, "user", "user", s_sftpFileAuthentication, s_fileKnownHosts, "/", o_sshTunnelCredentials);
+			runSftp("192.168.122.89", 2222, "user", "user", s_sftpFileAuthentication, s_fileKnownHosts, "/", o_sshTunnelCredentials);
 		} catch (Exception o_exc) {
 			net.forestany.forestj.lib.Global.logException(o_exc);
 			fail(o_exc.getMessage());
@@ -117,7 +117,7 @@ public class SFTPTest {
 		p_o_sftpClient.download(p_s_startingFolderRemote + "first_subfolder/test.txt", s_testDirectory + "text.txt");
 		assertTrue(net.forestany.forestj.lib.io.File.exists(s_testDirectory + "text.txt"), "could not download file from '" + p_s_startingFolderRemote + "first_subfolder/test.txt'");
 		
-		net.forestany.forestj.lib.io.File o_file = new net.forestany.forestj.lib.io.File(s_testDirectory + "text.txt", false);
+		net.forestany.forestj.lib.io.File o_file = new net.forestany.forestj.lib.io.File(s_testDirectory + "text.txt", false, "\r\n");
 		assertTrue(o_file.getFileContent().contentEquals("Hello World!\r\nHello World!!\r\n"), "downloaded file content from '" + p_s_startingFolderRemote + "first_subfolder/test.txt' is not equal to uploaded bytes from before");
 		
 		p_o_sftpClient.rename(p_s_startingFolderRemote + "first_subfolder/test.txt", p_s_startingFolderRemote + "renamed_test.txt");

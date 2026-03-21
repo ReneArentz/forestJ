@@ -410,6 +410,11 @@ public class CSV {
 		for (java.lang.reflect.Field o_field : p_o_object.getClass().getDeclaredFields()) {
 													net.forestany.forestj.lib.Global.ilogFiner("iterate all fields - field '" + o_field.getName() + "' with type '" + o_field.getType().getTypeName() + "'");
 			
+			/* check if field type is available */
+			if ((o_field.getType() == null) || (o_field.getType().getTypeName() == null)) {
+				continue;
+			}
+
 			/* if field of parameter object is of type list */
 			if (o_field.getType().getTypeName().contains("java.util.List")) {
 				/* retrieve field type of list */
@@ -474,6 +479,11 @@ public class CSV {
 			
 													net.forestany.forestj.lib.Global.ilogFiner("iterate all fields - field '" + o_field.getName() + "' with type '" + o_field.getType().getTypeName() + "'");
 			
+			/* check if field type is available */
+			if ((o_field.getType() == null) || (o_field.getType().getTypeName() == null)) {
+				continue;
+			}
+
 			/* if field of parameter object is of type list */
 			if (o_field.getType().getTypeName().contains("java.util.List")) {
 				/* retrieve field type of list */
@@ -566,6 +576,11 @@ public class CSV {
 					/* get array type */
 					s_arrayType = o_field.getType().getTypeName().substring(0, o_field.getType().getTypeName().length() - 2);
 					
+					/* if array type of field could not be retrieved, throw an exception */
+					if (s_arrayType == null) {
+						throw new NullPointerException("Could not retrieve array element type of field(" + o_field.getName() + ")");
+					}
+
 					/* help variable for storing list values */
 					String s_arrayValues = "";
 										
@@ -659,7 +674,7 @@ public class CSV {
 							/* remove last csv array delimiter in array values */
 							s_arrayValues = s_arrayValues.substring(0, s_arrayValues.length() - this.s_arrayDelimiter.length());
 						}
-					} else if ( (s_arrayType.contentEquals("int")) || (s_arrayType.contentEquals("java.lang.Integer")) ) {
+					} else if ( (s_arrayType.contentEquals("int")) || (s_arrayType.contentEquals("integer")) || (s_arrayType.contentEquals("java.lang.Integer")) ) {
 						/* cast current field of parameter object as array */
 						int[] a_objects = (int[])o_object;
 						
@@ -821,6 +836,10 @@ public class CSV {
 	private String objectValueToString(Object p_o_object, String p_s_type) throws IllegalArgumentException {
 		String s_foo = "";
 		
+		if (p_s_type == null) {
+			p_s_type = "null";
+		}
+
 		if (p_o_object != null) {
 			/* transpose primitive type to class type */
 			switch (p_s_type.toLowerCase()) {
@@ -1074,7 +1093,7 @@ public class CSV {
 			/* if parameter array element class is set, generate header line based on this class */
 			if (p_o_arrayElementClass != null) {
 				/* check if class type of array element is a inner class */
-				if (p_o_arrayElementClass.getTypeName().contains("$")) {
+				if ((p_o_arrayElementClass.getTypeName() != null) && (p_o_arrayElementClass.getTypeName().contains("$"))) {
 					/* get instance of parent class */
 					Object o_parentClass = Class.forName(p_o_arrayElementClass.getTypeName().split("\\$")[0]).getDeclaredConstructor().newInstance();
 					boolean b_found = false;
@@ -1107,7 +1126,7 @@ public class CSV {
 													net.forestany.forestj.lib.Global.ilogFiner("First line from file:\t" + a_csvLines[0]);
 			
 			/* compare generated header line with first line of csv file content */
-			if (a_csvLines[0].contentEquals(s_headerLine)) {
+			if ((a_csvLines[0] != null) && (a_csvLines[0].contentEquals(s_headerLine))) {
 				/* generated header line matches with first line, so we can skip this line */
 				i_start++;
 			}
@@ -1137,7 +1156,7 @@ public class CSV {
 				/* parameter array element class is set */
 				if (p_o_arrayElementClass != null) {
 					/* check if class type of array element is a inner class */
-					if (p_o_arrayElementClass.getTypeName().contains("$")) {
+					if ((p_o_arrayElementClass.getTypeName() != null) && (p_o_arrayElementClass.getTypeName().contains("$"))) {
 						/* get instance of parent class */
 						Object o_parentClass = Class.forName(p_o_arrayElementClass.getTypeName().split("\\$")[0]).getDeclaredConstructor().newInstance();
 						boolean b_found = false;
@@ -1232,16 +1251,18 @@ public class CSV {
 				
 				/* iterate all csv columns retrieved from current csv line */
 				for (String s_csvColumnValue : a_csvColumns) {
-					/* if csv column value is a double quoted value */
-					if ( (s_csvColumnValue.startsWith("\"")) && (s_csvColumnValue.endsWith("\"")) ) {
-						/* remove double quote from start and end of csv column value */
-						s_csvColumnValue = s_csvColumnValue.substring(1, s_csvColumnValue.length() - 1);
-					}
-					
-					/* if csv column value contains double double quotes '""' */
-					if (s_csvColumnValue.contains("\"\"")) {
-						/* replace all double double quotes '""' with single double quotes '"' */
-						s_csvColumnValue = s_csvColumnValue.replaceAll("\"\"", "\"");
+					if (s_csvColumnValue != null) {
+						/* if csv column value is a double quoted value */
+						if ( (s_csvColumnValue.startsWith("\"")) && (s_csvColumnValue.endsWith("\"")) ) {
+							/* remove double quote from start and end of csv column value */
+							s_csvColumnValue = s_csvColumnValue.substring(1, s_csvColumnValue.length() - 1);
+						}
+						
+						/* if csv column value contains double double quotes '""' */
+						if (s_csvColumnValue.contains("\"\"")) {
+							/* replace all double double quotes '""' with single double quotes '"' */
+							s_csvColumnValue = s_csvColumnValue.replaceAll("\"\"", "\"");
+						}
 					}
 					
 															net.forestany.forestj.lib.Global.ilogFiner("Field name '" + a_fieldNames[k] + "' of line '" + (i + 1) + "' gets value '" + s_csvColumnValue + "'");
@@ -1296,7 +1317,7 @@ public class CSV {
 	 */
 	private void setFieldOrProperty(String p_s_fieldName, Object p_o_object, String p_s_objectValue) throws IllegalArgumentException, java.text.ParseException, java.time.DateTimeException, NoSuchFieldException, NoSuchMethodException, java.lang.reflect.InvocationTargetException, IllegalAccessException, NullPointerException {
 		/* check if property is of type 'java.util.List' */
-		if (p_o_object.getClass().getDeclaredField(p_s_fieldName).getType().getTypeName().contentEquals("java.util.List")) {
+		if ((p_o_object != null) && (p_o_object.getClass().getDeclaredField(p_s_fieldName) != null) && (p_o_object.getClass().getDeclaredField(p_s_fieldName).getType() != null) && (p_o_object.getClass().getDeclaredField(p_s_fieldName).getType().getTypeName() != null) && (p_o_object.getClass().getDeclaredField(p_s_fieldName).getType().getTypeName().contentEquals("java.util.List"))) {
 			/* check if object value is not empty */
 			if (!net.forestany.forestj.lib.Helper.isStringEmpty(p_s_objectValue)) {
 				/* retrieve field type of list */
@@ -1368,12 +1389,17 @@ public class CSV {
 		        	}
 		        }
 			}
-		} else if (p_o_object.getClass().getDeclaredField(p_s_fieldName).getType().getTypeName().endsWith("[]")) { /* handle parameter object value as standard array */
+		} else if ((p_o_object != null) && (p_o_object.getClass().getDeclaredField(p_s_fieldName) != null) && (p_o_object.getClass().getDeclaredField(p_s_fieldName).getType().getTypeName() != null) && (p_o_object.getClass().getDeclaredField(p_s_fieldName).getType().getTypeName().endsWith("[]"))) { /* handle parameter object value as standard array */
 			/* check if object value is not empty */
 			if (!net.forestany.forestj.lib.Helper.isStringEmpty(p_s_objectValue)) {
 				/* retrieve field type of array */
 				String s_arrayType = p_o_object.getClass().getDeclaredField(p_s_fieldName).getType().getTypeName().substring(0, p_o_object.getClass().getDeclaredField(p_s_fieldName).getType().getTypeName().length() - 2);
 		        
+				/* if array type of field could not be retrieved, throw an exception */
+				if (s_arrayType == null) {
+					throw new NullPointerException("Could not retrieve array element type of field(" + p_s_fieldName + ") with type '" + p_o_object.getClass().getDeclaredField(p_s_fieldName).getType().getTypeName() + "'");
+				}
+
 		        /* if type of field array is contained in the list of allowed types */
 		        if (a_allowedTypes.contains(s_arrayType)) {
 		        	/* help variable for setting object array */
@@ -1476,7 +1502,7 @@ public class CSV {
 						
 						/* look for set-property-method of current parameter object value */
 						for (java.lang.reflect.Method o_methodSearch : p_o_object.getClass().getDeclaredMethods()) {
-							if (o_methodSearch.getName().contentEquals("set" + p_s_fieldName)) {
+							if ((o_methodSearch.getName() != null) && (o_methodSearch.getName().contentEquals("set" + p_s_fieldName))) {
 								o_method = o_methodSearch;
 								b_methodFound = true;
 							}
@@ -1559,6 +1585,15 @@ public class CSV {
 							
 							/* invoke set-property-method to set object array field of current element */
 							o_method.invoke(p_o_object, new Object[] {o_bar});
+						} else if ((s_arrayType.contentEquals("string")) || (s_arrayType.contentEquals("java.lang.String"))) {
+							String[] o_bar = new String[o_foo.length];
+							
+							for (int i = 0; i < o_foo.length; i++) {
+								o_bar[i] = (String)o_foo[i];
+							}
+							
+							/* invoke set-property-method to set object array field of current element */
+							o_method.invoke(p_o_object, new Object[] {o_bar});
 						} else {
 							/* invoke set-property-method to set object array field of current element */
 							o_method.invoke(p_o_object, new Object[] {o_foo});
@@ -1631,6 +1666,14 @@ public class CSV {
 								}
 								
 								p_o_object.getClass().getDeclaredField(p_s_fieldName).set(p_o_object, o_bar);
+							} else if ((s_arrayType.contentEquals("string")) || (s_arrayType.contentEquals("java.lang.String"))) {
+								String[] o_bar = new String[o_foo.length];
+								
+								for (int i = 0; i < o_foo.length; i++) {
+									o_bar[i] = (String)o_foo[i];
+								}
+								
+								p_o_object.getClass().getDeclaredField(p_s_fieldName).set(p_o_object, o_bar);
 							} else {
 								p_o_object.getClass().getDeclaredField(p_s_fieldName).set(p_o_object, o_foo);
 							}
@@ -1648,7 +1691,7 @@ public class CSV {
 				
 				/* look for set-property-method of current parameter object value */
 				for (java.lang.reflect.Method o_methodSearch : p_o_object.getClass().getDeclaredMethods()) {
-					if (o_methodSearch.getName().contentEquals("set" + p_s_fieldName)) {
+					if ((o_methodSearch.getName() != null) && (o_methodSearch.getName().contentEquals("set" + p_s_fieldName))) {
 						o_method = o_methodSearch;
 						b_methodFound = true;
 					}
@@ -1690,6 +1733,14 @@ public class CSV {
 	private Object stringToObjectValue(String p_s_value, String p_s_type) throws IllegalArgumentException, java.text.ParseException, java.time.DateTimeException {
 		Object o_foo = null;
 		
+		if (p_s_value == null) {
+			throw new IllegalArgumentException("Invalid value parameter is null");
+		}
+
+		if (p_s_type == null) {
+			p_s_type = "null";
+		}
+
 		/* transpose primitive type to class type */
 		switch (p_s_type.toLowerCase()) {
 			case "short":
@@ -1829,6 +1880,8 @@ public class CSV {
 				o_foo = null;
 			} else if (p_s_type.contentEquals("java.time.LocalTime")) {
 				o_foo = null;
+			} else {
+				throw new IllegalArgumentException("Invalid type[" + p_s_type + "] for empty value");
 			}
 		}
 		

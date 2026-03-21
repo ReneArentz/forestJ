@@ -30,13 +30,17 @@ class FixedLengthRecordTest {
 				flrReadWithGroupHeaderAndFooter("TestFLRWithGroupHeaderAndGroupFooter.txt");
 				flrReadEverything("TestFLREverything.txt");
 				flrReadEverythingWithSubtypes("TestFLREverythingWithSubtypes.txt");
+				flrReadEverythingWithSubtypesOptional("TestFLREverythingWithSubtypesOptional.txt");
+				flrReadEverythingWithSubtypesOptionalNestedStructure("TestFLREverythingWithSubtypesOptionalNestedStructure.txt");
 				
 				flrWriteTests(s_testDirectory, "TestWriteFLRWithoutGroups.txt", "TestFLRWithoutGroups.txt", 0);
-				flrWriteTests(s_testDirectory, "TestWriteFLRWithGroupHeader.txt", "TestFLRWithGroupHeader.txt", 1);
+				flrWriteTests(s_testDirectory, "TestWriteFLRWithGroupHeader.txt", "TestFLRWithGroupHeaderClean.txt", 1);
 				flrWriteTests(s_testDirectory, "TestWriteFLRWithGroupFooter.txt", "TestFLRWithGroupFooter.txt", 2);
 				flrWriteTests(s_testDirectory, "TestWriteFLRWithGroupHeaderAndGroupFooter.txt", "TestFLRWithGroupHeaderAndGroupFooter.txt", 3);
 				flrWriteTests(s_testDirectory, "TestWriteFLREverything.txt", "TestFLREverything.txt", 4);
 				flrWriteTests(s_testDirectory, "TestWriteFLREverythingWithSubtypes.txt", "TestFLREverythingWithSubtypes.txt", 5);
+				flrWriteTests(s_testDirectory, "TestWriteFLREverythingWithSubtypesOptional.txt", "TestFLREverythingWithSubtypesOptional.txt", 6);
+				flrWriteTests(s_testDirectory, "TestWriteFLREverythingWithSubtypesOptionalNestedStructure.txt", "TestFLREverythingWithSubtypesOptionalNestedStructure.txt", 7);
 			
 			net.forestany.forestj.lib.io.File.deleteDirectory(s_testDirectory);
 			assertFalse(
@@ -44,7 +48,6 @@ class FixedLengthRecordTest {
 					"directory[" + s_testDirectory + "] does exist"
 			);
 		} catch (Exception o_exc) {
-			o_exc.printStackTrace();
 			fail(o_exc.getMessage());
 		}
 	}
@@ -434,7 +437,246 @@ class FixedLengthRecordTest {
 			assertEquals(i_sumInt, o_groupFooter.FieldSumInt, "sum over the field Int has unexpected value for stack #" + (i + 1) + ": '" + i_sumInt + "' != '" + o_groupFooter.FieldSumInt + "'");
 		}
 	}
+
+	private static void flrReadEverythingWithSubtypesOptional(String p_s_flrFileName) throws Exception {
+		String s_file = net.forestany.forestj.lib.io.File.getCurrentDirectory() + net.forestany.forestj.lib.io.File.DIR + "src" + net.forestany.forestj.lib.io.File.DIR + "test" + net.forestany.forestj.lib.io.File.DIR + "resources" + net.forestany.forestj.lib.io.File.DIR + "flr" + net.forestany.forestj.lib.io.File.DIR + p_s_flrFileName;
+		
+		/* test with flr regex */
+		FixedLengthRecordData o_flrData = new FixedLengthRecordData();
+		FixedLengthRecordOtherData o_flrOtherData = new FixedLengthRecordOtherData();
+		FixedLengthRecordAnotherData o_flrAnotherData = new FixedLengthRecordAnotherData();
+		FixedLengthRecordDataWithSubtypes o_flrDataWithSubtypes = new FixedLengthRecordDataWithSubtypes();
+		FixedLengthRecordDataWithSubtypesOptional o_flrDataWithSubtypesOptional = new FixedLengthRecordDataWithSubtypesOptional();
+		FixedLengthRecordGroupHeaderData o_groupHeaderData = new FixedLengthRecordGroupHeaderData();
+		FixedLengthRecordGroupFooterData o_groupFooterData = new FixedLengthRecordGroupFooterData();
+		net.forestany.forestj.lib.io.FixedLengthRecordFile o_flrFile = new net.forestany.forestj.lib.io.FixedLengthRecordFile(o_flrData, "^000.*$", o_groupHeaderData, "^\\+H\\+.*$", o_groupFooterData, "^\\+F\\+.*$");
+		o_flrFile.addFLRType(o_flrFile.new FLRType(o_flrOtherData, "^100.*$"));
+		o_flrFile.addFLRType(o_flrFile.new FLRType(o_flrAnotherData, "^200.*$"));
+		o_flrFile.addFLRType(o_flrFile.new FLRType(o_flrDataWithSubtypes, "^300.*$"));
+		o_flrFile.addFLRType(o_flrFile.new FLRType(o_flrDataWithSubtypesOptional, "^400.*$"));
+		o_flrFile.readFile(s_file);
+		
+		int i = 0;
+		int j = 0;
+		int k = 0;
+		
+		int l = 0;
+		int m = 0;
+		int n = 0;
+		int o = 0;
+		
+		for (java.util.Map.Entry<Integer, net.forestany.forestj.lib.io.FixedLengthRecordFile.FixedLengthRecordStack> o_stack : o_flrFile.getStacks().entrySet()) {
+			int i_sumInt = 0;
+			
+			FixedLengthRecordGroupHeaderData o_groupHeader = (FixedLengthRecordGroupHeaderData)o_stack.getValue().getGroupHeader();
+			compareGroupHeaders(i++, o_groupHeader);
+			
+			for (java.util.Map.Entry<Integer, net.forestany.forestj.lib.io.FixedLengthRecord<?>> o_foo : o_stack.getValue().getFixedLengthRecords().entrySet()) {
+				if (o_foo.getValue() instanceof FixedLengthRecordData) {
+					FixedLengthRecordData o_record = (FixedLengthRecordData)o_foo.getValue();
+					compareRecords(j++, o_record);
+					i_sumInt += o_record.FieldInt / 2;
+				} else if (o_foo.getValue() instanceof FixedLengthRecordOtherData) {
+					FixedLengthRecordOtherData o_record = (FixedLengthRecordOtherData)o_foo.getValue();
+					compareOtherRecords(l++, o_record);
+					i_sumInt += o_record.FieldInt / 2;
+				} else if (o_foo.getValue() instanceof FixedLengthRecordAnotherData) {
+					FixedLengthRecordAnotherData o_record = (FixedLengthRecordAnotherData)o_foo.getValue();
+					compareAnotherRecords(m++, o_record);
+					i_sumInt += o_record.FieldInt / 2;
+				} else if (o_foo.getValue() instanceof FixedLengthRecordDataWithSubtypes) {
+					FixedLengthRecordDataWithSubtypes o_record = (FixedLengthRecordDataWithSubtypes)o_foo.getValue();
+					compareRecordsWithSubtypes(n++, o_record);
+				} else if (o_foo.getValue() instanceof FixedLengthRecordDataWithSubtypesOptional) {
+					FixedLengthRecordDataWithSubtypesOptional o_record = (FixedLengthRecordDataWithSubtypesOptional)o_foo.getValue();
+					compareRecordsWithSubtypesOptional(o++, o_record);
+				}
+			}
+			
+			FixedLengthRecordGroupFooterData o_groupFooter = (FixedLengthRecordGroupFooterData)o_stack.getValue().getGroupFooter();
+			compareGroupFootersEverythingWithSubtypes(k++, o_groupFooter);
+			
+			assertEquals(i_sumInt, o_groupFooter.FieldSumInt, "sum over the field Int has unexpected value for stack #" + (i + 1) + ": '" + i_sumInt + "' != '" + o_groupFooter.FieldSumInt + "'");
+		}
+		
+		/* test with flr known length, but not flr with optional sub-types */
+
+		o_flrFile = new net.forestany.forestj.lib.io.FixedLengthRecordFile(o_flrData, null, 320, o_groupHeaderData, null, 106, o_groupFooterData, null, 81);
+		o_flrFile.addFLRType(o_flrFile.new FLRType(o_flrOtherData, null, 58));
+		o_flrFile.addFLRType(o_flrFile.new FLRType(o_flrAnotherData, null, 72));
+		o_flrFile.addFLRType(o_flrFile.new FLRType(o_flrDataWithSubtypes, null, 217));
+		o_flrFile.addFLRType(o_flrFile.new FLRType(o_flrDataWithSubtypesOptional, "^400.*$"));
+		o_flrFile.readFile(s_file);
+		
+		i = 0;
+		j = 0;
+		k = 0;
+		
+		l = 0;
+		m = 0;
+		n = 0;
+		o = 0;
+		
+		for (java.util.Map.Entry<Integer, net.forestany.forestj.lib.io.FixedLengthRecordFile.FixedLengthRecordStack> o_stack : o_flrFile.getStacks().entrySet()) {
+			int i_sumInt = 0;
+			
+			FixedLengthRecordGroupHeaderData o_groupHeader = (FixedLengthRecordGroupHeaderData)o_stack.getValue().getGroupHeader();
+			compareGroupHeaders(i++, o_groupHeader);
+			
+			for (java.util.Map.Entry<Integer, net.forestany.forestj.lib.io.FixedLengthRecord<?>> o_foo : o_stack.getValue().getFixedLengthRecords().entrySet()) {
+				if (o_foo.getValue() instanceof FixedLengthRecordData) {
+					FixedLengthRecordData o_record = (FixedLengthRecordData)o_foo.getValue();
+					compareRecords(j++, o_record);
+					i_sumInt += o_record.FieldInt / 2;
+				} else if (o_foo.getValue() instanceof FixedLengthRecordOtherData) {
+					FixedLengthRecordOtherData o_record = (FixedLengthRecordOtherData)o_foo.getValue();
+					compareOtherRecords(l++, o_record);
+					i_sumInt += o_record.FieldInt / 2;
+				} else if (o_foo.getValue() instanceof FixedLengthRecordAnotherData) {
+					FixedLengthRecordAnotherData o_record = (FixedLengthRecordAnotherData)o_foo.getValue();
+					compareAnotherRecords(m++, o_record);
+					i_sumInt += o_record.FieldInt / 2;
+				} else if (o_foo.getValue() instanceof FixedLengthRecordDataWithSubtypes) {
+					FixedLengthRecordDataWithSubtypes o_record = (FixedLengthRecordDataWithSubtypes)o_foo.getValue();
+					compareRecordsWithSubtypes(n++, o_record);
+				} else if (o_foo.getValue() instanceof FixedLengthRecordDataWithSubtypesOptional) {
+					FixedLengthRecordDataWithSubtypesOptional o_record = (FixedLengthRecordDataWithSubtypesOptional)o_foo.getValue();
+					compareRecordsWithSubtypesOptional(o++, o_record);
+				}
+			}
+			
+			FixedLengthRecordGroupFooterData o_groupFooter = (FixedLengthRecordGroupFooterData)o_stack.getValue().getGroupFooter();
+			compareGroupFootersEverythingWithSubtypes(k++, o_groupFooter);
+			
+			assertEquals(i_sumInt, o_groupFooter.FieldSumInt, "sum over the field Int has unexpected value for stack #" + (i + 1) + ": '" + i_sumInt + "' != '" + o_groupFooter.FieldSumInt + "'");
+		}
+	}
 	
+	private static void flrReadEverythingWithSubtypesOptionalNestedStructure(String p_s_flrFileName) throws Exception {
+		String s_file = net.forestany.forestj.lib.io.File.getCurrentDirectory() + net.forestany.forestj.lib.io.File.DIR + "src" + net.forestany.forestj.lib.io.File.DIR + "test" + net.forestany.forestj.lib.io.File.DIR + "resources" + net.forestany.forestj.lib.io.File.DIR + "flr" + net.forestany.forestj.lib.io.File.DIR + p_s_flrFileName;
+		
+		/* test with flr regex */
+		FixedLengthRecordData o_flrData = new FixedLengthRecordData();
+		FixedLengthRecordOtherData o_flrOtherData = new FixedLengthRecordOtherData();
+		FixedLengthRecordAnotherData o_flrAnotherData = new FixedLengthRecordAnotherData();
+		FixedLengthRecordDataWithSubtypes o_flrDataWithSubtypes = new FixedLengthRecordDataWithSubtypes();
+		FixedLengthRecordDataWithSubtypesOptional o_flrDataWithSubtypesOptional = new FixedLengthRecordDataWithSubtypesOptional();
+		FixedLengthRecordDataWithSubtypesOptionalNestedStructure o_flrDataWithSubtypesOptionalNestedStructure = new FixedLengthRecordDataWithSubtypesOptionalNestedStructure();
+		FixedLengthRecordGroupHeaderData o_groupHeaderData = new FixedLengthRecordGroupHeaderData();
+		FixedLengthRecordGroupFooterData o_groupFooterData = new FixedLengthRecordGroupFooterData();
+		net.forestany.forestj.lib.io.FixedLengthRecordFile o_flrFile = new net.forestany.forestj.lib.io.FixedLengthRecordFile(o_flrData, "^000.*$", o_groupHeaderData, "^\\+H\\+.*$", o_groupFooterData, "^\\+F\\+.*$");
+		o_flrFile.addFLRType(o_flrFile.new FLRType(o_flrOtherData, "^100.*$"));
+		o_flrFile.addFLRType(o_flrFile.new FLRType(o_flrAnotherData, "^200.*$"));
+		o_flrFile.addFLRType(o_flrFile.new FLRType(o_flrDataWithSubtypes, "^300.*$"));
+		o_flrFile.addFLRType(o_flrFile.new FLRType(o_flrDataWithSubtypesOptional, "^400.*$"));
+		o_flrFile.addFLRType(o_flrFile.new FLRType(o_flrDataWithSubtypesOptionalNestedStructure, "^500.*$"));
+		o_flrFile.readFile(s_file);
+		
+		int i = 0;
+		int j = 0;
+		int k = 0;
+		
+		int l = 0;
+		int m = 0;
+		int n = 0;
+		int o = 0;
+		int p = 0;
+		
+		for (java.util.Map.Entry<Integer, net.forestany.forestj.lib.io.FixedLengthRecordFile.FixedLengthRecordStack> o_stack : o_flrFile.getStacks().entrySet()) {
+			int i_sumInt = 0;
+			
+			FixedLengthRecordGroupHeaderData o_groupHeader = (FixedLengthRecordGroupHeaderData)o_stack.getValue().getGroupHeader();
+			compareGroupHeaders(i++, o_groupHeader);
+			
+			for (java.util.Map.Entry<Integer, net.forestany.forestj.lib.io.FixedLengthRecord<?>> o_foo : o_stack.getValue().getFixedLengthRecords().entrySet()) {
+				if (o_foo.getValue() instanceof FixedLengthRecordData) {
+					FixedLengthRecordData o_record = (FixedLengthRecordData)o_foo.getValue();
+					compareRecords(j++, o_record);
+					i_sumInt += o_record.FieldInt / 2;
+				} else if (o_foo.getValue() instanceof FixedLengthRecordOtherData) {
+					FixedLengthRecordOtherData o_record = (FixedLengthRecordOtherData)o_foo.getValue();
+					compareOtherRecords(l++, o_record);
+					i_sumInt += o_record.FieldInt / 2;
+				} else if (o_foo.getValue() instanceof FixedLengthRecordAnotherData) {
+					FixedLengthRecordAnotherData o_record = (FixedLengthRecordAnotherData)o_foo.getValue();
+					compareAnotherRecords(m++, o_record);
+					i_sumInt += o_record.FieldInt / 2;
+				} else if (o_foo.getValue() instanceof FixedLengthRecordDataWithSubtypes) {
+					FixedLengthRecordDataWithSubtypes o_record = (FixedLengthRecordDataWithSubtypes)o_foo.getValue();
+					compareRecordsWithSubtypes(n++, o_record);
+				} else if (o_foo.getValue() instanceof FixedLengthRecordDataWithSubtypesOptional) {
+					FixedLengthRecordDataWithSubtypesOptional o_record = (FixedLengthRecordDataWithSubtypesOptional)o_foo.getValue();
+					compareRecordsWithSubtypesOptional(o++, o_record);
+				} else if (o_foo.getValue() instanceof FixedLengthRecordDataWithSubtypesOptionalNestedStructure) {
+					FixedLengthRecordDataWithSubtypesOptionalNestedStructure o_record = (FixedLengthRecordDataWithSubtypesOptionalNestedStructure)o_foo.getValue();
+					compareRecordsWithSubtypesOptionalNestedStructure(p++, o_record);
+				}
+			}
+			
+			FixedLengthRecordGroupFooterData o_groupFooter = (FixedLengthRecordGroupFooterData)o_stack.getValue().getGroupFooter();
+			compareGroupFootersEverythingWithSubtypes(k++, o_groupFooter);
+			
+			assertEquals(i_sumInt, o_groupFooter.FieldSumInt, "sum over the field Int has unexpected value for stack #" + (i + 1) + ": '" + i_sumInt + "' != '" + o_groupFooter.FieldSumInt + "'");
+		}
+		
+		/* test with flr known length, but not flr with optional sub-types */
+
+		o_flrFile = new net.forestany.forestj.lib.io.FixedLengthRecordFile(o_flrData, null, 320, o_groupHeaderData, null, 106, o_groupFooterData, null, 81);
+		o_flrFile.addFLRType(o_flrFile.new FLRType(o_flrOtherData, null, 58));
+		o_flrFile.addFLRType(o_flrFile.new FLRType(o_flrAnotherData, null, 72));
+		o_flrFile.addFLRType(o_flrFile.new FLRType(o_flrDataWithSubtypes, null, 217));
+		o_flrFile.addFLRType(o_flrFile.new FLRType(o_flrDataWithSubtypesOptional, "^400.*$"));
+		o_flrFile.addFLRType(o_flrFile.new FLRType(o_flrDataWithSubtypesOptionalNestedStructure, "^500.*$"));
+		o_flrFile.readFile(s_file);
+		
+		i = 0;
+		j = 0;
+		k = 0;
+		
+		l = 0;
+		m = 0;
+		n = 0;
+		o = 0;
+		p = 0;
+		
+		for (java.util.Map.Entry<Integer, net.forestany.forestj.lib.io.FixedLengthRecordFile.FixedLengthRecordStack> o_stack : o_flrFile.getStacks().entrySet()) {
+			int i_sumInt = 0;
+			
+			FixedLengthRecordGroupHeaderData o_groupHeader = (FixedLengthRecordGroupHeaderData)o_stack.getValue().getGroupHeader();
+			compareGroupHeaders(i++, o_groupHeader);
+			
+			for (java.util.Map.Entry<Integer, net.forestany.forestj.lib.io.FixedLengthRecord<?>> o_foo : o_stack.getValue().getFixedLengthRecords().entrySet()) {
+				if (o_foo.getValue() instanceof FixedLengthRecordData) {
+					FixedLengthRecordData o_record = (FixedLengthRecordData)o_foo.getValue();
+					compareRecords(j++, o_record);
+					i_sumInt += o_record.FieldInt / 2;
+				} else if (o_foo.getValue() instanceof FixedLengthRecordOtherData) {
+					FixedLengthRecordOtherData o_record = (FixedLengthRecordOtherData)o_foo.getValue();
+					compareOtherRecords(l++, o_record);
+					i_sumInt += o_record.FieldInt / 2;
+				} else if (o_foo.getValue() instanceof FixedLengthRecordAnotherData) {
+					FixedLengthRecordAnotherData o_record = (FixedLengthRecordAnotherData)o_foo.getValue();
+					compareAnotherRecords(m++, o_record);
+					i_sumInt += o_record.FieldInt / 2;
+				} else if (o_foo.getValue() instanceof FixedLengthRecordDataWithSubtypes) {
+					FixedLengthRecordDataWithSubtypes o_record = (FixedLengthRecordDataWithSubtypes)o_foo.getValue();
+					compareRecordsWithSubtypes(n++, o_record);
+				} else if (o_foo.getValue() instanceof FixedLengthRecordDataWithSubtypesOptional) {
+					FixedLengthRecordDataWithSubtypesOptional o_record = (FixedLengthRecordDataWithSubtypesOptional)o_foo.getValue();
+					compareRecordsWithSubtypesOptional(o++, o_record);
+				} else if (o_foo.getValue() instanceof FixedLengthRecordDataWithSubtypesOptionalNestedStructure) {
+					FixedLengthRecordDataWithSubtypesOptionalNestedStructure o_record = (FixedLengthRecordDataWithSubtypesOptionalNestedStructure)o_foo.getValue();
+					compareRecordsWithSubtypesOptionalNestedStructure(p++, o_record);
+				}
+			}
+			
+			FixedLengthRecordGroupFooterData o_groupFooter = (FixedLengthRecordGroupFooterData)o_stack.getValue().getGroupFooter();
+			compareGroupFootersEverythingWithSubtypes(k++, o_groupFooter);
+			
+			assertEquals(i_sumInt, o_groupFooter.FieldSumInt, "sum over the field Int has unexpected value for stack #" + (i + 1) + ": '" + i_sumInt + "' != '" + o_groupFooter.FieldSumInt + "'");
+		}
+	}
+
 	private static void compareGroupHeaders(int p_i_groupHeader, FixedLengthRecordGroupHeaderData o_groupHeader) throws Exception {
 		if (p_i_groupHeader == 0) {
 			assertEquals(123,											o_groupHeader.FieldCustomerNumber,			"values for field 'CustomerNumber' are not equal");
@@ -499,7 +741,7 @@ class FixedLengthRecordTest {
 			assertEquals(1,																			o_record.FieldId,					"values for field 'Id' are not equal");
 			assertEquals("9d08862f-a9d0-4970-bba2-eb95dc9245f8",									o_record.FieldUUID,					"values for field 'UUID' are not equal");
 			assertEquals("Das ist einfach ",														o_record.FieldShortText,			"values for field 'ShortText' are not equal");
-			assertEquals("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et.",		o_record.FieldText,					"values for field 'Text' are not equal");
+			assertEquals("Lorem ipsum dolor sit amet, consectetur adipiscing elit.        ",		o_record.FieldText,					"values for field 'Text' are not equal");
 			assertEquals((short)1001,																o_record.FieldSmallInt,				"values for field 'SmallInt' are not equal");
 			assertEquals(900000123,																	o_record.FieldInt,					"values for field 'Int' are not equal");
 			assertEquals(653398433456789458L,														o_record.FieldBigInt,				"values for field 'BigInt' are not equal");
@@ -562,7 +804,7 @@ class FixedLengthRecordTest {
 			assertEquals(4,																			o_record.FieldId,					"values for field 'Id' are not equal");
 			assertEquals("e1ac53e1-72e9-41d2-8278-17c1c8be79f2",									o_record.FieldUUID,					"values for field 'UUID' are not equal");
 			assertEquals(" a b c d e f g h",														o_record.FieldShortText,			"values for field 'ShortText' are not equal");
-			assertEquals("resolution. So striking at of to welcomed resolved. Northward by",		o_record.FieldText,					"values for field 'Text' are not equal");
+			assertEquals("resolution. So striking at of to welcomed resolved.             ",		o_record.FieldText,					"values for field 'Text' are not equal");
 			assertEquals((short)1004,																o_record.FieldSmallInt,				"values for field 'SmallInt' are not equal");
 			assertEquals(600321000,																	o_record.FieldInt,					"values for field 'Int' are not equal");
 			assertEquals(555672589158833618L,														o_record.FieldBigInt,				"values for field 'BigInt' are not equal");
@@ -1018,6 +1260,232 @@ class FixedLengthRecordTest {
         }
     }
 	
+	private static void compareRecordsWithSubtypesOptional(int p_i_record, FixedLengthRecordDataWithSubtypesOptional o_record) throws Exception {
+		if (p_i_record == 0) {
+        	assertEquals("abcdef",																o_record.FieldText,			"values for field 'FieldText' are not equal");
+        	
+            int i = 1;
+
+            for (FixedLengthRecordSubtypeOptionalOne o_one : o_record.FieldListOptionalOne) {
+                if (i == 1) {
+                	assertEquals(22,																o_one.FieldTwoDigitId,			"values for field 'FieldTwoDigitId' are not equal");
+                	assertEquals("Optional 1",														o_one.FieldShortText,				"values for field 'ShortText' are not equal");
+                } else if (i == 2) {
+                	assertEquals(22,																o_one.FieldTwoDigitId,			"values for field 'FieldTwoDigitId' are not equal");
+                	assertEquals("Optional  ",														o_one.FieldShortText,				"values for field 'ShortText' are not equal");
+                } else if (i == 3) {
+                	assertEquals(22,																o_one.FieldTwoDigitId,			"values for field 'FieldTwoDigitId' are not equal");
+                	assertEquals("Optional 3",														o_one.FieldShortText,				"values for field 'ShortText' are not equal");
+                }
+
+                i++;
+            }
+
+            i = 1;
+
+            for (FixedLengthRecordSubtypeOptionalTwo o_two : o_record.FieldListOptionalTwo) {
+                if (i == 1) {
+                	assertEquals(1,															o_two.FieldThreeDigitId,				"values for field 'FieldThreeDigitId' are not equal");
+                } else if (i == 2) {
+                	assertEquals(2,															o_two.FieldThreeDigitId,				"values for field 'FieldThreeDigitId' are not equal");
+                } else if (i == 3) {
+					assertEquals(3,															o_two.FieldThreeDigitId,				"values for field 'FieldThreeDigitId' are not equal");
+                } else if (i == 4) {
+					assertEquals(4,															o_two.FieldThreeDigitId,				"values for field 'FieldThreeDigitId' are not equal");
+                }
+
+                i++;
+            }
+        } else if (p_i_record == 1) {
+        	assertEquals("ABCDEF",																o_record.FieldText,			"values for field 'FieldText' are not equal");
+        	assertEquals(null,																o_record.FieldListOptionalOne,	"values for field 'FieldListOptionalOne' are not equal");
+
+            int i = 1;
+
+            for (FixedLengthRecordSubtypeOptionalTwo o_two : o_record.FieldListOptionalTwo) {
+                if (i == 1) {
+                	assertEquals(1,															o_two.FieldThreeDigitId,				"values for field 'FieldThreeDigitId' are not equal");
+                } else if (i == 2) {
+                	assertEquals(2,															o_two.FieldThreeDigitId,				"values for field 'FieldThreeDigitId' are not equal");
+                } else if (i == 3) {
+					assertEquals(0,															o_two.FieldThreeDigitId,				"values for field 'FieldThreeDigitId' are not equal");
+                } else if (i == 4) {
+					assertEquals(4,															o_two.FieldThreeDigitId,				"values for field 'FieldThreeDigitId' are not equal");
+                } else if (i == 5) {
+					assertEquals(5,															o_two.FieldThreeDigitId,				"values for field 'FieldThreeDigitId' are not equal");
+                } else if (i == 6) {
+					assertEquals(6,															o_two.FieldThreeDigitId,				"values for field 'FieldThreeDigitId' are not equal");
+                } else if (i == 7) {
+					assertEquals(712,															o_two.FieldThreeDigitId,				"values for field 'FieldThreeDigitId' are not equal");
+                } else if (i == 8) {
+					assertEquals(8,															o_two.FieldThreeDigitId,				"values for field 'FieldThreeDigitId' are not equal");
+                }
+
+                i++;
+            }
+        } else if (p_i_record == 2) {
+        	assertEquals("ghijkl",																o_record.FieldText,			"values for field 'FieldText' are not equal");
+        	
+            int i = 1;
+
+            for (FixedLengthRecordSubtypeOptionalOne o_one : o_record.FieldListOptionalOne) {
+                if (i == 1) {
+                	assertEquals(24,																o_one.FieldTwoDigitId,			"values for field 'FieldTwoDigitId' are not equal");
+                	assertEquals("Optional 1",														o_one.FieldShortText,				"values for field 'ShortText' are not equal");
+                } else if (i == 2) {
+                	assertEquals(24,																o_one.FieldTwoDigitId,			"values for field 'FieldTwoDigitId' are not equal");
+                	assertEquals("Optional 2",														o_one.FieldShortText,				"values for field 'ShortText' are not equal");
+                } else if (i == 3) {
+                	assertEquals(24,																o_one.FieldTwoDigitId,			"values for field 'FieldTwoDigitId' are not equal");
+                	assertEquals("Optional 3",														o_one.FieldShortText,				"values for field 'ShortText' are not equal");
+                } else if (i == 4) {
+                	assertEquals(24,																o_one.FieldTwoDigitId,			"values for field 'FieldTwoDigitId' are not equal");
+                	assertEquals("Optional  ",														o_one.FieldShortText,				"values for field 'ShortText' are not equal");
+                } else if (i == 5) {
+                	assertEquals(24,																o_one.FieldTwoDigitId,			"values for field 'FieldTwoDigitId' are not equal");
+                	assertEquals("Optional 5",														o_one.FieldShortText,				"values for field 'ShortText' are not equal");
+                } else if (i == 6) {
+                	assertEquals(24,																o_one.FieldTwoDigitId,			"values for field 'FieldTwoDigitId' are not equal");
+                	assertEquals("Optional 6",														o_one.FieldShortText,				"values for field 'ShortText' are not equal");
+                } else if (i == 7) {
+                	assertEquals(24,																o_one.FieldTwoDigitId,			"values for field 'FieldTwoDigitId' are not equal");
+                	assertEquals("Optional 7",														o_one.FieldShortText,				"values for field 'ShortText' are not equal");
+                } else if (i == 8) {
+                	assertEquals(24,																o_one.FieldTwoDigitId,			"values for field 'FieldTwoDigitId' are not equal");
+                	assertEquals(null,																o_one.FieldShortText,				"values for field 'ShortText' are not equal");
+                } else if (i == 9) {
+                	assertEquals(24,																o_one.FieldTwoDigitId,			"values for field 'FieldTwoDigitId' are not equal");
+                	assertEquals("Optional 9",														o_one.FieldShortText,				"values for field 'ShortText' are not equal");
+                } else if (i == 10) {
+                	assertEquals(24,																o_one.FieldTwoDigitId,			"values for field 'FieldTwoDigitId' are not equal");
+                	assertEquals("Optional 0",														o_one.FieldShortText,				"values for field 'ShortText' are not equal");
+                }
+
+                i++;
+            }
+
+            i = 1;
+
+            for (FixedLengthRecordSubtypeOptionalTwo o_two : o_record.FieldListOptionalTwo) {
+                if (i == 1) {
+                	assertEquals(1,															o_two.FieldThreeDigitId,				"values for field 'FieldThreeDigitId' are not equal");
+                } else if (i == 2) {
+                	assertEquals(2,															o_two.FieldThreeDigitId,				"values for field 'FieldThreeDigitId' are not equal");
+                } else if (i == 3) {
+					assertEquals(321,															o_two.FieldThreeDigitId,				"values for field 'FieldThreeDigitId' are not equal");
+                } else if (i == 4) {
+					assertEquals(4,															o_two.FieldThreeDigitId,				"values for field 'FieldThreeDigitId' are not equal");
+                } else if (i == 5) {
+					assertEquals(5,															o_two.FieldThreeDigitId,				"values for field 'FieldThreeDigitId' are not equal");
+                } else if (i == 6) {
+					assertEquals(6,															o_two.FieldThreeDigitId,				"values for field 'FieldThreeDigitId' are not equal");
+                } else if (i == 7) {
+					assertEquals(0,															o_two.FieldThreeDigitId,				"values for field 'FieldThreeDigitId' are not equal");
+                } else if (i == 8) {
+					assertEquals(808,															o_two.FieldThreeDigitId,				"values for field 'FieldThreeDigitId' are not equal");
+                }
+
+                i++;
+            }
+        } else if (p_i_record == 3) {
+        	assertEquals("GHIJKL",																o_record.FieldText,			"values for field 'FieldText' are not equal");
+			assertEquals(null,																o_record.FieldListOptionalOne,	"values for field 'FieldListOptionalOne' are not equal");
+			assertEquals(null,																o_record.FieldListOptionalTwo,	"values for field 'FieldListOptionalTwo' are not equal");
+        }
+    }
+	
+	private static void compareRecordsWithSubtypesOptionalNestedStructure(int p_i_record, FixedLengthRecordDataWithSubtypesOptionalNestedStructure o_record) throws Exception {
+		java.text.DateFormat o_timeFormat = new java.text.SimpleDateFormat("HH:mm:ss");
+
+		if (p_i_record == 0) {
+        	assertEquals("a1b2c3", o_record.FieldText, "values for field 'FieldText' are not equal");
+			assertEquals(java.time.LocalDate.of(2021, 12, 21), o_record.FieldDate, "values for field 'FieldDate' are not equal");
+        	
+			int i = 0;
+
+			for (FixedLengthRecordDataWithNestedStructure o_nestedRecord : o_record.FieldListRecordNestedStructure) {
+				if (i == 0) {
+					FixedLengthRecordNestedSubtypeOne o_castOfNestedRecord = o_nestedRecord.FieldNestedSubtypeOne.get(0);
+
+					assertEquals("testab", o_castOfNestedRecord.FieldString, "values for field 'FieldString' are not equal");
+					assertEquals(net.forestany.forestj.lib.Helper.fromISO8601UTCToUtilDate("2026-01-03T14:07:27Z"), o_castOfNestedRecord.FieldTimestamp, "values for field 'FieldTimestamp' are not equal");
+				} else if (i == 1) {
+					FixedLengthRecordNestedSubtypeThree o_castOfNestedRecord = o_nestedRecord.FieldNestedSubtypeThree.get(0);
+
+					assertEquals(49703, o_castOfNestedRecord.FieldInt, "values for field 'FieldInt' are not equal");
+					assertEquals("THISISATEST99", o_castOfNestedRecord.FieldShortText, "values for field 'FieldShortText' are not equal");
+				} else if (i == 2) {
+					FixedLengthRecordNestedSubtypeThree o_castOfNestedRecord = o_nestedRecord.FieldNestedSubtypeThree.get(0);
+
+					assertEquals(0, o_castOfNestedRecord.FieldInt, "values for field 'FieldInt' are not equal");
+					assertEquals("a1b2c3d4e5f6g", o_castOfNestedRecord.FieldShortText, "values for field 'FieldShortText' are not equal");
+				} else if (i == 3) {
+					FixedLengthRecordNestedSubtypeFour o_castOfNestedRecord = o_nestedRecord.FieldNestedSubtypeFour.get(0);
+					
+					assertEquals(23, o_castOfNestedRecord.FieldInt, "values for field 'FieldInt' are not equal");
+					assertEquals(o_timeFormat.parse("14:51:00"), o_castOfNestedRecord.FieldTime, "values for field 'FieldTime' are not equal");
+				} else if (i == 4) {
+					FixedLengthRecordNestedSubtypeFour o_castOfNestedRecord = o_nestedRecord.FieldNestedSubtypeFour.get(0);
+					
+					assertEquals(5522, o_castOfNestedRecord.FieldInt, "values for field 'FieldInt' are not equal");
+					assertEquals(o_timeFormat.parse("12:59:02"), o_castOfNestedRecord.FieldTime, "values for field 'FieldTime' are not equal");
+				} else if (i == 5) {
+					FixedLengthRecordNestedSubtypeOne o_castOfNestedRecord = o_nestedRecord.FieldNestedSubtypeOne.get(0);
+
+					assertEquals("a b c ", o_castOfNestedRecord.FieldString, "values for field 'FieldString' are not equal");
+					assertEquals(net.forestany.forestj.lib.Helper.fromISO8601UTCToUtilDate("2000-12-11T10:09:08Z"), o_castOfNestedRecord.FieldTimestamp, "values for field 'FieldTimestamp' are not equal");
+				} else if (i == 6) {
+					FixedLengthRecordNestedSubtypeOne o_castOfNestedRecord = o_nestedRecord.FieldNestedSubtypeOne.get(0);
+
+					assertEquals(null, o_castOfNestedRecord.FieldString, "values for field 'FieldString' are not equal");
+					assertEquals(net.forestany.forestj.lib.Helper.fromISO8601UTCToUtilDate("2025-02-03T04:15:26Z"), o_castOfNestedRecord.FieldTimestamp, "values for field 'FieldTimestamp' are not equal");
+				} else if (i == 7) {
+					FixedLengthRecordNestedSubtypeThree o_castOfNestedRecord = o_nestedRecord.FieldNestedSubtypeThree.get(0);
+
+					assertEquals(87735, o_castOfNestedRecord.FieldInt, "values for field 'FieldInt' are not equal");
+					assertEquals(null , o_castOfNestedRecord.FieldShortText, "values for field 'FieldShortText' are not equal");
+				} else if (i == 8) {
+					FixedLengthRecordNestedSubtypeTwo o_castOfNestedRecord = o_nestedRecord.FieldNestedSubtypeTwo.get(0);
+					
+					assertEquals(8773, o_castOfNestedRecord.FieldInt, "values for field 'FieldInt' are not equal");
+					assertEquals(o_timeFormat.parse("18:03:56"), o_castOfNestedRecord.FieldTime, "values for field 'FieldTime' are not equal");
+				}
+
+				i++;
+			}
+        } else if (p_i_record == 1) {
+        	assertEquals("z9y8x7", o_record.FieldText, "values for field 'FieldText' are not equal");
+			assertEquals(java.time.LocalDate.of(2025, 5, 5), o_record.FieldDate, "values for field 'FieldDate' are not equal");
+
+			int i = 0;
+
+			for (FixedLengthRecordDataWithNestedStructure o_nestedRecord : o_record.FieldListRecordNestedStructure) {
+				if (i == 0) {
+					FixedLengthRecordNestedSubtypeFour o_castOfNestedRecord = o_nestedRecord.FieldNestedSubtypeFour.get(0);
+					
+					assertEquals(0, o_castOfNestedRecord.FieldInt, "values for field 'FieldInt' are not equal");
+					assertEquals(o_timeFormat.parse("22:40:59"), o_castOfNestedRecord.FieldTime, "values for field 'FieldTime' are not equal");
+				} else if (i == 1) {
+					FixedLengthRecordNestedSubtypeTwo o_castOfNestedRecord = o_nestedRecord.FieldNestedSubtypeTwo.get(0);
+					
+					assertEquals(9513, o_castOfNestedRecord.FieldInt, "values for field 'FieldInt' are not equal");
+					assertEquals(o_timeFormat.parse("08:15:58"), o_castOfNestedRecord.FieldTime, "values for field 'FieldTime' are not equal");
+				} else if (i == 2) {
+					FixedLengthRecordNestedSubtypeThree o_castOfNestedRecord = o_nestedRecord.FieldNestedSubtypeThree.get(0);
+
+					assertEquals(0, o_castOfNestedRecord.FieldInt, "values for field 'FieldInt' are not equal");
+					assertEquals("a1b2c3d4e5f6g", o_castOfNestedRecord.FieldShortText, "values for field 'FieldShortText' are not equal");
+				}
+
+				i++;
+			}
+        } else if (p_i_record == 2) {
+        	assertEquals(null, o_record.FieldText, "values for field 'FieldText' are not equal");
+			assertEquals(null, o_record.FieldDate, "values for field 'FieldDate' are not equal");
+			assertEquals(null, o_record.FieldListRecordNestedStructure, "values for field 'FieldListRecordNestedStructure' are not equal");
+        }
+    }
+	
 	
 	private static void flrWriteTests(String p_s_testDirectory, String p_s_flrFileName, String p_s_contentCompareFileName, int p_i_mode) throws Exception {
 		String s_file = p_s_testDirectory + p_s_flrFileName;
@@ -1026,8 +1494,9 @@ class FixedLengthRecordTest {
 		FixedLengthRecordData o_flrData = new FixedLengthRecordData();
 		net.forestany.forestj.lib.io.FixedLengthRecordFile o_flrFile = new net.forestany.forestj.lib.io.FixedLengthRecordFile(o_flrData, "^000.*$");
 		createStackData(p_i_mode, o_flrFile);
+		o_flrFile.setLineBreak("\n");
 		o_flrFile.writeFile(s_file);
-		
+
 		/* compare file hashes */
 		assertEquals(
 			net.forestany.forestj.lib.io.File.hashFile(s_file, "SHA-512"),
@@ -1044,6 +1513,8 @@ class FixedLengthRecordTest {
 		 * mode = 3 -> 3 stacks with group headers, footers and record
 		 * mode = 4 -> 3 stacks with group headers, footers and 3 different types of records
 		 * mode = 5 -> 3 stacks with group headers, footers and 4 different types of records - one type has two subtypes
+		 * mode = 6 -> 3 stacks with group headers, footers and 5 different types of records - one type has two subtypes, another has two optional subtypes
+		 * mode = 7 -> 3 stacks with group headers, footers and 6 different types of records - one type has two subtypes, another has two optional subtypes, one subtype has a nested structure
 		 */
 		
 		java.text.DateFormat o_datetimeFormat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -1055,7 +1526,7 @@ class FixedLengthRecordTest {
 		
 		net.forestany.forestj.lib.io.FixedLengthRecordFile.FixedLengthRecordStack o_stack = p_o_flrFile.createNewStack();
 		
-		if ( (p_i_mode == 1) || (p_i_mode == 3) || (p_i_mode == 4) || (p_i_mode == 5) ) {
+		if ( (p_i_mode == 1) || (p_i_mode == 3) || (p_i_mode == 4) || (p_i_mode == 5) || (p_i_mode == 6) || (p_i_mode == 7) ) {
 			FixedLengthRecordGroupHeaderData o_groupHeader = new FixedLengthRecordGroupHeaderData();
 			o_groupHeader.FieldCustomerNumber = 123;
 			o_groupHeader.FieldDate = java.time.LocalDate.of(2011, 1, 1);
@@ -1068,7 +1539,7 @@ class FixedLengthRecordTest {
 		o_flr.FieldId = 				1;																			
 		o_flr.FieldUUID = 				"9d08862f-a9d0-4970-bba2-eb95dc9245f8";									
 		o_flr.FieldShortText = 			"Das ist einfach ";														
-		o_flr.FieldText = 				"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et.";		
+		o_flr.FieldText = 				"Lorem ipsum dolor sit amet, consectetur adipiscing elit.";		
 		o_flr.FieldSmallInt = 			(short)1001;																
 		o_flr.FieldInt = 				900000123;																	
 		o_flr.FieldBigInt = 			653398433456789458L;														
@@ -1088,7 +1559,7 @@ class FixedLengthRecordTest {
 		
 		o_stack.addFixedLengthRecord(i_recordNumber++, o_flr);
 		
-		if ( (p_i_mode == 4) || (p_i_mode == 5) ) {
+		if ( (p_i_mode == 4) || (p_i_mode == 5) || (p_i_mode == 6) || (p_i_mode == 7) ) {
 			FixedLengthRecordOtherData o_flrOther = new FixedLengthRecordOtherData();
 			o_flrOther.FieldStringId = 			"00000A";
 			o_flrOther.FieldInt = 				45872;																	
@@ -1124,7 +1595,7 @@ class FixedLengthRecordTest {
 		
 		o_stack.addFixedLengthRecord(i_recordNumber++, o_flr);
 		
-		if ( (p_i_mode == 4) || (p_i_mode == 5) ) {
+		if ( (p_i_mode == 4) || (p_i_mode == 5) || (p_i_mode == 6) || (p_i_mode == 7) ) {
 			FixedLengthRecordOtherData o_flrOther = new FixedLengthRecordOtherData();
 			o_flrOther.FieldStringId = 			"00000B";
 			o_flrOther.FieldInt = 				62348;																	
@@ -1160,7 +1631,7 @@ class FixedLengthRecordTest {
 		
 		o_stack.addFixedLengthRecord(i_recordNumber++, o_flr);
 		
-		if (p_i_mode == 5) {
+		if ( (p_i_mode == 5) || (p_i_mode == 6) || (p_i_mode == 7) ) {
             FixedLengthRecordDataWithSubtypes o_flrWithSubtypes = new FixedLengthRecordDataWithSubtypes();
             o_flrWithSubtypes.FieldDate = o_dateFormat.parse("2010-10-10");
             o_flrWithSubtypes.FieldLastNotice = "Last notice   1";
@@ -1202,7 +1673,42 @@ class FixedLengthRecordTest {
             o_stack.addFixedLengthRecord(i_recordNumber++, o_flrWithSubtypes);
         }
 		
-		if ( (p_i_mode == 4) || (p_i_mode == 5) ) {
+		if ((p_i_mode == 6) || (p_i_mode == 7)) {
+			FixedLengthRecordDataWithSubtypesOptional o_flrWithSubtypesOptional = new FixedLengthRecordDataWithSubtypesOptional();
+            o_flrWithSubtypesOptional.FieldText = "abcdef";
+            
+            o_flrWithSubtypesOptional.FieldListOptionalOne = new java.util.ArrayList<FixedLengthRecordSubtypeOptionalOne>();
+            	FixedLengthRecordSubtypeOptionalOne o_one = new FixedLengthRecordSubtypeOptionalOne();
+	            	o_one.FieldTwoDigitId = 22;
+	            	o_one.FieldShortText = "Optional 1";
+	            	o_flrWithSubtypesOptional.FieldListOptionalOne.add(o_one);
+            	o_one = new FixedLengthRecordSubtypeOptionalOne();
+	            	o_one.FieldTwoDigitId = 22;
+	            	o_one.FieldShortText = "Optional  ";
+	            	o_flrWithSubtypesOptional.FieldListOptionalOne.add(o_one);
+            	o_one = new FixedLengthRecordSubtypeOptionalOne();
+	            	o_one.FieldTwoDigitId = 22;
+	            	o_one.FieldShortText = "Optional 3";
+	            	o_flrWithSubtypesOptional.FieldListOptionalOne.add(o_one);
+            
+            o_flrWithSubtypesOptional.FieldListOptionalTwo = new java.util.ArrayList<FixedLengthRecordSubtypeOptionalTwo>();
+            	FixedLengthRecordSubtypeOptionalTwo o_two = new FixedLengthRecordSubtypeOptionalTwo();
+            		o_two.FieldThreeDigitId = 1;
+            		o_flrWithSubtypesOptional.FieldListOptionalTwo.add(o_two);
+            	o_two = new FixedLengthRecordSubtypeOptionalTwo();
+	        		o_two.FieldThreeDigitId = 2;
+	        		o_flrWithSubtypesOptional.FieldListOptionalTwo.add(o_two);
+                o_two = new FixedLengthRecordSubtypeOptionalTwo();
+	        		o_two.FieldThreeDigitId = 3;
+	        		o_flrWithSubtypesOptional.FieldListOptionalTwo.add(o_two);
+                o_two = new FixedLengthRecordSubtypeOptionalTwo();
+	        		o_two.FieldThreeDigitId = 4;
+	        		o_flrWithSubtypesOptional.FieldListOptionalTwo.add(o_two);
+                            
+            o_stack.addFixedLengthRecord(i_recordNumber++, o_flrWithSubtypesOptional);
+		}
+
+		if ( (p_i_mode == 4) || (p_i_mode == 5) || (p_i_mode == 6) || (p_i_mode == 7) ) {
 			FixedLengthRecordAnotherData o_flrAnother = new FixedLengthRecordAnotherData();
 			o_flrAnother.FieldStringId = 			"00000A";
 			o_flrAnother.FieldFloatCol = 			1448.83f;																	
@@ -1213,10 +1719,118 @@ class FixedLengthRecordTest {
 			o_stack.addFixedLengthRecord(i_recordNumber++, o_flrAnother);
 		}
 		
-		if ( (p_i_mode == 2) || (p_i_mode == 3) || (p_i_mode == 4) || (p_i_mode == 5) ) { 
+		if (p_i_mode == 7) {
+			FixedLengthRecordDataWithSubtypesOptionalNestedStructure o_flrWithSubtypesOptionalNestedSubstructure = new FixedLengthRecordDataWithSubtypesOptionalNestedStructure();
+            o_flrWithSubtypesOptionalNestedSubstructure.FieldText = "a1b2c3";
+			o_flrWithSubtypesOptionalNestedSubstructure.FieldDate = java.time.LocalDate.of(2021, 12, 21);
+
+            o_flrWithSubtypesOptionalNestedSubstructure.FieldListRecordNestedStructure = new java.util.ArrayList<FixedLengthRecordDataWithNestedStructure>();
+
+			FixedLengthRecordNestedSubtypeOne o_one = new FixedLengthRecordNestedSubtypeOne();
+				o_one.FieldString = "testab";
+				o_one.FieldTimestamp = net.forestany.forestj.lib.Helper.fromISO8601UTCToUtilDate("2026-01-03T14:07:27Z");
+				FixedLengthRecordDataWithNestedStructure o_nestedRecord = new FixedLengthRecordDataWithNestedStructure();
+				o_nestedRecord.FieldNestedSubtypeOne = java.util.Arrays.asList(o_one);
+				o_flrWithSubtypesOptionalNestedSubstructure.FieldListRecordNestedStructure.add(o_nestedRecord);
+
+			FixedLengthRecordNestedSubtypeThree o_three = new FixedLengthRecordNestedSubtypeThree();
+				o_three.FieldInt = 49703;
+				o_three.FieldShortText = "THISISATEST99";
+				o_nestedRecord = new FixedLengthRecordDataWithNestedStructure();
+				o_nestedRecord.FieldNestedSubtypeThree = java.util.Arrays.asList(o_three);
+				o_flrWithSubtypesOptionalNestedSubstructure.FieldListRecordNestedStructure.add(o_nestedRecord);
+
+			o_three = new FixedLengthRecordNestedSubtypeThree();
+				o_three.FieldInt = 0;
+				o_three.FieldShortText = "a1b2c3d4e5f6g";
+				o_nestedRecord = new FixedLengthRecordDataWithNestedStructure();
+				o_nestedRecord.FieldNestedSubtypeThree = java.util.Arrays.asList(o_three);
+				o_flrWithSubtypesOptionalNestedSubstructure.FieldListRecordNestedStructure.add(o_nestedRecord);
+
+			FixedLengthRecordNestedSubtypeFour o_four = new FixedLengthRecordNestedSubtypeFour();
+				o_four.FieldInt = 23;
+				o_four.FieldTime = o_timeFormat.parse("14:51:00");
+				o_nestedRecord = new FixedLengthRecordDataWithNestedStructure();
+				o_nestedRecord.FieldNestedSubtypeFour = java.util.Arrays.asList(o_four);
+				o_flrWithSubtypesOptionalNestedSubstructure.FieldListRecordNestedStructure.add(o_nestedRecord);
+
+			o_four = new FixedLengthRecordNestedSubtypeFour();
+				o_four.FieldInt = 5522;
+				o_four.FieldTime = o_timeFormat.parse("12:59:02");
+				o_nestedRecord = new FixedLengthRecordDataWithNestedStructure();
+				o_nestedRecord.FieldNestedSubtypeFour = java.util.Arrays.asList(o_four);
+				o_flrWithSubtypesOptionalNestedSubstructure.FieldListRecordNestedStructure.add(o_nestedRecord);
+
+			o_one = new FixedLengthRecordNestedSubtypeOne();
+				o_one.FieldString = "a b c ";
+				o_one.FieldTimestamp = net.forestany.forestj.lib.Helper.fromISO8601UTCToUtilDate("2000-12-11T10:09:08Z");
+				o_nestedRecord = new FixedLengthRecordDataWithNestedStructure();
+				o_nestedRecord.FieldNestedSubtypeOne = java.util.Arrays.asList(o_one);
+				o_flrWithSubtypesOptionalNestedSubstructure.FieldListRecordNestedStructure.add(o_nestedRecord);
+
+			o_one = new FixedLengthRecordNestedSubtypeOne();
+				o_one.FieldString = null;
+				o_one.FieldTimestamp = net.forestany.forestj.lib.Helper.fromISO8601UTCToUtilDate("2025-02-03T04:15:26Z");
+				o_nestedRecord = new FixedLengthRecordDataWithNestedStructure();
+				o_nestedRecord.FieldNestedSubtypeOne = java.util.Arrays.asList(o_one);
+				o_flrWithSubtypesOptionalNestedSubstructure.FieldListRecordNestedStructure.add(o_nestedRecord);
+
+			o_three = new FixedLengthRecordNestedSubtypeThree();
+				o_three.FieldInt = 87735;
+				o_three.FieldShortText = null;
+				o_nestedRecord = new FixedLengthRecordDataWithNestedStructure();
+				o_nestedRecord.FieldNestedSubtypeThree = java.util.Arrays.asList(o_three);
+				o_flrWithSubtypesOptionalNestedSubstructure.FieldListRecordNestedStructure.add(o_nestedRecord);
+
+			FixedLengthRecordNestedSubtypeTwo o_two = new FixedLengthRecordNestedSubtypeTwo();
+				o_two.FieldInt = 8773;
+				o_two.FieldTime = o_timeFormat.parse("18:03:56");
+				o_nestedRecord = new FixedLengthRecordDataWithNestedStructure();
+				o_nestedRecord.FieldNestedSubtypeTwo = java.util.Arrays.asList(o_two);
+				o_flrWithSubtypesOptionalNestedSubstructure.FieldListRecordNestedStructure.add(o_nestedRecord);
+
+            o_stack.addFixedLengthRecord(i_recordNumber++, o_flrWithSubtypesOptionalNestedSubstructure);
+		}
+
+		if ((p_i_mode == 6) || (p_i_mode == 7)) {
+			FixedLengthRecordDataWithSubtypesOptional o_flrWithSubtypesOptional = new FixedLengthRecordDataWithSubtypesOptional();
+            o_flrWithSubtypesOptional.FieldText = "ABCDEF";
+            o_flrWithSubtypesOptional.FieldListOptionalOne = null;
+            
+            o_flrWithSubtypesOptional.FieldListOptionalTwo = new java.util.ArrayList<FixedLengthRecordSubtypeOptionalTwo>();
+            	FixedLengthRecordSubtypeOptionalTwo o_two = new FixedLengthRecordSubtypeOptionalTwo();
+            		o_two.FieldThreeDigitId = 1;
+            		o_flrWithSubtypesOptional.FieldListOptionalTwo.add(o_two);
+            	o_two = new FixedLengthRecordSubtypeOptionalTwo();
+	        		o_two.FieldThreeDigitId = 2;
+	        		o_flrWithSubtypesOptional.FieldListOptionalTwo.add(o_two);
+                o_two = new FixedLengthRecordSubtypeOptionalTwo();
+	        		o_two.FieldThreeDigitId = 0;
+	        		o_flrWithSubtypesOptional.FieldListOptionalTwo.add(o_two);
+                o_two = new FixedLengthRecordSubtypeOptionalTwo();
+	        		o_two.FieldThreeDigitId = 4;
+	        		o_flrWithSubtypesOptional.FieldListOptionalTwo.add(o_two);
+				o_two = new FixedLengthRecordSubtypeOptionalTwo();
+	        		o_two.FieldThreeDigitId = 5;
+	        		o_flrWithSubtypesOptional.FieldListOptionalTwo.add(o_two);
+				o_two = new FixedLengthRecordSubtypeOptionalTwo();
+	        		o_two.FieldThreeDigitId = 6;
+	        		o_flrWithSubtypesOptional.FieldListOptionalTwo.add(o_two);
+				o_two = new FixedLengthRecordSubtypeOptionalTwo();
+	        		o_two.FieldThreeDigitId = 712;
+	        		o_flrWithSubtypesOptional.FieldListOptionalTwo.add(o_two);
+				o_two = new FixedLengthRecordSubtypeOptionalTwo();
+	        		o_two.FieldThreeDigitId = 8;
+	        		o_flrWithSubtypesOptional.FieldListOptionalTwo.add(o_two);
+				
+                            
+            o_stack.addFixedLengthRecord(i_recordNumber++, o_flrWithSubtypesOptional);
+		}
+
+		if ( (p_i_mode == 2) || (p_i_mode == 3) || (p_i_mode == 4) || (p_i_mode == 5) || (p_i_mode == 6) || (p_i_mode == 7) ) { 
 			FixedLengthRecordGroupFooterData o_groupFooter = new FixedLengthRecordGroupFooterData();
 			o_groupFooter.FieldAmountRecords = (p_i_mode >= 4) ? ((p_i_mode == 4) ? 6 : 7) : 3;
-			o_groupFooter.FieldSumInt = ((p_i_mode == 4) || (p_i_mode == 5)) ? 1200132092 : 1200061721;
+			o_groupFooter.FieldSumInt = ((p_i_mode == 4) || (p_i_mode == 5) || (p_i_mode == 6) || (p_i_mode == 7)) ? 1200132092 : 1200061721;
 			
 			o_stack.setGroupFooter(o_groupFooter);
 			
@@ -1225,7 +1839,7 @@ class FixedLengthRecordTest {
 			i_recordNumber = 0;
 		}
 		
-		if ( (p_i_mode == 1) || (p_i_mode == 3) || (p_i_mode == 4) || (p_i_mode == 5) ) {
+		if ( (p_i_mode == 1) || (p_i_mode == 3) || (p_i_mode == 4) || (p_i_mode == 5) || (p_i_mode == 6) || (p_i_mode == 7) ) {
 			if (p_i_mode == 1) {
 				p_o_flrFile.addStack(i_stackNumber++, o_stack);
 				o_stack = p_o_flrFile.createNewStack();
@@ -1244,7 +1858,7 @@ class FixedLengthRecordTest {
 		o_flr.FieldId = 				4;																			
 		o_flr.FieldUUID = 				"e1ac53e1-72e9-41d2-8278-17c1c8be79f2";									
 		o_flr.FieldShortText = 			" a b c d e f g h";														
-		o_flr.FieldText = 				"resolution. So striking at of to welcomed resolved. Northward by";		
+		o_flr.FieldText = 				"resolution. So striking at of to welcomed resolved.";
 		o_flr.FieldSmallInt = 			(short)1004;																
 		o_flr.FieldInt = 				600321000;																	
 		o_flr.FieldBigInt = 			555672589158833618L;														
@@ -1264,7 +1878,7 @@ class FixedLengthRecordTest {
 		
 		o_stack.addFixedLengthRecord(i_recordNumber++, o_flr);
 		
-		if ( (p_i_mode == 4) || (p_i_mode == 5) ) {
+		if ( (p_i_mode == 4) || (p_i_mode == 5) || (p_i_mode == 6) || (p_i_mode == 7) ) {
 			FixedLengthRecordOtherData o_flrOther = new FixedLengthRecordOtherData();
 			o_flrOther.FieldStringId = 			"00000A";
 			o_flrOther.FieldInt = 				45486;																	
@@ -1276,7 +1890,7 @@ class FixedLengthRecordTest {
 			o_stack.addFixedLengthRecord(i_recordNumber++, o_flrOther);
 		}
 		
-		if (p_i_mode == 5) {
+		if ( (p_i_mode == 5) || (p_i_mode == 6) || (p_i_mode == 7) ) {
             FixedLengthRecordDataWithSubtypes o_flrWithSubtypes = new FixedLengthRecordDataWithSubtypes();
             o_flrWithSubtypes.FieldDate = o_dateFormat.parse("2020-02-02");
             o_flrWithSubtypes.FieldLastNotice = "Last notice   2";
@@ -1344,7 +1958,7 @@ class FixedLengthRecordTest {
             o_stack.addFixedLengthRecord(i_recordNumber++, o_flrWithSubtypes);
         }
 		
-		if ( (p_i_mode == 4) || (p_i_mode == 5) ) {
+		if ( (p_i_mode == 4) || (p_i_mode == 5) || (p_i_mode == 6) || (p_i_mode == 7) ) {
 			FixedLengthRecordAnotherData o_flrAnother = new FixedLengthRecordAnotherData();
 			o_flrAnother.FieldStringId = 			"00000A";
 			o_flrAnother.FieldFloatCol = 			2195.12f;																	
@@ -1353,6 +1967,83 @@ class FixedLengthRecordTest {
 			o_flrAnother.FieldInt = 				11258;																	
 			
 			o_stack.addFixedLengthRecord(i_recordNumber++, o_flrAnother);
+		}
+
+		if ((p_i_mode == 6) || (p_i_mode == 7)) {
+			FixedLengthRecordDataWithSubtypesOptional o_flrWithSubtypesOptional = new FixedLengthRecordDataWithSubtypesOptional();
+            o_flrWithSubtypesOptional.FieldText = "ghijkl";
+            
+            o_flrWithSubtypesOptional.FieldListOptionalOne = new java.util.ArrayList<FixedLengthRecordSubtypeOptionalOne>();
+            	FixedLengthRecordSubtypeOptionalOne o_one = new FixedLengthRecordSubtypeOptionalOne();
+	            	o_one.FieldTwoDigitId = 24;
+	            	o_one.FieldShortText = "Optional 1";
+	            	o_flrWithSubtypesOptional.FieldListOptionalOne.add(o_one);
+            	o_one = new FixedLengthRecordSubtypeOptionalOne();
+	            	o_one.FieldTwoDigitId = 24;
+	            	o_one.FieldShortText = "Optional 2";
+	            	o_flrWithSubtypesOptional.FieldListOptionalOne.add(o_one);
+            	o_one = new FixedLengthRecordSubtypeOptionalOne();
+	            	o_one.FieldTwoDigitId = 24;
+	            	o_one.FieldShortText = "Optional 3";
+	            	o_flrWithSubtypesOptional.FieldListOptionalOne.add(o_one);
+				o_one = new FixedLengthRecordSubtypeOptionalOne();
+	            	o_one.FieldTwoDigitId = 24;
+	            	o_one.FieldShortText = "Optional  ";
+	            	o_flrWithSubtypesOptional.FieldListOptionalOne.add(o_one);
+				o_one = new FixedLengthRecordSubtypeOptionalOne();
+	            	o_one.FieldTwoDigitId = 24;
+	            	o_one.FieldShortText = "Optional 5";
+	            	o_flrWithSubtypesOptional.FieldListOptionalOne.add(o_one);
+				o_one = new FixedLengthRecordSubtypeOptionalOne();
+	            	o_one.FieldTwoDigitId = 24;
+	            	o_one.FieldShortText = "Optional 6";
+	            	o_flrWithSubtypesOptional.FieldListOptionalOne.add(o_one);
+				o_one = new FixedLengthRecordSubtypeOptionalOne();
+	            	o_one.FieldTwoDigitId = 24;
+	            	o_one.FieldShortText = "Optional 7";
+	            	o_flrWithSubtypesOptional.FieldListOptionalOne.add(o_one);
+				o_one = new FixedLengthRecordSubtypeOptionalOne();
+	            	o_one.FieldTwoDigitId = 24;
+	            	o_one.FieldShortText = null;
+	            	o_flrWithSubtypesOptional.FieldListOptionalOne.add(o_one);
+				o_one = new FixedLengthRecordSubtypeOptionalOne();
+	            	o_one.FieldTwoDigitId = 24;
+	            	o_one.FieldShortText = "Optional 9";
+	            	o_flrWithSubtypesOptional.FieldListOptionalOne.add(o_one);
+				o_one = new FixedLengthRecordSubtypeOptionalOne();
+	            	o_one.FieldTwoDigitId = 24;
+	            	o_one.FieldShortText = "Optional 0";
+	            	o_flrWithSubtypesOptional.FieldListOptionalOne.add(o_one);
+				
+            
+            o_flrWithSubtypesOptional.FieldListOptionalTwo = new java.util.ArrayList<FixedLengthRecordSubtypeOptionalTwo>();
+            	FixedLengthRecordSubtypeOptionalTwo o_two = new FixedLengthRecordSubtypeOptionalTwo();
+            		o_two.FieldThreeDigitId = 1;
+            		o_flrWithSubtypesOptional.FieldListOptionalTwo.add(o_two);
+            	o_two = new FixedLengthRecordSubtypeOptionalTwo();
+	        		o_two.FieldThreeDigitId = 2;
+	        		o_flrWithSubtypesOptional.FieldListOptionalTwo.add(o_two);
+                o_two = new FixedLengthRecordSubtypeOptionalTwo();
+	        		o_two.FieldThreeDigitId = 321;
+	        		o_flrWithSubtypesOptional.FieldListOptionalTwo.add(o_two);
+                o_two = new FixedLengthRecordSubtypeOptionalTwo();
+	        		o_two.FieldThreeDigitId = 4;
+	        		o_flrWithSubtypesOptional.FieldListOptionalTwo.add(o_two);
+				o_two = new FixedLengthRecordSubtypeOptionalTwo();
+	        		o_two.FieldThreeDigitId = 5;
+	        		o_flrWithSubtypesOptional.FieldListOptionalTwo.add(o_two);
+                o_two = new FixedLengthRecordSubtypeOptionalTwo();
+	        		o_two.FieldThreeDigitId = 6;
+	        		o_flrWithSubtypesOptional.FieldListOptionalTwo.add(o_two);
+                o_two = new FixedLengthRecordSubtypeOptionalTwo();
+	        		o_two.FieldThreeDigitId = 0;
+	        		o_flrWithSubtypesOptional.FieldListOptionalTwo.add(o_two);
+                o_two = new FixedLengthRecordSubtypeOptionalTwo();
+	        		o_two.FieldThreeDigitId = 808;
+	        		o_flrWithSubtypesOptional.FieldListOptionalTwo.add(o_two);
+                
+
+            o_stack.addFixedLengthRecord(i_recordNumber++, o_flrWithSubtypesOptional);
 		}
 		
 		o_flr = new FixedLengthRecordData();
@@ -1403,7 +2094,16 @@ class FixedLengthRecordTest {
 		
 		o_stack.addFixedLengthRecord(i_recordNumber++, o_flr);
 		
-		if ( (p_i_mode == 4) || (p_i_mode == 5) ) {
+		if ((p_i_mode == 6) || (p_i_mode == 7)) {
+			FixedLengthRecordDataWithSubtypesOptional o_flrWithSubtypesOptional = new FixedLengthRecordDataWithSubtypesOptional();
+            o_flrWithSubtypesOptional.FieldText = "GHIJKL";
+            o_flrWithSubtypesOptional.FieldListOptionalOne = null;
+			o_flrWithSubtypesOptional.FieldListOptionalTwo = null;
+
+            o_stack.addFixedLengthRecord(i_recordNumber++, o_flrWithSubtypesOptional);
+		}
+
+		if ( (p_i_mode == 4) || (p_i_mode == 5) || (p_i_mode == 6) || (p_i_mode == 7) ) {
 			FixedLengthRecordOtherData o_flrOther = new FixedLengthRecordOtherData();
 			o_flrOther.FieldStringId = 			"00000B";
 			o_flrOther.FieldInt = 				97322;																	
@@ -1415,10 +2115,10 @@ class FixedLengthRecordTest {
 			o_stack.addFixedLengthRecord(i_recordNumber++, o_flrOther);
 		}
 		
-		if ( (p_i_mode == 2) || (p_i_mode == 3) || (p_i_mode == 4) || (p_i_mode == 5) ) {
+		if ( (p_i_mode == 2) || (p_i_mode == 3) || (p_i_mode == 4) || (p_i_mode == 5) || (p_i_mode == 6) || (p_i_mode == 7) ) {
 			FixedLengthRecordGroupFooterData o_groupFooter = new FixedLengthRecordGroupFooterData();
 			o_groupFooter.FieldAmountRecords = (p_i_mode >= 4) ? ((p_i_mode == 4) ? 6 : 7) : 3;
-			o_groupFooter.FieldSumInt = ((p_i_mode == 4) || (p_i_mode == 5)) ? 766737533 : 766660500;
+			o_groupFooter.FieldSumInt = ((p_i_mode == 4) || (p_i_mode == 5) || (p_i_mode == 6) || (p_i_mode == 7)) ? 766737533 : 766660500;
 			
 			o_stack.setGroupFooter(o_groupFooter);
 			
@@ -1427,7 +2127,7 @@ class FixedLengthRecordTest {
 			i_recordNumber = 0;
 		}
 		
-		if ( (p_i_mode == 1) || (p_i_mode == 3) || (p_i_mode == 4) || (p_i_mode == 5) ) {
+		if ( (p_i_mode == 1) || (p_i_mode == 3) || (p_i_mode == 4) || (p_i_mode == 5) || (p_i_mode == 6) || (p_i_mode == 7) ) {
 			if (p_i_mode == 1) {
 				p_o_flrFile.addStack(i_stackNumber++, o_stack);
 				o_stack = p_o_flrFile.createNewStack();
@@ -1466,7 +2166,7 @@ class FixedLengthRecordTest {
 		
 		o_stack.addFixedLengthRecord(i_recordNumber++, o_flr);
 		
-		if ( (p_i_mode == 4) || (p_i_mode == 5) ) {
+		if ( (p_i_mode == 4) || (p_i_mode == 5) || (p_i_mode == 6) || (p_i_mode == 7) ) {
 			FixedLengthRecordAnotherData o_flrAnother = new FixedLengthRecordAnotherData();
 			o_flrAnother.FieldStringId = 			"00000A";
 			o_flrAnother.FieldFloatCol = 			4390.24f;																	
@@ -1477,7 +2177,7 @@ class FixedLengthRecordTest {
 			o_stack.addFixedLengthRecord(i_recordNumber++, o_flrAnother);
 		}
 		
-		if ( (p_i_mode == 4) || (p_i_mode == 5) ) {
+		if ( (p_i_mode == 4) || (p_i_mode == 5) || (p_i_mode == 6) || (p_i_mode == 7) ) {
 			FixedLengthRecordAnotherData o_flrAnother = new FixedLengthRecordAnotherData();
 			o_flrAnother.FieldStringId = 			"00000B";
 			o_flrAnother.FieldFloatCol = 			0.0f;																	
@@ -1512,7 +2212,7 @@ class FixedLengthRecordTest {
 		
 		o_stack.addFixedLengthRecord(i_recordNumber++, o_flr);
 		
-		if ( (p_i_mode == 4) || (p_i_mode == 5) ) {
+		if ( (p_i_mode == 4) || (p_i_mode == 5) || (p_i_mode == 6) || (p_i_mode == 7) ) {
 			FixedLengthRecordOtherData o_flrOther = new FixedLengthRecordOtherData();
 			o_flrOther.FieldStringId = 			"00000A";
 			o_flrOther.FieldInt = 				36582;																	
@@ -1524,7 +2224,7 @@ class FixedLengthRecordTest {
 			o_stack.addFixedLengthRecord(i_recordNumber++, o_flrOther);
 		}
 		
-		if ( (p_i_mode == 4) || (p_i_mode == 5) ) {
+		if ( (p_i_mode == 4) || (p_i_mode == 5) || (p_i_mode == 6) || (p_i_mode == 7) ) {
 			FixedLengthRecordOtherData o_flrOther = new FixedLengthRecordOtherData();
 			o_flrOther.FieldStringId = 			"00000B";
 			o_flrOther.FieldInt = 				0;																	
@@ -1560,7 +2260,7 @@ class FixedLengthRecordTest {
 		
 		o_stack.addFixedLengthRecord(i_recordNumber++, o_flr);
 		
-		if ( (p_i_mode == 4) || (p_i_mode == 5) ) {
+		if ( (p_i_mode == 4) || (p_i_mode == 5) || (p_i_mode == 6) || (p_i_mode == 7) ) {
 			FixedLengthRecordOtherData o_flrOther = new FixedLengthRecordOtherData();
 			o_flrOther.FieldStringId = 			"00000C";
 			o_flrOther.FieldInt = 				22558;																	
@@ -1572,7 +2272,38 @@ class FixedLengthRecordTest {
 			o_stack.addFixedLengthRecord(i_recordNumber++, o_flrOther);
 		}
 		
-		if (p_i_mode == 5) {
+		if (p_i_mode == 7) {
+			FixedLengthRecordDataWithSubtypesOptionalNestedStructure o_flrWithSubtypesOptionalNestedSubstructure = new FixedLengthRecordDataWithSubtypesOptionalNestedStructure();
+            o_flrWithSubtypesOptionalNestedSubstructure.FieldText = "z9y8x7";
+			o_flrWithSubtypesOptionalNestedSubstructure.FieldDate = java.time.LocalDate.of(2025, 5, 5);
+
+            o_flrWithSubtypesOptionalNestedSubstructure.FieldListRecordNestedStructure = new java.util.ArrayList<FixedLengthRecordDataWithNestedStructure>();
+			
+			FixedLengthRecordNestedSubtypeFour o_four = new FixedLengthRecordNestedSubtypeFour();
+				o_four.FieldInt = 0;
+				o_four.FieldTime = o_timeFormat.parse("22:40:59");
+				FixedLengthRecordDataWithNestedStructure o_nestedRecord = new FixedLengthRecordDataWithNestedStructure();
+				o_nestedRecord.FieldNestedSubtypeFour = java.util.Arrays.asList(o_four);
+				o_flrWithSubtypesOptionalNestedSubstructure.FieldListRecordNestedStructure.add(o_nestedRecord);
+
+			FixedLengthRecordNestedSubtypeTwo o_two = new FixedLengthRecordNestedSubtypeTwo();
+				o_two.FieldInt = 9513;
+				o_two.FieldTime = o_timeFormat.parse("08:15:58");
+				o_nestedRecord = new FixedLengthRecordDataWithNestedStructure();
+				o_nestedRecord.FieldNestedSubtypeTwo = java.util.Arrays.asList(o_two);
+				o_flrWithSubtypesOptionalNestedSubstructure.FieldListRecordNestedStructure.add(o_nestedRecord);
+
+			FixedLengthRecordNestedSubtypeThree o_three = new FixedLengthRecordNestedSubtypeThree();
+				o_three.FieldInt = 0;
+				o_three.FieldShortText = "a1b2c3d4e5f6g";
+				o_nestedRecord = new FixedLengthRecordDataWithNestedStructure();
+				o_nestedRecord.FieldNestedSubtypeThree = java.util.Arrays.asList(o_three);
+				o_flrWithSubtypesOptionalNestedSubstructure.FieldListRecordNestedStructure.add(o_nestedRecord);
+
+            o_stack.addFixedLengthRecord(i_recordNumber++, o_flrWithSubtypesOptionalNestedSubstructure);
+		}
+
+		if ( (p_i_mode == 5) || (p_i_mode == 6) || (p_i_mode == 7) ) {
             FixedLengthRecordDataWithSubtypes o_flrWithSubtypes = new FixedLengthRecordDataWithSubtypes();
             o_flrWithSubtypes.FieldDate = o_dateFormat.parse("2030-03-03");
             o_flrWithSubtypes.FieldLastNotice = "Last notice   3";
@@ -1706,16 +2437,27 @@ class FixedLengthRecordTest {
             o_stack.addFixedLengthRecord(i_recordNumber++, o_flrWithSubtypes);
         }
 		
-		if ( (p_i_mode == 2) || (p_i_mode == 3) || (p_i_mode == 4) || (p_i_mode == 5) ) {
+		if (p_i_mode == 7) {
+			FixedLengthRecordDataWithSubtypesOptionalNestedStructure o_flrWithSubtypesOptionalNestedSubstructure = new FixedLengthRecordDataWithSubtypesOptionalNestedStructure();
+            o_flrWithSubtypesOptionalNestedSubstructure.FieldText = null;
+            o_flrWithSubtypesOptionalNestedSubstructure.FieldListRecordNestedStructure = null;
+			o_flrWithSubtypesOptionalNestedSubstructure.FieldDate = null;
+
+            o_stack.addFixedLengthRecord(i_recordNumber++, o_flrWithSubtypesOptionalNestedSubstructure);
+		}
+
+		if ( (p_i_mode == 2) || (p_i_mode == 3) || (p_i_mode == 4) || (p_i_mode == 5) || (p_i_mode == 6) || (p_i_mode == 7) ) {
 			FixedLengthRecordGroupFooterData o_groupFooter = new FixedLengthRecordGroupFooterData();
 			o_groupFooter.FieldAmountRecords = (p_i_mode >= 4) ? ((p_i_mode == 4) ? 8 : 10) : 2;
-			o_groupFooter.FieldSumInt = ((p_i_mode == 4) || (p_i_mode == 5)) ? 260642429 : 260606060;
+			o_groupFooter.FieldSumInt = ((p_i_mode == 4) || (p_i_mode == 5) || (p_i_mode == 6) || (p_i_mode == 7)) ? 260642429 : 260606060;
 			
 			o_stack.setGroupFooter(o_groupFooter);
 		}
 		
 		p_o_flrFile.addStack(i_stackNumber++, o_stack);
 	}
+	
+
 	@Test
 	public void testFixedLengthRecordStandardTransposeMethods() {
 		try {
@@ -1732,6 +2474,12 @@ class FixedLengthRecordTest {
 			assertEquals(
 				"This is just a test This is just a ",
 				net.forestany.forestj.lib.io.StandardTransposeMethods.TransposeString("This is just a test This is just a test This is just a test This is just a test", 35),
+				"FixedLengthRecord StandardTransposeMethods TransposeString(Object, Integer) method does not return expected value"
+			);
+
+			assertEquals(
+				"This is just a test                ",
+				net.forestany.forestj.lib.io.StandardTransposeMethods.TransposeString("This is just a test", 35),
 				"FixedLengthRecord StandardTransposeMethods TransposeString(Object, Integer) method does not return expected value"
 			);
 			
@@ -2036,6 +2784,12 @@ class FixedLengthRecordTest {
 			/* util date */
 			
 			assertEquals(
+				null,
+				net.forestany.forestj.lib.io.StandardTransposeMethods.UtilDate.TransposeDate_ISO8601("0000-00-00T00:00:00Z"),
+				"FixedLengthRecord StandardTransposeMethods TransposeDate_ISO8601(String) method does not return expected value"
+			);
+
+			assertEquals(
 				new java.text.SimpleDateFormat("dd.MM.yyyy HH:mm:ss").parse("14.03.2020 06:02:03"),
 				net.forestany.forestj.lib.io.StandardTransposeMethods.UtilDate.TransposeDate_ISO8601("2020-03-14T05:02:03Z"),
 				"FixedLengthRecord StandardTransposeMethods TransposeDate_ISO8601(String) method does not return expected value"
@@ -2066,6 +2820,12 @@ class FixedLengthRecordTest {
 			);
 			
 			assertEquals(
+				null,
+				net.forestany.forestj.lib.io.StandardTransposeMethods.UtilDate.TransposeDate_RFC1123("Mon, 00 Jan 0000 00:00:00 GMT"),
+				"FixedLengthRecord StandardTransposeMethods TransposeDate_RFC1123(String) method does not return expected value"
+			);
+
+			assertEquals(
 				new java.text.SimpleDateFormat("dd.MM.yyyy HH:mm:ss").parse("14.03.2020 06:02:03"),
 				net.forestany.forestj.lib.io.StandardTransposeMethods.UtilDate.TransposeDate_RFC1123("Sat, 14 Mar 2020 05:02:03 GMT"),
 				"FixedLengthRecord StandardTransposeMethods TransposeDate_RFC1123(String) method does not return expected value"
@@ -2077,6 +2837,12 @@ class FixedLengthRecordTest {
 				"FixedLengthRecord StandardTransposeMethods TransposeDate_RFC1123(Object, Integer) method does not return expected value"
 			);
 			
+			assertEquals(
+				null,
+				net.forestany.forestj.lib.io.StandardTransposeMethods.UtilDate.TransposeDate_yyyymmddhhiiss("00000000000000"),
+				"FixedLengthRecord StandardTransposeMethods TransposeDate_yyyymmddhhiiss(String) method does not return expected value"
+			);
+
 			assertEquals(
 				new java.text.SimpleDateFormat("dd.MM.yyyy HH:mm:ss").parse("01.01.2011 02:04:08"),
 				net.forestany.forestj.lib.io.StandardTransposeMethods.UtilDate.TransposeDate_yyyymmddhhiiss("20110101020408"),
@@ -2295,10 +3061,16 @@ class FixedLengthRecordTest {
 			
 			/* LocalDateTime */
 			
+			assertEquals(
+				null,
+				net.forestany.forestj.lib.io.StandardTransposeMethods.LocalDateTime.TransposeLocalDateTime_ISO8601("0000-00-00T00:00:00Z"),
+				"FixedLengthRecord StandardTransposeMethods TransposeLocalDateTime_ISO8601(String) method does not return expected value"
+			);
+
 			java.time.LocalDateTime o_localDateTime = java.time.LocalDateTime.of(2020, 03, 14, 06, 02, 03).atZone(java.time.ZoneId.systemDefault()).withZoneSameInstant(java.time.ZoneId.of("Europe/Berlin")).toLocalDateTime();
 		
 			assertEquals(
-					o_localDateTime,
+				o_localDateTime,
 				net.forestany.forestj.lib.io.StandardTransposeMethods.LocalDateTime.TransposeLocalDateTime_ISO8601("2020-03-14T05:02:03Z"),
 				"FixedLengthRecord StandardTransposeMethods TransposeLocalDateTime_ISO8601(String) method does not return expected value"
 			);
@@ -2322,6 +3094,12 @@ class FixedLengthRecordTest {
 			);
 			
 			assertEquals(
+				null,
+				net.forestany.forestj.lib.io.StandardTransposeMethods.LocalDateTime.TransposeLocalDateTime_RFC1123("Mon, 00 Jan 0000 00:00:00 GMT"),
+				"FixedLengthRecord StandardTransposeMethods TransposeLocalDateTime_RFC1123(String) method does not return expected value"
+			);
+
+			assertEquals(
 				o_localDateTime,
 				net.forestany.forestj.lib.io.StandardTransposeMethods.LocalDateTime.TransposeLocalDateTime_RFC1123("Sat, 14 Mar 2020 05:02:03 GMT"),
 				"FixedLengthRecord StandardTransposeMethods TransposeLocalDateTime_RFC1123(String) method does not return expected value"
@@ -2333,6 +3111,18 @@ class FixedLengthRecordTest {
 				"FixedLengthRecord StandardTransposeMethods TransposeLocalDateTime_RFC1123(Object, Integer) method does not return expected value"
 			);
 			
+			assertEquals(
+				null,
+				net.forestany.forestj.lib.io.StandardTransposeMethods.LocalDateTime.TransposeLocalDateTime_yyyymmddhhiiss("00000000000000"),
+				"FixedLengthRecord StandardTransposeMethods TransposeLocalDateTime_yyyymmddhhiiss(String) method does not return expected value"
+			);
+
+			assertEquals(
+				null,
+				net.forestany.forestj.lib.io.StandardTransposeMethods.LocalDateTime.TransposeLocalDateTime_ddmmyyyyhhiiss_Dot("00.00.0000 00:00:00"),
+				"FixedLengthRecord StandardTransposeMethods TransposeLocalDateTime_ddmmyyyyhhiiss_Dot(String) method does not return expected value"
+			);
+
 			o_localDateTime = java.time.LocalDateTime.of(2011, 01, 01, 02, 04, 8).atZone(java.time.ZoneId.systemDefault()).withZoneSameInstant(java.time.ZoneId.of("Europe/Berlin")).toLocalDateTime();
 			
 			assertEquals(
@@ -2423,6 +3213,18 @@ class FixedLengthRecordTest {
 			
 			/* LocalDate */
 			
+			assertEquals(
+				null,
+				net.forestany.forestj.lib.io.StandardTransposeMethods.LocalDate.TransposeLocalDate_yyyymmdd("00000000"),
+				"FixedLengthRecord StandardTransposeMethods TransposeLocalDate_yyyymmdd(String) method does not return expected value"
+			);
+
+			assertEquals(
+				null,
+				net.forestany.forestj.lib.io.StandardTransposeMethods.LocalDate.TransposeLocalDate_yyyymmdd("00.00.0000"),
+				"FixedLengthRecord StandardTransposeMethods TransposeLocalDate_yyyymmdd(String) method does not return expected value"
+			);
+
 			java.time.LocalDate o_localDate = java.time.LocalDate.of(2011, 01, 01);
 			
 			assertEquals(
@@ -2513,6 +3315,12 @@ class FixedLengthRecordTest {
 				
 			/* LocalTime */
 			
+			assertEquals(
+				null,
+				net.forestany.forestj.lib.io.StandardTransposeMethods.LocalTime.TransposeLocalTime_hhiiss("000000"),
+				"FixedLengthRecord StandardTransposeMethods TransposeLocalTime_hhiiss(String) method does not return expected value"
+			);
+
 			java.time.LocalTime o_localTime = java.time.LocalTime.of(2, 3, 4);
 			
 			assertEquals(
@@ -2643,8 +3451,9 @@ class FixedLengthRecordTest {
 				"FixedLengthRecord StandardTransposeMethods TransposeFloat(Object, Integer, Integer, String, String) method does not return expected value"
 			);
 			
+			/* use your system group and decimal separator here, for GER it is '.' and ',' */
 			assertEquals(
-				"00,214,748.12",
+				"00.214.748,12",//"00,214,748.12",
 				net.forestany.forestj.lib.io.StandardTransposeMethods.FloatingPointNumbers.TransposeFloat(214748.1230101f, 8, 2),
 				"FixedLengthRecord StandardTransposeMethods TransposeFloat(Object, Integer, Integer) method does not return expected value"
 			);
@@ -2696,9 +3505,10 @@ class FixedLengthRecordTest {
 				net.forestany.forestj.lib.io.StandardTransposeMethods.FloatingPointNumbers.TransposeFloatWithSign(214748f, 8, 0, null, null),
 				"FixedLengthRecord StandardTransposeMethods TransposeFloatWithSign(Object, Integer, Integer, String, String) method does not return expected value"
 			);
-			
+
+			/* use your system group and decimal separator here, for GER it is '.' and ',' */
 			assertEquals(
-				"+00,214,748.12",
+				"+00.214.748,12",//"+00,214,748.12",
 				net.forestany.forestj.lib.io.StandardTransposeMethods.FloatingPointNumbers.TransposeFloatWithSign(214748.1230101f, 8, 2),
 				"FixedLengthRecord StandardTransposeMethods TransposeFloatWithSign(Object, Integer, Integer) method does not return expected value"
 			);
@@ -2843,8 +3653,9 @@ class FixedLengthRecordTest {
 				"FixedLengthRecord StandardTransposeMethods TransposeDouble(Object, Integer, Integer, String, String) method does not return expected value"
 			);
 			
+			/* use your system group and decimal separator here, for GER it is '.' and ',' */
 			assertEquals(
-				"00,214,748.12",
+				"00.214.748,12",//"00,214,748.12",
 				net.forestany.forestj.lib.io.StandardTransposeMethods.FloatingPointNumbers.TransposeDouble(214748.1230101d, 8, 2),
 				"FixedLengthRecord StandardTransposeMethods TransposeDouble(Object, Integer, Integer) method does not return expected value"
 			);
@@ -2897,8 +3708,9 @@ class FixedLengthRecordTest {
 				"FixedLengthRecord StandardTransposeMethods TransposeDoubleWithSign(Object, Integer, Integer, String, String) method does not return expected value"
 			);
 			
+			/* use your system group and decimal separator here, for GER it is '.' and ',' */
 			assertEquals(
-				"+00,214,748.12",
+				"+00.214.748,12",//"+00,214,748.12",
 				net.forestany.forestj.lib.io.StandardTransposeMethods.FloatingPointNumbers.TransposeDoubleWithSign(214748.1230101d, 8, 2),
 				"FixedLengthRecord StandardTransposeMethods TransposeDoubleWithSign(Object, Integer, Integer) method does not return expected value"
 			);
@@ -3042,6 +3854,18 @@ class FixedLengthRecordTest {
 				(java.math.BigDecimal)net.forestany.forestj.lib.io.StandardTransposeMethods.FloatingPointNumbers.TransposeBigDecimal("-002147483647", 8),
 				"FixedLengthRecord StandardTransposeMethods TransposeBigDecimal(String, Integer) method does not return expected value"
 			);
+
+			assertEquals(
+				new java.math.BigDecimal("214748.3647"),
+				(java.math.BigDecimal)net.forestany.forestj.lib.io.StandardTransposeMethods.FloatingPointNumbers.TransposeBigDecimal("00000+2147483647", 12),
+				"FixedLengthRecord StandardTransposeMethods TransposeBigDecimal(String, Integer) method does not return expected value"
+			);
+			
+			assertEquals(
+				new java.math.BigDecimal("-21474.83647"),
+				(java.math.BigDecimal)net.forestany.forestj.lib.io.StandardTransposeMethods.FloatingPointNumbers.TransposeBigDecimal("0000-2147483647", 10),
+				"FixedLengthRecord StandardTransposeMethods TransposeBigDecimal(String, Integer) method does not return expected value"
+			);
 			
 			assertEquals(
 				"000001",
@@ -3061,8 +3885,9 @@ class FixedLengthRecordTest {
 				"FixedLengthRecord StandardTransposeMethods TransposeBigDecimal(Object, Integer, Integer, String, String) method does not return expected value"
 			);
 			
+			/* use your system group and decimal separator here, for GER it is '.' and ',' */
 			assertEquals(
-				"00,214,748.12",
+				"00.214.748,12",//"00,214,748.12",
 				net.forestany.forestj.lib.io.StandardTransposeMethods.FloatingPointNumbers.TransposeBigDecimal(new java.math.BigDecimal("214748.1230101"), 8, 2),
 				"FixedLengthRecord StandardTransposeMethods TransposeBigDecimal(Object, Integer, Integer) method does not return expected value"
 			);
@@ -3115,8 +3940,9 @@ class FixedLengthRecordTest {
 				"FixedLengthRecord StandardTransposeMethods TransposeBigDecimalWithSign(Object, Integer, Integer, String, String) method does not return expected value"
 			);
 			
+			/* use your system group and decimal separator here, for GER it is '.' and ',' */
 			assertEquals(
-				"+00,214,748.12",
+				"+00.214.748,12",//"+00,214,748.12",
 				net.forestany.forestj.lib.io.StandardTransposeMethods.FloatingPointNumbers.TransposeBigDecimalWithSign(new java.math.BigDecimal("214748.1230101"), 8, 2),
 				"FixedLengthRecord StandardTransposeMethods TransposeBigDecimalWithSign(Object, Integer, Integer) method does not return expected value"
 			);
@@ -3185,6 +4011,43 @@ class FixedLengthRecordTest {
 				"+00.000.000,00000000000",
 				net.forestany.forestj.lib.io.StandardTransposeMethods.FloatingPointNumbers.TransposeBigDecimalWithSign(new java.math.BigDecimal("0"), 8, 11, ",", "."),
 				"FixedLengthRecord StandardTransposeMethods TransposeBigDecimalWithSign(Object, Integer, Integer, String, String) method does not return expected value"
+			);
+
+			assertEquals(
+				"0000214748",
+				net.forestany.forestj.lib.io.StandardTransposeMethods.FloatingPointNumbers.TransposeBigDecimalWithNegativeSignOnly(new java.math.BigDecimal("214748"), 9, 0, null, null),
+				"FixedLengthRecord StandardTransposeMethods TransposeBigDecimalWithNegativeSignOnly(Object, Integer, Integer, String, String) method does not return expected value"
+			);
+			
+			/* use your system group and decimal separator here, for GER it is '.' and ',' */
+			assertEquals(
+				"000.214.748,12",//"000,214,748.12",
+				net.forestany.forestj.lib.io.StandardTransposeMethods.FloatingPointNumbers.TransposeBigDecimalWithNegativeSignOnly(new java.math.BigDecimal("214748.1230101"), 8, 2),
+				"FixedLengthRecord StandardTransposeMethods TransposeBigDecimalWithNegativeSignOnly(Object, Integer, Integer) method does not return expected value"
+			);
+			
+			assertEquals(
+				"000.214.748,12",
+				net.forestany.forestj.lib.io.StandardTransposeMethods.FloatingPointNumbers.TransposeBigDecimalWithNegativeSignOnly(new java.math.BigDecimal("214748.1230101"), 8, 2, ",", "."),
+				"FixedLengthRecord StandardTransposeMethods TransposeBigDecimalWithNegativeSignOnly(Object, Integer, Integer, String, String) method does not return expected value"
+			);
+			
+			assertEquals(
+				"-00214748,1230",
+				net.forestany.forestj.lib.io.StandardTransposeMethods.FloatingPointNumbers.TransposeBigDecimalWithNegativeSignOnly(new java.math.BigDecimal("-214748.12301019812"), 8, 4, ",", null),
+				"FixedLengthRecord StandardTransposeMethods TransposeBigDecimalWithNegativeSignOnly(Object, Integer, Integer, String, String) method does not return expected value"
+			);
+			
+			assertEquals(
+				"0002147481230",
+				net.forestany.forestj.lib.io.StandardTransposeMethods.FloatingPointNumbers.TransposeBigDecimalWithNegativeSignOnly(new java.math.BigDecimal("214748.12301019812"), 8, 4, null, null),
+				"FixedLengthRecord StandardTransposeMethods TransposeBigDecimalWithNegativeSignOnly(Object, Integer, Integer, String, String) method does not return expected value"
+			);
+
+			assertEquals(
+				"000.000.000,00000000000",
+				net.forestany.forestj.lib.io.StandardTransposeMethods.FloatingPointNumbers.TransposeBigDecimalWithNegativeSignOnly(new java.math.BigDecimal("0"), 8, 11, ",", "."),
+				"FixedLengthRecord StandardTransposeMethods TransposeBigDecimalWithNegativeSignOnly(Object, Integer, Integer, String, String) method does not return expected value"
 			);
 		} catch (Exception o_exc) {
 			fail(o_exc.getMessage());

@@ -92,7 +92,7 @@ public class Alter extends QueryAbstract {
 								s_foo += "ALTER TABLE " + "`" + this.s_table + "`" + " ";
 								
 								/* change a column, only one possible for one alter query */
-								if (o_column.getAlterOperation().contentEquals("CHANGE")) {
+								if ((o_column.getAlterOperation() != null) && (o_column.getAlterOperation().contentEquals("CHANGE"))) {
 									if (this.a_columns.size() > 1) {
 										throw new Exception("Columns object lists must contain only one item for CHANGE operation");
 									}
@@ -102,11 +102,11 @@ public class Alter extends QueryAbstract {
 								}
 								
 								/* drop a column, notice column which should be deleted for not creating it new with new temp table */
-								if (o_column.getAlterOperation().contentEquals("DROP")) {
+								if ((o_column.getAlterOperation() != null) && (o_column.getAlterOperation().contentEquals("DROP"))) {
 									a_deleteColumns.add(o_column.s_name);
 								}
 								
-								if (o_column.getAlterOperation().contentEquals("ADD")) {
+								if ((o_column.getAlterOperation() != null) && (o_column.getAlterOperation().contentEquals("ADD"))) {
 									s_foo += "ADD ";
 								}
 								
@@ -148,7 +148,7 @@ public class Alter extends QueryAbstract {
 									if (a_deleteColumns.contains(o_columnDefinition.get("name").toString())) {
 										/* skip columns which should be deleted */
 										continue;
-									} else if ( (o_changeColumn != null) && (o_column.s_name.equals(o_changeColumn.s_name)) ) {
+									} else if ( (o_column != null) && (o_changeColumn != null) && (o_column.s_name.equals(o_changeColumn.s_name)) ) {
 										/* handle change column */
 										o_column.s_name = o_changeColumn.s_newName;
 										o_column.assumeColumnTypeSqlite(o_changeColumn);
@@ -219,11 +219,11 @@ public class Alter extends QueryAbstract {
 										}
 										
 										/* if we want to change a column, we have to change it's name for indices as well */
-										if ( (o_changeColumn != null) && (s_name.equals(o_changeColumn.s_name)) ) {
+										if ( (s_name != null) && (o_changeColumn != null) && (s_name.equals(o_changeColumn.s_name)) ) {
 											s_name = s_name.replace(o_changeColumn.s_name, o_changeColumn.s_newName);
 											
 											for (int j = 0; j < a_indexColumns.length; j++) {
-												if (a_indexColumns[j].equals(o_changeColumn.s_name)) {
+												if ((a_indexColumns[j] != null) && (a_indexColumns[j].equals(o_changeColumn.s_name))) {
 													a_indexColumns[j] = o_changeColumn.s_newName;
 												}
 											}
@@ -276,13 +276,13 @@ public class Alter extends QueryAbstract {
 							
 							/* iterate each column */
 							for (ColumnStructure o_column : this.a_columns) {
-								if (o_column.getAlterOperation().contentEquals("ADD")) {
+								if ((o_column.getAlterOperation() != null) && (o_column.getAlterOperation().contentEquals("ADD"))) {
 									/* just add 'ADD ' once within alter query */
 									if (!b_once) {
 										s_foo += "ADD ";
 										b_once = true;
 									}
-								} else if (o_column.getAlterOperation().contentEquals("CHANGE")) {
+								} else if ((o_column.getAlterOperation() != null) && (o_column.getAlterOperation().contentEquals("CHANGE"))) {
 									s_foo = "";
 									
 									/* use mssql execute command for renaming a column, and set it as first query command */
@@ -292,7 +292,7 @@ public class Alter extends QueryAbstract {
 									
 									/* renew start alter query */
 									s_foo += "ALTER TABLE " + "[" + this.s_table + "]" + " ALTER ";
-								} else if (o_column.getAlterOperation().contentEquals("DROP")) {
+								} else if ((o_column.getAlterOperation() != null) && (o_column.getAlterOperation().contentEquals("DROP"))) {
 									/* just add 'DROP ' once within alter query */
 									if (!b_once) {
 										s_foo += "DROP ";
@@ -305,7 +305,7 @@ public class Alter extends QueryAbstract {
 									s_foo += o_column.toString();
 								} else {
 									/* if we change a column, we use query separator, because of mssql execute command */
-									if (o_column.getAlterOperation().contentEquals("CHANGE")) {
+									if ((o_column.getAlterOperation() != null) && (o_column.getAlterOperation().contentEquals("CHANGE"))) {
 										s_foo += o_column.toString() + this.s_querySeparator;
 									} else {
 										s_foo += o_column.toString() + ", ";
@@ -337,13 +337,13 @@ public class Alter extends QueryAbstract {
 							boolean b_closeDrop = false;
 							
 							/* add 'ADD ' command bracket and notice that we need to close it */
-							if (this.a_columns.get(0).getAlterOperation().contentEquals("ADD")) {
+							if ((this.a_columns.get(0).getAlterOperation() != null) && (this.a_columns.get(0).getAlterOperation().contentEquals("ADD"))) {
 								s_foo += "ADD (";
 								b_closeAdd = true;
 							}
 							
 							/* add 'MODIFY ' command bracket and notice that we need to close it */
-							if (this.a_columns.get(0).getAlterOperation().contentEquals("CHANGE")) {
+							if ((this.a_columns.get(0).getAlterOperation() != null) && (this.a_columns.get(0).getAlterOperation().contentEquals("CHANGE"))) {
 								s_foo += "MODIFY (";
 								b_closeModify = true;
 								
@@ -354,7 +354,7 @@ public class Alter extends QueryAbstract {
 							}
 							
 							/* add 'DROP ' command bracket and notice that we need to close it */
-							if (this.a_columns.get(0).getAlterOperation().contentEquals("DROP")) {
+							if ((this.a_columns.get(0).getAlterOperation() != null) && (this.a_columns.get(0).getAlterOperation().contentEquals("DROP"))) {
 								s_foo += "DROP (";
 								b_closeDrop = true;
 							}
@@ -377,7 +377,7 @@ public class Alter extends QueryAbstract {
 							/* iterate each constraint object */
 							for (Constraint o_constraint : this.a_constraints) {
 								/* alter index constraint -> empty current alter query */
-								if (o_constraint.getConstraint().contentEquals("INDEX")) {
+								if ((o_constraint.getConstraint() != null) && (o_constraint.getConstraint().contentEquals("INDEX"))) {
 									s_foo = "";
 								}
 								
@@ -385,7 +385,7 @@ public class Alter extends QueryAbstract {
 									s_foo += o_constraint.toString();
 								} else {
 									/* handle alter index constraint as separate alter query */
-									if (o_constraint.getConstraint().contentEquals("INDEX")) {
+									if ((o_constraint.getConstraint() != null) && (o_constraint.getConstraint().contentEquals("INDEX"))) {
 										s_foo += o_constraint.toString() + this.s_querySeparator;
 									} else { /* add constraint to alter query */
 										s_foo += o_constraint.toString() + ", ";
@@ -404,7 +404,7 @@ public class Alter extends QueryAbstract {
 					} else {
 						if (this.a_columns.size() > 0) { /* list all alter columns within query */
 							/* use additional alter query for renaming a column, and set it as first query command separated with query separator */
-							if (this.a_columns.get(0).getAlterOperation().contentEquals("CHANGE")) {
+							if ((this.a_columns.get(0).getAlterOperation() != null) && (this.a_columns.get(0).getAlterOperation().contentEquals("CHANGE"))) {
 								if (!net.forestany.forestj.lib.Helper.isStringEmpty(this.a_columns.get(0).s_newName)) {
 									s_foo = "ALTER TABLE " + "\"" + this.s_table + "\"" + " RENAME COLUMN \"" + this.a_columns.get(0).s_name + "\" TO \"" + this.a_columns.get(0).s_newName + "\"" + this.s_querySeparator + s_foo;
 								}
@@ -423,7 +423,7 @@ public class Alter extends QueryAbstract {
 							/* iterate each constraint object */
 							for (Constraint o_constraint : this.a_constraints) {
 								/* alter index constraint -> empty current alter query */
-								if (o_constraint.getConstraint().contentEquals("INDEX")) {
+								if ((o_constraint.getConstraint() != null) && (o_constraint.getConstraint().contentEquals("INDEX"))) {
 									s_foo = "";
 								}
 								
@@ -431,7 +431,7 @@ public class Alter extends QueryAbstract {
 									s_foo += o_constraint.toString();
 								} else {
 									/* handle alter index constraint as separate alter query */
-									if (o_constraint.getConstraint().contentEquals("INDEX")) {
+									if ((o_constraint.getConstraint() != null) && (o_constraint.getConstraint().contentEquals("INDEX"))) {
 										s_foo += o_constraint.toString() + this.s_querySeparator;
 									} else { /* add constraint to alter query */
 										s_foo += o_constraint.toString() + ", ";

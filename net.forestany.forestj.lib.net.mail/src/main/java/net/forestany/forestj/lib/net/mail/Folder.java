@@ -203,7 +203,7 @@ public class Folder {
 													if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("check folder object name corresponds to parameter name:\t" + o_folder.getName().toLowerCase() + " == " + p_s_name.toLowerCase());
 			
 			/* if folder object name corresponds to the name we are looking for */
-			if (o_folder.getName().toLowerCase().contentEquals(p_s_name.toLowerCase())) {
+			if ((o_folder != null) && (o_folder.getName() != null) && (o_folder.getName().toLowerCase().contentEquals(p_s_name.toLowerCase()))) {
 				/* set folder object as return value and abort the loop */
 				o_return = o_folder;
 				break;

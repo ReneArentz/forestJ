@@ -2441,6 +2441,10 @@ public class Client {
 		
 		/* iterate each directory element */
 		for (net.forestany.forestj.lib.io.ListingElement o_listingElement : a_list) {
+			if ((o_listingElement == null) || (o_listingElement.getFullName() == null)) {
+				continue;
+			}
+
 			/* just get directory or file name as temporary variable */
 			String s_foo = o_listingElement.getFullName().substring(p_s_sourceDirectoryLocal.length());
 			

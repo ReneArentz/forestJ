@@ -103,7 +103,7 @@ public abstract class TimerTask extends java.util.TimerTask {
 	 * 										7 - java.time.DayOfWeek.SUNDAY 										
 	 */
 	public void excludeWeekday(java.time.DayOfWeek p_o_dayOfWeek) {
-		if (!this.a_excludeWeekdays.contains(p_o_dayOfWeek)) {
+		if ((this.a_excludeWeekdays != null) && (!this.a_excludeWeekdays.contains(p_o_dayOfWeek))) {
 			this.a_excludeWeekdays.add(p_o_dayOfWeek);
 													net.forestany.forestj.lib.Global.ilogConfig("Exclude weekday '" + p_o_dayOfWeek + "'");
 		}
@@ -124,7 +124,7 @@ public abstract class TimerTask extends java.util.TimerTask {
 		java.time.DayOfWeek o_dayOfWeek = java.time.DayOfWeek.from(java.time.LocalDate.now()); 
 		
 		/* only execute runTimerTask if current weekday is not excluded */
-		if (!this.a_excludeWeekdays.contains(o_dayOfWeek)) {
+		if ((this.a_excludeWeekdays != null) && (!this.a_excludeWeekdays.contains(o_dayOfWeek))) {
 			try {
 				/* execute runTimerTask */
 				this.runTimerTask();

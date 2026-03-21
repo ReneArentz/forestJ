@@ -113,7 +113,7 @@ public class Where extends QueryAbstract {
 	 * @throws IllegalArgumentException		invalid database gateway value from query parameter object or invalid operator or filter operator value
 	 */
 	public Where(Query<?> p_o_query) throws IllegalArgumentException {
-		this(p_o_query, null, null, "", "", false, false);
+		this(p_o_query, null, null, "", false, "", false, false);
 	}
 	
 	/**
@@ -126,7 +126,7 @@ public class Where extends QueryAbstract {
 	 * @throws IllegalArgumentException		invalid database gateway value from query parameter object or invalid operator or filter operator value
 	 */
 	public Where(Query<?> p_o_query, Column p_o_column, Object p_o_value, String p_s_operator) throws IllegalArgumentException {
-		this(p_o_query, p_o_column, p_o_value, p_s_operator, "", false, false);
+		this(p_o_query, p_o_column, p_o_value, p_s_operator, false, "", false, false);
 	}
 	
 	/**
@@ -136,11 +136,26 @@ public class Where extends QueryAbstract {
 	 * @param p_o_column					column object of where clause
 	 * @param p_o_value						value object of where clause
 	 * @param p_s_operator					operator between both column, e.g. '=', '&lt;&gt;', '&gt;', ...
+	 * @param p_b_markString				true - mark a string object as string, false - a string value could be interpreted as time with format 'hhmmss'
+	 * @throws IllegalArgumentException		invalid database gateway value from query parameter object or invalid operator or filter operator value
+	 */
+	public Where(Query<?> p_o_query, Column p_o_column, Object p_o_value, String p_s_operator, boolean p_b_markString) throws IllegalArgumentException {
+		this(p_o_query, p_o_column, p_o_value, p_s_operator, p_b_markString, "", false, false);
+	}
+
+	/**
+	 * constructor will be called with Query object, because all necessary database gateway, sql type and table information are part of Query class
+	 * 
+	 * @param p_o_query						query object with table and sql type information
+	 * @param p_o_column					column object of where clause
+	 * @param p_o_value						value object of where clause
+	 * @param p_s_operator					operator between both column, e.g. '=', '&lt;&gt;', '&gt;', ...
+	 * @param p_b_markString				true - mark a string object as string, false - a string value could be interpreted as time with format 'hhmmss'
 	 * @param p_s_filterOperator			operator between multiple relation objects, e.g. 'AND', 'OR', ...
 	 * @throws IllegalArgumentException		invalid database gateway value from query parameter object or invalid operator or filter operator value
 	 */
-	public Where(Query<?> p_o_query, Column p_o_column, Object p_o_value, String p_s_operator, String p_s_filterOperator) throws IllegalArgumentException {
-		this(p_o_query, p_o_column, p_o_value, p_s_operator, p_s_filterOperator, false, false);
+	public Where(Query<?> p_o_query, Column p_o_column, Object p_o_value, String p_s_operator, boolean p_b_markString, String p_s_filterOperator) throws IllegalArgumentException {
+		this(p_o_query, p_o_column, p_o_value, p_s_operator, p_b_markString, p_s_filterOperator, false, false);
 	}
 	
 	/**
@@ -150,12 +165,13 @@ public class Where extends QueryAbstract {
 	 * @param p_o_column					column object of where clause
 	 * @param p_o_value						value object of where clause
 	 * @param p_s_operator					operator between both column, e.g. '=', '&lt;&gt;', '&gt;', ...
+	 * @param p_b_markString				true - mark a string object as string, false - a string value could be interpreted as time with format 'hhmmss'
 	 * @param p_s_filterOperator			operator between multiple relation objects, e.g. 'AND', 'OR', ...
 	 * @param p_b_bracketStart				flag to add '(' bracket before relation object
 	 * @throws IllegalArgumentException		invalid database gateway value from query parameter object or invalid operator or filter operator value
 	 */
-	public Where(Query<?> p_o_query, Column p_o_column, Object p_o_value, String p_s_operator, String p_s_filterOperator, boolean p_b_bracketStart) throws IllegalArgumentException {
-		this(p_o_query, p_o_column, p_o_value, p_s_operator, p_s_filterOperator, p_b_bracketStart, false);
+	public Where(Query<?> p_o_query, Column p_o_column, Object p_o_value, String p_s_operator, boolean p_b_markString, String p_s_filterOperator, boolean p_b_bracketStart) throws IllegalArgumentException {
+		this(p_o_query, p_o_column, p_o_value, p_s_operator, p_b_markString, p_s_filterOperator, p_b_bracketStart, false);
 	}
 	
 	/**
@@ -165,18 +181,24 @@ public class Where extends QueryAbstract {
 	 * @param p_o_column					column object of where clause
 	 * @param p_o_value						value object of where clause
 	 * @param p_s_operator					operator between both column, e.g. '=', '&lt;&gt;', '&gt;', ...
+	 * @param p_b_markString				true - mark a string object as string, false - a string value could be interpreted as time with format 'hhmmss'
 	 * @param p_s_filterOperator			operator between multiple relation objects, e.g. 'AND', 'OR', ...
 	 * @param p_b_bracketStart				flag to add '(' bracket before relation object
 	 * @param p_b_bracketEnd				flag to add ')' bracket after relation object
 	 * @throws IllegalArgumentException		invalid database gateway value from query parameter object or invalid operator or filter operator value
 	 */
-	public Where(Query<?> p_o_query, Column p_o_column, Object p_o_value, String p_s_operator, String p_s_filterOperator, boolean p_b_bracketStart, boolean p_b_bracketEnd) throws IllegalArgumentException {
+	public Where(Query<?> p_o_query, Column p_o_column, Object p_o_value, String p_s_operator, boolean p_b_markString, String p_s_filterOperator, boolean p_b_bracketStart, boolean p_b_bracketEnd) throws IllegalArgumentException {
 		super(p_o_query);
 		
 		if (p_o_column != null) {
 			this.o_column = p_o_column;
 		}
 		
+		/* mark string value */
+		if ((p_b_markString) && (p_o_value instanceof String)) {
+			p_o_value = (Object)("___forestjStringValue___" + p_o_value.toString());
+		}
+
 		this.o_value = this.parseValue(p_o_value);
 		
 		if (!net.forestany.forestj.lib.Helper.isStringEmpty(p_s_operator)) {

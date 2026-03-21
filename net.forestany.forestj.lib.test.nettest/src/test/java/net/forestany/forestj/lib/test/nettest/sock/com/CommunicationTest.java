@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
  */
 public class CommunicationTest {
 	/* sleep multiplier for test cycle executions */
-	private static int i_sleepMultiplier = 8;
+	private static int i_sleepMultiplier = 14;
 	
 	/* counter for total test fails, but we will tolerate some */
 	private static int i_fails = 0;
@@ -22,6 +22,16 @@ public class CommunicationTest {
 	public void testCommunicationMultipleTimes() {
 		try {
 			net.forestany.forestj.lib.LoggingConfig.initiateTestLogging();
+
+			/* use this logging to identify test issues and where they happen in debug console - mabye without severe level if many exceptions are happening */
+			/*net.forestany.forestj.lib.Global.get().resetLog();
+			net.forestany.forestj.lib.LoggingConfig o_loggingConfigAll = new net.forestany.forestj.lib.LoggingConfig();
+			o_loggingConfigAll.setLevel(java.util.logging.Level.FINEST);
+			o_loggingConfigAll.setUseConsole(true);
+			o_loggingConfigAll.setConsoleLevel(java.util.logging.Level.WARNING);
+			o_loggingConfigAll.loadConfig();
+			net.forestany.forestj.lib.Global.get().by_logControl = 0;
+			net.forestany.forestj.lib.Global.get().by_internalLogControl = net.forestany.forestj.lib.Global.SEVERE + net.forestany.forestj.lib.Global.WARNING;*/
 			
 			int i_iterations = 1;
 			
@@ -481,11 +491,13 @@ public class CommunicationTest {
 			
 		if ( (p_b_asymmetricSecurity) && ( !net.forestany.forestj.lib.io.File.folderExists(s_resourcesDirectory) ) ) {
 			throw new Exception("cannot find directory '" + s_resourcesDirectory + "' where files are needed for asymmetric security communication");
-		} else if ( (p_b_asymmetricSecurity) && (p_b_securityTrustAll) ) {
-			/* I don't know why exactly, but it is very important that for local test of TCP bidirectional on the same machine, truststore must be set right here with all trusting certificates */
-			System.setProperty("javax.net.ssl.trustStore", s_resourcesDirectory + "all/TrustStore-all.p12");
-			System.setProperty("javax.net.ssl.trustStorePassword", "123456");
 		}
+		/* not necessary anymore because we use createSSLContextWithKeystoreAndTruststore, but keep it for somewhat in the future */
+		// else if ( (p_b_asymmetricSecurity) && (p_b_securityTrustAll) ) {
+			/* I don't know why exactly, but it is very important that for local test of TCP bidirectional on the same machine, truststore must be set right here with all trusting certificates */
+			//System.setProperty("javax.net.ssl.trustStore", s_resourcesDirectory + "all/TrustStore-all.p12");
+			//System.setProperty("javax.net.ssl.trustStorePassword", "123456");
+		//}
 		
 		int i_comAmount = 1;
 		int i_comMessageBoxLength = 1500;
@@ -549,17 +561,32 @@ public class CommunicationTest {
 				p_e_comType == net.forestany.forestj.lib.net.sock.com.Type.TCP_RECEIVE || 
 				p_e_comType == net.forestany.forestj.lib.net.sock.com.Type.TCP_RECEIVE_WITH_ANSWER
 			) {
-				o_communicationConfig.addSSLContextToList(net.forestany.forestj.lib.Cryptography.createSSLContextWithOneCertificate(s_resourcesDirectory + "server/KeyStore-srv.p12", "123456", "test_server2"));
-				o_communicationConfig.setCommunicationSecurity(net.forestany.forestj.lib.net.sock.com.Security.ASYMMETRIC);
+				o_communicationConfig.addSSLContextToList(
+					net.forestany.forestj.lib.Cryptography.createSSLContextWithKeystoreAndTruststore(
+						s_resourcesDirectory + "server/KeyStore-srv.p12",
+						"123456",
+						"test_server2",
+						s_resourcesDirectory + "server/TrustStore-srv.p12",
+						"123456"
+					)
+				);
 			} else {
 				if (!p_b_securityTrustAll) {
-					o_communicationConfig.setTrustStoreProperties(s_resourcesDirectory + "client/TrustStore-clt.p12", "123456");
+					o_communicationConfig.addSSLContextToList(net.forestany.forestj.lib.Cryptography.createSSLContextWithTruststoreOnly(s_resourcesDirectory + "client/TrustStore-clt.p12", "123456"));
 				} else {
-					o_communicationConfig.addSSLContextToList(net.forestany.forestj.lib.Cryptography.createSSLContextWithOneCertificate(s_resourcesDirectory + "client/KeyStore-clt.p12", "123456", "test_client"));
-				}
-				
-				o_communicationConfig.setCommunicationSecurity(net.forestany.forestj.lib.net.sock.com.Security.ASYMMETRIC);
+					o_communicationConfig.addSSLContextToList(
+						net.forestany.forestj.lib.Cryptography.createSSLContextWithKeystoreAndTruststore(
+							s_resourcesDirectory + "client/KeyStore-clt.p12",
+							"123456",
+							"test_client",
+							s_resourcesDirectory + "client/TrustStore-clt.p12",
+							"123456"
+						)
+					);
+				}	
 			}
+
+			o_communicationConfig.setCommunicationSecurity(net.forestany.forestj.lib.net.sock.com.Security.ASYMMETRIC);
 		}
 		
 		o_communicationConfig.setUseMarshalling(p_b_useMarshalling);

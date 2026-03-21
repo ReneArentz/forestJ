@@ -221,6 +221,11 @@ public class SendTCP<T extends java.net.Socket> extends net.forestany.forestj.li
 		this.o_sslContext = p_o_sslContext;
 		this.o_proxySocket = null;
 		
+		/* check host parameter */
+		if (p_s_host == null) {
+			throw new IllegalArgumentException("Send host address is 'null'");
+		}
+
 		/* check port min. value */
 		if (p_i_port < 1) {
 			throw new IllegalArgumentException("Send port must be at least '1', but was set to '" + p_i_port + "'");
@@ -398,6 +403,11 @@ public class SendTCP<T extends java.net.Socket> extends net.forestany.forestj.li
 	 * @throws java.net.UnknownHostException			issue local host name could not be resolved into an address
 	 */
 	public void overrideDestinationAddress(String p_s_host, int p_i_port, boolean p_b_usingProxy, boolean p_b_checkReachability) throws IllegalArgumentException, IllegalStateException, java.net.UnknownHostException {
+		/* check host parameter */
+		if (p_s_host == null) {
+			throw new IllegalArgumentException("Send host address is 'null'");
+		}
+
 		/* check port min. value */
 		if (p_i_port < 1) {
 			throw new IllegalArgumentException("Send port must be at least '1', but was set to '" + p_i_port + "'");
@@ -447,6 +457,11 @@ public class SendTCP<T extends java.net.Socket> extends net.forestany.forestj.li
 			throw new IllegalStateException("Can only upgrade TCP-Client socket without TLS to TLS socket");
 		}
 		
+		/* check host parameter */
+		if (p_s_host == null) {
+			throw new IllegalArgumentException("Send host address is 'null'");
+		}
+
 		/* check port min. value */
 		if (p_i_port < 1) {
 			throw new IllegalArgumentException("Send port must be at least '1', but was set to '" + p_i_port + "'");
@@ -616,7 +631,7 @@ public class SendTCP<T extends java.net.Socket> extends net.forestany.forestj.li
 				} catch (java.net.SocketTimeoutException o_exc) {
 					net.forestany.forestj.lib.Global.ilogFiner("SocketTimeoutException SendTCP-runSocket method: " + o_exc.getMessage() + " - Terminations: " + (this.i_terminations + 1) + "/" + this.i_maxTerminations);
 				} catch (java.io.IOException o_exc) {
-					if ( (o_exc.getMessage().contentEquals("Connection refused: connect")) || (o_exc.getMessage().contentEquals("Connection timed out: connect")) || (o_exc.getMessage().contentEquals("Connection timed out: no further information")) || (o_exc.getMessage().contentEquals("Connection refused: no further information")) || (o_exc.getMessage().contentEquals("Connection reset")) ) {
+					if ( (o_exc.getMessage() != null) && ( (o_exc.getMessage().contentEquals("Connection refused: connect")) || (o_exc.getMessage().contentEquals("Connection timed out: connect")) || (o_exc.getMessage().contentEquals("Connection timed out: no further information")) || (o_exc.getMessage().contentEquals("Connection refused: no further information")) || (o_exc.getMessage().contentEquals("Connection reset")) ) ) {
 						net.forestany.forestj.lib.Global.ilogWarning("IOException SendTCP-runSocket method: " + o_exc.getMessage() + " - Terminations: " + (this.i_terminations + 1) + "/" + this.i_maxTerminations + " - Expected Terminations: " + i_exceptionTerminations + "/10");
 						
 						/* check if current time in milliseconds minus reminder is greater than the configured socket timeout, in that case we stop the socket instance */

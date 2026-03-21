@@ -141,7 +141,7 @@ public abstract class FileSystemWatcher extends net.forestany.forestj.lib.TimerT
 		/* check if file extension filter is not empty */
 		if (!net.forestany.forestj.lib.Helper.isStringEmpty(this.s_fileExtensionFilter)) {
 			/* if value contains delimiter, we need to split up the file extension filter */
-			if (this.s_fileExtensionFilter.contains("|")) {
+			if ((this.s_fileExtensionFilter != null) && (this.s_fileExtensionFilter.contains("|"))) {
 				for (String s_fileExtensionFilter : this.s_fileExtensionFilter.split("\\|")) {
 					/* add file extension filter to list */
 					a_filter.add(s_fileExtensionFilter);
@@ -180,16 +180,16 @@ public abstract class FileSystemWatcher extends net.forestany.forestj.lib.TimerT
 						/* iterate each filter restriction */
 						for (String s_filter : a_filter) {
 							/* if filter starts with wildcard, we are controlling just the end of file names */
-							if (s_filter.startsWith("*")) {
+							if ((s_filter != null) && (s_filter.startsWith("*"))) {
 								/* remove wildcard */
 								s_filter = s_filter.substring(1);
 								
 								/* check if filename ends with filter restriction */
-								if (o_listingElement.getName().endsWith(s_filter)) {
+								if ((o_listingElement.getName() != null) && (o_listingElement.getName().endsWith(s_filter))) {
 									b_match = true;
 								}
 							} else { /* otherwise file name must match completely */
-								if (o_listingElement.getName().contentEquals(s_filter)) {
+								if ((o_listingElement.getName() != null) && (o_listingElement.getName().contentEquals(s_filter))) {
 									b_match = true;
 								}
 							}
@@ -256,16 +256,16 @@ public abstract class FileSystemWatcher extends net.forestany.forestj.lib.TimerT
 					/* iterate each filter restriction */
 					for (String s_filter : a_filter) {
 						/* if filter starts with wildcard, we are controlling just the end of file names */
-						if (s_filter.startsWith("*")) {
+						if ((s_filter != null) && (s_filter.startsWith("*"))) {
 							/* remove wildcard */
 							s_filter = s_filter.substring(1);
 							
 							/* check if filename ends with filter restriction */
-							if (o_listingElement.getName().endsWith(s_filter)) {
+							if ((o_listingElement.getName() != null) && (o_listingElement.getName().endsWith(s_filter))) {
 								b_match = true;
 							}
 						} else { /* otherwise file name must match completely */
-							if (o_listingElement.getName().contentEquals(s_filter)) {
+							if ((o_listingElement.getName() != null) && (o_listingElement.getName().contentEquals(s_filter))) {
 								b_match = true;
 							}
 						}
@@ -296,7 +296,7 @@ public abstract class FileSystemWatcher extends net.forestany.forestj.lib.TimerT
 			/* iterate all files of newest state */
 			for (ListingElement o_searchListingElement : a_currentFiles) {
 				/* if full name matches, file still exists */
-				if (o_listingElement.getFullName().contentEquals(o_searchListingElement.getFullName())) {
+				if ((o_listingElement.getFullName() != null) && (o_listingElement.getFullName().contentEquals(o_searchListingElement.getFullName()))) {
 					o_compareListingElement = o_searchListingElement;
 					b_found = true;
 					break;
@@ -344,7 +344,7 @@ public abstract class FileSystemWatcher extends net.forestany.forestj.lib.TimerT
 			/* iterate all files from last timer iteration */
 			for (ListingElement o_searchListingElement : this.a_files) {
 				/* if full name matches, file exists before */
-				if (o_listingElement.getFullName().contentEquals(o_searchListingElement.getFullName())) {
+				if ((o_listingElement.getFullName() != null) && (o_listingElement.getFullName().contentEquals(o_searchListingElement.getFullName()))) {
 					b_found = true;
 					break;
 				}

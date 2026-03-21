@@ -260,6 +260,11 @@ public class BaseJDBC extends Base {
 			return true;
 		} catch (java.sql.SQLException o_exc) {
 			return false;
+		} finally {
+			if (this.o_currentPreparedStatement != null) {
+				try { this.o_currentPreparedStatement.close(); } catch (java.sql.SQLException o_exc) { /* ignored */ }
+				this.o_currentPreparedStatement = null;
+			}
 		}
 	}
 	
@@ -282,15 +287,17 @@ public class BaseJDBC extends Base {
 	public void closeConnection() {
 		if (this.o_currentResult != null) {
 	        try { this.o_currentResult.close(); } catch (java.sql.SQLException o_exc) { /* ignored */ }
+			this.o_currentResult = null;
 	    }
 		
 	    if (this.o_currentPreparedStatement != null) {
 	        try { this.o_currentPreparedStatement.close(); } catch (java.sql.SQLException o_exc) { /* ignored */ }
+			this.o_currentPreparedStatement = null;
 	    }
 	    
-	    if (this.o_currentConnection != null) {
+	    if (!this.isClosed()) {
 	        try { this.o_currentConnection.close(); } catch (java.sql.SQLException o_exc) { /* ignored */ }
-	    }
+		}
 	    
 	    										net.forestany.forestj.lib.Global.ilogConfig("database connection closed");
 	}
@@ -312,9 +319,15 @@ public class BaseJDBC extends Base {
 	 * @param p_o_sqlQuery				query object of Query class &lt;? must be of type QueryAbstract&gt;
 	 * @param p_b_autoTransaction		transaction flag: true - commit database after each execution of query object automatically, false - do not commit automatically
 	 * @return							list of hash maps, key(string) -> column name + value(object) -> column value of a database record
+	 * @throws IllegalArgumentException	sql query parameter is null
 	 * @throws IllegalAccessException	exception accessing column type, column name or just column value of current result set record
 	 */
-	public java.util.List<java.util.LinkedHashMap<String, Object>> fetchQuery(IQuery<?> p_o_sqlQuery, boolean p_b_autoTransaction) throws IllegalAccessException {
+	public java.util.List<java.util.LinkedHashMap<String, Object>> fetchQuery(IQuery<?> p_o_sqlQuery, boolean p_b_autoTransaction) throws IllegalArgumentException, IllegalAccessException {
+		/* check parameter */
+		if (p_o_sqlQuery == null) {
+			throw new IllegalArgumentException("SQL query parameter is null");
+		}
+		
 		/* prepare return value */
 		java.util.List<java.util.LinkedHashMap<String, Object>> a_rows = new java.util.ArrayList<java.util.LinkedHashMap<String, Object>>();
 		
@@ -368,7 +381,7 @@ public class BaseJDBC extends Base {
 					}
 					
 					/* if last query with SQLITE is 'VACUUM' we must commit our transaction first and reopen our connection */
-					if ( (p_b_autoTransaction) && (this.e_baseGateway == BaseGateway.SQLITE) && (i == (a_queries.length - 1)) && (a_queries[i].toString().contentEquals("VACUUM")) ) {
+					if ( (p_b_autoTransaction) && (this.e_baseGateway == BaseGateway.SQLITE) && (i == (a_queries.length - 1)) && (a_queries[i] != null) && (a_queries[i].toString().contentEquals("VACUUM")) ) {
 						/* commit our transaction */
 						this.o_currentConnection.commit();
 						this.o_currentConnection.setAutoCommit(true);
@@ -391,6 +404,10 @@ public class BaseJDBC extends Base {
 						String s_type = a_values.get(j).getKey();
 						Object o_foo = a_values.get(j).getValue();
 						
+						if (s_type == null) {
+							s_type = "null";
+						}
+
 						if (s_type.contentEquals("boolean")) {
 							net.forestany.forestj.lib.Global.ilogFinest("add 'boolean' value to prepared statement" + ((net.forestany.forestj.lib.Global.get().getLogCompleteSqlQuery()) ? " [" + o_foo.toString() + "]" : ""));
 							this.o_currentPreparedStatement.setBoolean(j + 1, Boolean.class.cast(o_foo));
@@ -523,8 +540,20 @@ public class BaseJDBC extends Base {
 															if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("fetch row");
 					a_rows.add(this.fetchRow());
 				}
+
+				this.o_currentResultMetaData = null;
 			} catch (java.sql.SQLException o_exc) {
 				throw new IllegalAccessException("Could not fetch row, issue get metadata and column information; SQLState=" + o_exc.getSQLState() + "; ErrorCode=" + o_exc.getErrorCode() + "; Message=" + o_exc.getMessage() + "; Query=" + this.s_query);
+			} finally {
+				if (this.o_currentPreparedStatement != null) {
+					try { this.o_currentPreparedStatement.close(); } catch (java.sql.SQLException o_exc) { /* ignored */ }
+					this.o_currentPreparedStatement = null;
+				}
+
+				if (this.o_currentResult != null) {
+					try { this.o_currentResult.close(); } catch (java.sql.SQLException o_exc) { /* ignored */ }
+					this.o_currentResult = null;
+				}
 			}
 		} else {
 			String s_lastInsertIdQuery = "this.o_currentPreparedStatement.getUpdateCount()";
@@ -538,7 +567,8 @@ public class BaseJDBC extends Base {
 				if (i_affectedRows >= 0) {
 					o_row.put("AffectedRows", i_affectedRows);
 				} else {
-					o_row.put("AffectedRows", this.o_currentPreparedStatement.getUpdateCount());
+					i_affectedRows = this.o_currentPreparedStatement.getUpdateCount();
+					o_row.put("AffectedRows", i_affectedRows);
 				}
 				
 														net.forestany.forestj.lib.Global.ilogFinest("update count is '" + o_row.get("AffectedRows") + "'");
@@ -591,7 +621,7 @@ public class BaseJDBC extends Base {
 							String s_columnDefaultValue = o_tempResult.getString(1);
 							
 							/* sequence ends with '.nextval' */
-					    	if (s_columnDefaultValue.toLowerCase().endsWith(".nextval")) {
+					    	if ((s_columnDefaultValue != null) && (s_columnDefaultValue.toLowerCase().endsWith(".nextval"))) {
 					    		/* get sequence name, e.g. "SYSTEM"."ISEQ$$_74013".nextval */
 					    		s_sequence = s_columnDefaultValue.replace(".nextval", "");
 					    		/* we always consider that the first column in table with a sequence is a value we want to have as last inserted identifier value */
@@ -621,7 +651,22 @@ public class BaseJDBC extends Base {
 				a_rows.add(o_row);
 			} catch (java.sql.SQLException o_exc) {
 				/* do not throw exception here, maybe only log this information */
-				System.err.println("Could not count affected rows or could not fetch last insert id; SQLState=" + o_exc.getSQLState() + "; ErrorCode=" + o_exc.getErrorCode() + "; Message=" + o_exc.getMessage() + "; Query=" + s_lastInsertIdQuery);
+				System.err.println("Could not count affected rows[" + i_affectedRows + "] or could not fetch last insert id; SQLState=" + o_exc.getSQLState() + "; ErrorCode=" + o_exc.getErrorCode() + "; Message=" + o_exc.getMessage() + "; Query=" + s_lastInsertIdQuery);
+
+				/* because of exception, answer row was not added so we must do that again */
+				java.util.LinkedHashMap<String, Object> o_row = new java.util.LinkedHashMap<String, Object>();
+				o_row.put("AffectedRows", i_affectedRows);
+				a_rows.add(o_row);
+			} finally {
+				if (this.o_currentPreparedStatement != null) {
+					try { this.o_currentPreparedStatement.close(); } catch (java.sql.SQLException o_exc) { /* ignored */ }
+					this.o_currentPreparedStatement = null;
+				}
+
+				if (this.o_currentResult != null) {
+					try { this.o_currentResult.close(); } catch (java.sql.SQLException o_exc) { /* ignored */ }
+					this.o_currentResult = null;
+				}
 			}
 		}
 		
@@ -667,11 +712,11 @@ public class BaseJDBC extends Base {
 			} else if ((this.e_baseGateway == BaseGateway.ORACLE) && (i_type == 2) && (this.o_currentResultMetaData.getPrecision(i + 1) == 38) && (this.o_currentResultMetaData.getScale(i + 1) == 0)) {
 				/* ORACLE: NUMBER(38,0) is a sepcial case and handled as an INTEGER */
 				i_type = java.sql.Types.INTEGER;
-			} else if ((this.e_baseGateway == BaseGateway.ORACLE) && (i_type == 2) && (this.o_currentResultMetaData.getPrecision(i + 1) > 0) && (this.o_currentResultMetaData.getPrecision(i + 1) < 6) && (this.o_currentResultMetaData.getScale(i + 1) == 0)) {
-				/* ORACLE: NUMBER(1-5,0) is a SMALLINT */
+			} else if ((this.e_baseGateway == BaseGateway.ORACLE) && (i_type == 2) && (this.o_currentResultMetaData.getPrecision(i + 1) > 0) && (this.o_currentResultMetaData.getPrecision(i + 1) < 5) && (this.o_currentResultMetaData.getScale(i + 1) == 0)) {
+				/* ORACLE: NUMBER(1-4,0) is a SMALLINT */
 				i_type = java.sql.Types.SMALLINT;
-			} else if ((this.e_baseGateway == BaseGateway.ORACLE) && (i_type == 2) && (this.o_currentResultMetaData.getPrecision(i + 1) > 5) && (this.o_currentResultMetaData.getPrecision(i + 1) < 10) && (this.o_currentResultMetaData.getScale(i + 1) == 0)) {
-				/* ORACLE: NUMBER(6-9,0) is a INTEGER */
+			} else if ((this.e_baseGateway == BaseGateway.ORACLE) && (i_type == 2) && (this.o_currentResultMetaData.getPrecision(i + 1) > 4) && (this.o_currentResultMetaData.getPrecision(i + 1) < 10) && (this.o_currentResultMetaData.getScale(i + 1) == 0)) {
+				/* ORACLE: NUMBER(5-9,0) is a INTEGER */
 				i_type = java.sql.Types.INTEGER;
 			} else if ((this.e_baseGateway == BaseGateway.ORACLE) && (i_type == 2) && (this.o_currentResultMetaData.getPrecision(i + 1) > 9) && (this.o_currentResultMetaData.getScale(i + 1) == 0)) {
 				/* ORACLE: NUMBER(10-99,0) is a BIGINT */
@@ -708,14 +753,22 @@ public class BaseJDBC extends Base {
 					if ( (this.e_baseGateway == BaseGateway.SQLITE) && (s_type != null) && (s_type.equals("BIT")) ) {
 						if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("get column value with result.getBoolean");
 						o_row.put(s_name, this.o_currentResult.getBoolean(s_name));
+					} else if ( (this.e_baseGateway == BaseGateway.SQLITE) && (s_type != null) && (s_type.equals("DECIMAL")) ) {
+						if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("get column value with result.getBigDecimal");
+						o_row.put(s_name, this.o_currentResult.getBigDecimal(s_name));
 					} else {
 						if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("get column value with result.getInt");
 						o_row.put(s_name, this.o_currentResult.getInt(s_name));
 					}
 					break;
 				case java.sql.Types.BIGINT:
-					if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("get column value with result.getLong");
-					o_row.put(s_name, this.o_currentResult.getLong(s_name));
+					if ( (this.e_baseGateway == BaseGateway.SQLITE) && (s_type != null) && (s_type.equals("DECIMAL")) ) {
+						if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("get column value with result.getBigDecimal");
+						o_row.put(s_name, this.o_currentResult.getBigDecimal(s_name));
+					} else {
+						if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("get column value with result.getLong");
+						o_row.put(s_name, this.o_currentResult.getLong(s_name));
+					}
 					break;
 				case java.sql.Types.BIT:
 				case java.sql.Types.BOOLEAN:

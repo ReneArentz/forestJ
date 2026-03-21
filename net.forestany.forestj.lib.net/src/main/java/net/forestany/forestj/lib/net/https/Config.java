@@ -324,8 +324,8 @@ public class Config {
 	 * @throws IllegalArgumentException						invalid parameter value
 	 */
 	public void setAmountCyclesToleratingDelay(int p_i_amountCyclesToleratingDelay) throws IllegalArgumentException  {
-		if (p_i_amountCyclesToleratingDelay < 1) {
-			throw new IllegalArgumentException("Amount of cycles tolerating delay (1 cycle = 50ms) must be at least '1', but was set to '" + p_i_amountCyclesToleratingDelay + "'");
+		if (p_i_amountCyclesToleratingDelay < 0) {
+			throw new IllegalArgumentException("Amount of cycles tolerating delay (1 cycle = 50ms) must be at least '0', but was set to '" + p_i_amountCyclesToleratingDelay + "'");
 		} else if (p_i_amountCyclesToleratingDelay > 100) {
 			throw new IllegalArgumentException("Amount of cycles tolerating delay (1 cycle = 50ms) must be lower than '100 (5000ms)', but was set to '" + p_i_amountCyclesToleratingDelay + "'");
 		} else {

@@ -2415,7 +2415,7 @@ public class Marshall {
 			
 			/* look for set-property-method of current parameter object value */
 			for (java.lang.reflect.Method o_methodSearch : p_o_object.getClass().getDeclaredMethods()) {
-				if (o_methodSearch.getName().contentEquals("set" + p_s_fieldName)) {
+				if ((o_methodSearch.getName() != null) && (o_methodSearch.getName().contentEquals("set" + p_s_fieldName))) {
 					o_method = o_methodSearch;
 					b_methodFound = true;
 				}

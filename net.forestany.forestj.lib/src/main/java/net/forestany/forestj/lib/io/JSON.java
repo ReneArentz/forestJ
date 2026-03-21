@@ -128,7 +128,7 @@ public class JSON {
 		s_json = this.removeWhiteSpaces(s_json);
 		
 		/* check if json-schema starts with curly brackets */
-	    if ( (!s_json.startsWith("{")) || (!s_json.endsWith("}")) ) {
+	    if ( (s_json == null) || (!s_json.startsWith("{")) || (!s_json.endsWith("}")) ) {
     		throw new IllegalArgumentException("JSON-schema must start with curly bracket '{' and end with curly bracket '}'.");
     	}
 	    
@@ -194,7 +194,7 @@ public class JSON {
 		s_json = this.removeWhiteSpaces(s_json);
 		
 		/* check if json-schema starts with curly brackets */
-	    if ( (!s_json.startsWith("{")) || (!s_json.endsWith("}")) ) {
+	    if ( (s_json == null) || (!s_json.startsWith("{")) || (!s_json.endsWith("}")) ) {
     		throw new IllegalArgumentException("JSON-schema must start with curly bracket '{' and end with curly bracket '}'.");
     	}
 	    
@@ -486,6 +486,11 @@ public class JSON {
 	private JSONValueType getJSONValueType(String p_s_jsonValue) throws IllegalArgumentException {
 		JSONValueType e_jsonValueType = null;
 		
+		/* check if parameter is not null or empty */
+		if (net.forestany.forestj.lib.Helper.isStringEmpty(p_s_jsonValue)) {
+			throw new NullPointerException("Invalid JSON value type with value [null]");
+		}
+
 		/* get json value type */
 		if (p_s_jsonValue.charAt(0) == '"') { /* json value starts with '"' character, so it is of type string */
 			e_jsonValueType = JSONValueType.String;
@@ -640,7 +645,7 @@ public class JSON {
 			}
 			
 			/* we have an array object, so we directly start another recursion */
-			if ( (s_jsonLine.startsWith("{")) && (s_jsonLine.endsWith("}")) ) {
+			if ( (s_jsonLine != null) && (s_jsonLine.startsWith("{")) && (s_jsonLine.endsWith("}")) ) {
 														net.forestany.forestj.lib.Global.ilogFiner(printIndentation() + "new ArrayObject()");
 														
 				/* save current element in temporary variable */
@@ -666,7 +671,7 @@ public class JSON {
 				this.o_currentElement = o_oldCurrentElement;
 			} else {
 				/* the parsed json line must start with '"' or '{' character */
-				if (!s_jsonLine.startsWith("\"")) {
+				if ((s_jsonLine == null) || (!s_jsonLine.startsWith("\""))) {
 					throw new IllegalArgumentException("Invalid format, line does not start with '\"'");
 				}
 				
@@ -749,6 +754,10 @@ public class JSON {
 	 * @throws NullPointerException				value within json schema missing or min. amount not available
 	 */
 	private void parseJSONSchema(JSONElement p_o_jsonElement) throws IllegalArgumentException, NullPointerException {
+		if (p_o_jsonElement == null) {
+			return;
+		}
+
 		if (p_o_jsonElement.getChildren().size() > 0) {
 			boolean b_array = false;
 			boolean b_object = false;
@@ -760,29 +769,35 @@ public class JSON {
 			 * or if we have "type": "object" and "properties" and no "items"
 			 */
 			for (JSONElement o_jsonChild : p_o_jsonElement.getChildren()) {
-				if (o_jsonChild.getName().toLowerCase().contentEquals("type")) {
-					String s_type = o_jsonChild.getValue();
-					
-					/* remove surrounded double quotes from value */
-					if ( (s_type.startsWith("\"")) && (s_type.endsWith("\"")) ) {
-						s_type = s_type.substring(1, s_type.length() - 1);
+				if ((o_jsonChild != null) && (o_jsonChild.getName() != null)) {
+					if (o_jsonChild.getName().toLowerCase().contentEquals("type")) {
+						String s_type = o_jsonChild.getValue();
+
+						if (s_type == null) {
+							s_type = "null";
+						}
+						
+						/* remove surrounded double quotes from value */
+						if ( (s_type.startsWith("\"")) && (s_type.endsWith("\"")) ) {
+							s_type = s_type.substring(1, s_type.length() - 1);
+						}
+						
+						if (s_type.contentEquals("array")) {
+							b_array = true;
+						} else if (s_type.contentEquals("object")) {
+							b_object = true;
+						}
+					} else if (o_jsonChild.getName().toLowerCase().contentEquals("properties")) {
+						b_properties = true;
+					} else if (o_jsonChild.getName().toLowerCase().contentEquals("items")) {
+						b_items = true;
 					}
-					
-					if (s_type.contentEquals("array")) {
-						b_array = true;
-					} else if (s_type.contentEquals("object")) {
-						b_object = true;
-					}
-				} else if (o_jsonChild.getName().toLowerCase().contentEquals("properties")) {
-					b_properties = true;
-				} else if (o_jsonChild.getName().toLowerCase().contentEquals("items")) {
-					b_items = true;
 				}
 			}
 			
 			/* control result of check */
 			if ( (!b_array) && (!b_object) ) {
-				if ( (this.i_level == 0) && (!p_o_jsonElement.getName().toLowerCase().contentEquals("definitions")) && (!p_o_jsonElement.getName().toLowerCase().contentEquals("properties")) ) {
+				if ( (this.i_level == 0) && (p_o_jsonElement.getName() != null) && (!p_o_jsonElement.getName().toLowerCase().contentEquals("definitions")) && (!p_o_jsonElement.getName().toLowerCase().contentEquals("properties")) ) {
 					throw new IllegalArgumentException("JSON definition of element[definitions] or [properties] necessary on first level for [" + p_o_jsonElement.getName() + "]");
 				}
 			} else if ( (b_array) && (b_properties) ) {
@@ -796,6 +811,10 @@ public class JSON {
 			}
 			
 			for (JSONElement o_jsonChild : p_o_jsonElement.getChildren()) {
+				if ((o_jsonChild == null) || (o_jsonChild.getName() == null)) {
+					continue;
+				}
+				
 				JSONValueType e_jsonValueType;
 				
 				/* determine json value type */
@@ -805,7 +824,7 @@ public class JSON {
 					e_jsonValueType = this.getJSONValueType(o_jsonChild.getValue());
 					
 					/* remove surrounded double quotes from value */
-					if ( (o_jsonChild.getValue().startsWith("\"")) && (o_jsonChild.getValue().endsWith("\"")) ) {
+					if ( (o_jsonChild.getValue() != null) && (o_jsonChild.getValue().startsWith("\"")) && (o_jsonChild.getValue().endsWith("\"")) ) {
 						o_jsonChild.setValue(o_jsonChild.getValue().substring(1, o_jsonChild.getValue().length() - 1));
 					}
 				}
@@ -879,14 +898,20 @@ public class JSON {
 					
 					/* check if new object has property name 'items' */
 					if (o_jsonChild.getName().toLowerCase().contentEquals("items")) {
-						if (!this.o_currentElement.getType().toLowerCase().contentEquals("array")) {
-							throw new IllegalArgumentException("JSON object[" + this.o_currentElement.getName() + "] with property[items] must be of type 'array' != '" + this.o_currentElement.getType() + "'");
+						if ((this.o_currentElement == null) || (this.o_currentElement.getType() == null) || (!this.o_currentElement.getType().toLowerCase().contentEquals("array"))) {
+							if (this.o_currentElement == null) {
+								throw new NullPointerException("Current element is null");
+							} else if (this.o_currentElement.getType() == null) {
+								throw new NullPointerException("Type of current element is null");
+							} else {
+								throw new IllegalArgumentException("JSON object[" + this.o_currentElement.getName() + "] with property[items] must be of type 'array' != '" + this.o_currentElement.getType() + "'");
+							}
 						}
 						
 						if (o_jsonChild.getChildren().size() == 1) {
 							JSONElement o_itemChild = o_jsonChild.getChildren().get(0);
 							
-							if (!net.forestany.forestj.lib.Helper.isStringEmpty(o_itemChild.getValue())) {
+							if ((!net.forestany.forestj.lib.Helper.isStringEmpty(o_itemChild.getValue())) && (!net.forestany.forestj.lib.Helper.isStringEmpty(o_itemChild.getName()))) {
 								/* remove surrounded double quotes from value */
 								String s_itemValue = o_itemChild.getValue().substring(1, o_itemChild.getValue().length() - 1);
 								
@@ -894,6 +919,10 @@ public class JSON {
 									String s_referenceName = s_itemValue.replace("#/definitions/", "");
 									
 									for (JSONElement o_jsonDefinition : this.a_definitions.getChildren()) {
+										if ((o_jsonDefinition == null) || (o_jsonDefinition.getName() == null)) {
+											continue;
+										}
+										
 										if (o_jsonDefinition.getName().contentEquals(s_referenceName)) {
 																					net.forestany.forestj.lib.Global.ilogFiner(this.printIndentation() + "setReference for (" + this.o_currentElement.getName() + ") with reference=" + s_referenceName);
 											
@@ -939,11 +968,13 @@ public class JSON {
 							/* if we have Root node as current element on level 0 with type 'array' and new child 'items', we must not add a new child, because of concurrent modification of the for loop */
 							boolean b_handleRootItems = false;
 							
-							if ( (this.o_currentElement.getName().contentEquals("Root")) && (this.o_currentElement.getLevel() == 0) && (this.o_currentElement.getType().toLowerCase().contentEquals("array")) && (o_newJSONElement.getName().toLowerCase().contentEquals("items")) ) {
-								b_handleRootItems = true;
-							} else {
-								/* add new json element to current elements children */
-								this.o_currentElement.getChildren().add(o_newJSONElement);
+							if (this.o_currentElement != null) {
+								if ( (this.o_currentElement.getName() != null) && (this.o_currentElement.getType() != null) && (this.o_currentElement.getName().contentEquals("Root")) && (this.o_currentElement.getLevel() == 0) && (this.o_currentElement.getType().toLowerCase().contentEquals("array")) && (o_newJSONElement.getName().toLowerCase().contentEquals("items")) ) {
+									b_handleRootItems = true;
+								} else {
+									/* add new json element to current elements children */
+									this.o_currentElement.getChildren().add(o_newJSONElement);
+								}
 							}
 							
 							/* set new json element as current element for recursive processing */
@@ -976,7 +1007,7 @@ public class JSON {
 							this.i_level--;
 							
 							/* between update of schema definitions, for the case that a definition is depending on another definition before */
-							if (this.o_currentElement.getName().toLowerCase().contentEquals("definitions")) {
+							if ((this.o_currentElement != null) && (this.o_currentElement.getName() != null) && (this.o_currentElement.getName().toLowerCase().contentEquals("definitions"))) {
 								this.a_definitions = this.o_currentElement;
 							}
 							
@@ -992,6 +1023,10 @@ public class JSON {
 							String s_referenceName = o_jsonChild.getValue().replace("#/definitions/", "");
 							
 							for (JSONElement o_jsonDefinition : this.a_definitions.getChildren()) {
+								if ((o_jsonDefinition == null) || (o_jsonDefinition.getName() == null)) {
+									continue;
+								}
+								
 								if (o_jsonDefinition.getName().contentEquals(s_referenceName)) {
 									this.o_currentElement.setReference(o_jsonDefinition);
 									b_found = true;
@@ -1012,7 +1047,7 @@ public class JSON {
 							String s_foo = o_jsonChild.getValue();
 							
 							/* check if type value ends with '[]' */
-							if (s_foo.endsWith("[]")) {
+							if ((s_foo != null) && (s_foo.endsWith("[]"))) {
 								/* delete '[]' from type value */
 								s_foo = s_foo.substring(0, s_foo.length() - 2);
 								
@@ -1044,7 +1079,7 @@ public class JSON {
 						}
 					} else if (o_jsonChild.getName().toLowerCase().contentEquals("mapping")) {
 						if (e_jsonValueType == JSONValueType.String) {
-							if (o_jsonChild.getValue().contains(":")) { /* set mapping and mappingClass */
+							if ((o_jsonChild.getValue() != null) && (o_jsonChild.getValue().contains(":"))) { /* set mapping and mappingClass */
 								this.o_currentElement.setMapping(o_jsonChild.getValue().substring(0, o_jsonChild.getValue().indexOf(":")));
 								this.o_currentElement.setMappingClass(o_jsonChild.getValue().substring(o_jsonChild.getValue().indexOf(":") + 1, o_jsonChild.getValue().length()));
 							} else { /* set only mappingClass */
@@ -1126,7 +1161,7 @@ public class JSON {
 							String s_array = o_jsonChild.getValue();
 							
 							/* check if array is surrounded with '[' and ']' characters */
-							if ( (!s_array.startsWith("[")) || (!s_array.endsWith("]")) ) {
+							if ( (s_array == null) || (!s_array.startsWith("[")) || (!s_array.endsWith("]")) ) {
 								throw new IllegalArgumentException("Invalid format for JSON type[" + e_jsonValueType + "] for property[" + o_jsonChild.getName() + "] with value[" + o_jsonChild.getValue() + "], must start with '[' and end with ']'");
 							}
 							
@@ -1139,7 +1174,7 @@ public class JSON {
 							/* iterate each array value */
 							for (String s_arrayValue : a_arrayValues) {
 								/* check if array value is surrounded with '"' and '"' characters */
-								if ( (!s_arrayValue.startsWith("\"")) || (!s_arrayValue.endsWith("\"")) ) {
+								if ( (s_arrayValue == null) || (!s_arrayValue.startsWith("\"")) || (!s_arrayValue.endsWith("\"")) ) {
 									throw new IllegalArgumentException("Invalid format for array value[" + s_arrayValue + "] for property[" + o_jsonChild.getName() + "], must start with '\"' and end with '\"'");
 								}
 								
@@ -1149,18 +1184,20 @@ public class JSON {
 								boolean b_requiredFound = false;
 								java.util.List<JSONElement> a_children = null;
 								
-								/* check if we are at 'root' level */
-								if ( (this.o_currentElement.getName().contentEquals("Root")) && (this.o_currentElement.getLevel() == 0) ) {
-									/* look for 'properties' child */
-									for (JSONElement o_jsonCurrentElementChild : this.o_currentElement.getChildren()) {
-										if (o_jsonCurrentElementChild.getName().toLowerCase().contentEquals("properties")) {
-											/* set 'properties' children as array to search for 'required' element */
-											a_children = o_jsonCurrentElementChild.getChildren();
+								if ((this.o_currentElement != null) && (this.o_currentElement.getName() != null)) {
+									/* check if we are at 'root' level */
+									if ( (this.o_currentElement.getName().contentEquals("Root")) && (this.o_currentElement.getLevel() == 0) ) {
+										/* look for 'properties' child */
+										for (JSONElement o_jsonCurrentElementChild : this.o_currentElement.getChildren()) {
+											if (o_jsonCurrentElementChild.getName().toLowerCase().contentEquals("properties")) {
+												/* set 'properties' children as array to search for 'required' element */
+												a_children = o_jsonCurrentElementChild.getChildren();
+											}
 										}
+									} else {
+										/* set children of current element as array to search for 'required' element */
+										a_children = this.o_currentElement.getChildren();
 									}
-								} else {
-									/* set children of current element as array to search for 'required' element */
-									a_children = this.o_currentElement.getChildren();
 								}
 								
 								if (a_children == null) {
@@ -1169,6 +1206,10 @@ public class JSON {
 								
 								/* iterate all children of current element to find required 'property' */
 								for (JSONElement o_jsonCurrentElementChild : a_children) {
+									if ((o_jsonCurrentElementChild == null) || (o_jsonCurrentElementChild.getName() == null)) {
+										continue;
+									}
+
 									/* compare by property name */
 									if (o_jsonCurrentElementChild.getName().toLowerCase().contentEquals(s_arrayValue.toLowerCase())) {
 										b_requiredFound = true;
@@ -1365,6 +1406,11 @@ public class JSON {
 		String s_json = "";
 		String s_jsonReferenceParentName = "";
 		
+		/* check if parameter is null */
+		if (p_o_jsonSchemaElement == null) {
+			throw new NullPointerException("Schema-element is null");
+		}
+
 		/* if type and mapping class are not set, we need at least a reference to continue */
 		if ( (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_jsonSchemaElement.getType())) && (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_jsonSchemaElement.getMappingClass())) ) {
 			if (p_o_jsonSchemaElement.getReference() == null) {
@@ -1375,6 +1421,10 @@ public class JSON {
 				
 				/* set reference as current schema-element */
 				p_o_jsonSchemaElement = p_o_jsonSchemaElement.getReference();
+
+				if (p_o_jsonSchemaElement == null) {
+					throw new NullPointerException("Schema-element is null");
+				}
 			}
 		}
 		
@@ -1385,12 +1435,16 @@ public class JSON {
 		
 		/* check if mapping class is set if schema-element is not 'items' */
 		if (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_jsonSchemaElement.getMappingClass())) {
+			if (p_o_jsonSchemaElement.getName() == null) {
+				throw new NullPointerException("Schema-element name is null and has no mapping class");
+			}
+
 			if (!p_o_jsonSchemaElement.getName().toLowerCase().contentEquals("items")) {
 				throw new NullPointerException("Schema-element[" + p_o_jsonSchemaElement.getName() + "] has no mapping class");
 			}
 		}
 
-		if (p_o_jsonSchemaElement.getType().toLowerCase().contentEquals("object")) {
+		if ((p_o_jsonSchemaElement.getType() != null) && (p_o_jsonSchemaElement.getType().toLowerCase().contentEquals("object"))) {
 													net.forestany.forestj.lib.Global.ilogFiner(this.printIndentation() + "cast schema-object(" + p_o_jsonSchemaElement.getName() + ")[parentName=" + s_jsonReferenceParentName + "] with schema-mapping(" + p_o_jsonSchemaElement.printMapping() + ") and p_o_object(" + p_o_object.getClass().getTypeName() + "), castonly=" + (p_o_jsonSchemaElement.getMappingClass().contentEquals(p_o_object.getClass().getTypeName())));
 			
 			/* cast object of p_o_object */
@@ -1473,14 +1527,14 @@ public class JSON {
 				this.i_level--;
 				
 				/* change last ',\r\n' to '\r\n' */
-				if (s_json.endsWith("," + this.s_lineBreak)) {
+				if ((s_json != null) && (s_json.endsWith("," + this.s_lineBreak))) {
 					s_json = s_json.substring(0, s_json.length() - 1 - this.s_lineBreak.length()) + this.s_lineBreak;
 				}
 				
 				/* add object end curved bracket to json output */
 				s_json += this.printIndentation() + "}," + this.s_lineBreak;
 			}
-		} else if (p_o_jsonSchemaElement.getType().toLowerCase().contentEquals("array")) {
+		} else if ((p_o_jsonSchemaElement.getType() != null) && (p_o_jsonSchemaElement.getType().toLowerCase().contentEquals("array"))) {
 			/* add property to json with starting array with opening bracket */
 			if ( (this.i_level == 0) || (p_b_parentIsArray) ) {
 				s_json += this.printIndentation() + "[" + this.s_lineBreak;
@@ -1505,6 +1559,10 @@ public class JSON {
 					throw new IllegalArgumentException("Schema-element[" + p_o_jsonSchemaElement.getName() + "] with schema-type[" + p_o_jsonSchemaElement.getType() + "] must have just one child");
 				}
 				
+				if (p_o_jsonSchemaElement.getChildren().get(0).getName() == null) {
+					throw new IllegalArgumentException("Schema-element[" + p_o_jsonSchemaElement.getName() + "] with schema-type[" + p_o_jsonSchemaElement.getType() + "] must have a name with the first child, but it is null");
+				}
+
 				if (!p_o_jsonSchemaElement.getChildren().get(0).getName().toLowerCase().contentEquals("items")) {
 					throw new IllegalArgumentException("Schema-element[" + p_o_jsonSchemaElement.getName() + "] with schema-type[" + p_o_jsonSchemaElement.getName() + "] must have one child with name[items]");
 				}
@@ -1530,6 +1588,10 @@ public class JSON {
 				/* check minItems and maxItems restrictions */
 				if (p_o_jsonSchemaElement.getRestrictions().size() > 0) {
 					for (JSONRestriction o_jsonRestriction : p_o_jsonSchemaElement.getRestrictions()) {
+						if ((o_jsonRestriction == null) || (o_jsonRestriction.getName() == null)) {
+							continue;
+						}
+
 						if (o_jsonRestriction.getName().toLowerCase().contentEquals("minitems")) {
 							/* check minItems restriction */
 							if (a_objects.size() < o_jsonRestriction.getIntValue()) {
@@ -1587,12 +1649,12 @@ public class JSON {
 			}
 			
 			/* change last "},\r\n" to "}\r\n" */
-			if (s_json.endsWith("}," + this.s_lineBreak)) {
+			if ((s_json != null) && (s_json.endsWith("}," + this.s_lineBreak))) {
 				s_json = s_json.substring(0, s_json.length() - 1 - this.s_lineBreak.length()) + this.s_lineBreak;
 			}
 			
 			/* change last ',\r\n' to '\r\n' */
-			if (s_json.endsWith("," + this.s_lineBreak)) {
+			if ((s_json != null) && (s_json.endsWith("," + this.s_lineBreak))) {
 				s_json = s_json.substring(0, s_json.length() - 1 - this.s_lineBreak.length()) + this.s_lineBreak;
 			}
 			
@@ -1608,7 +1670,7 @@ public class JSON {
 													net.forestany.forestj.lib.Global.ilogFiner(this.printIndentation() + "encode schema-property(" + p_o_jsonSchemaElement.getName() + ") with p_o_object(" + p_o_object.getClass().getTypeName() + ")");
 			
 			/* get object property if we have not an array with items */
-			if (!p_o_jsonSchemaElement.getName().toLowerCase().contentEquals("items")) {
+			if ((p_o_jsonSchemaElement.getName() != null) && (!p_o_jsonSchemaElement.getName().toLowerCase().contentEquals("items"))) {
 														net.forestany.forestj.lib.Global.ilogFiner(this.printIndentation() + "encode schema-property(" + p_o_jsonSchemaElement.getName() + "), cast object with p_o_object(" + p_o_object.getClass().getTypeName() + ")");
 				
 				/* get object property of current json element */
@@ -1623,7 +1685,7 @@ public class JSON {
 			/* check if json-element is required */
 			if (p_o_jsonSchemaElement.getRequired()) {
 				/* check if value is empty */
-				if ( (s_foo.contentEquals("")) || (s_foo.contentEquals("null")) || (s_foo.contentEquals("\"\"")) ) {
+				if ( (s_foo == null) || (s_foo.contentEquals("")) || (s_foo.contentEquals("null")) || (s_foo.contentEquals("\"\"")) ) {
 					throw new IllegalArgumentException("'" + p_o_jsonSchemaElement.getName() + "' is required, but value[" + s_foo + "] is empty");
 				}
 			}
@@ -1637,7 +1699,7 @@ public class JSON {
 			}
 			
 			/* add json-element with value */
-			if (p_o_jsonSchemaElement.getName().toLowerCase().contentEquals("items")) {
+			if ((p_o_jsonSchemaElement.getName() != null) && (p_o_jsonSchemaElement.getName().toLowerCase().contentEquals("items"))) {
 				/* array with items does not need captions */
 				s_json += this.printIndentation() + s_foo + "," + this.s_lineBreak;
 			} else {
@@ -1646,7 +1708,7 @@ public class JSON {
 		}
 
 		if (this.i_level == 0) {
-			if (s_json.endsWith("," + this.s_lineBreak)) {
+			if ((s_json != null) && (s_json.endsWith("," + this.s_lineBreak))) {
 				s_json = s_json.substring(0, s_json.length() - 1 - this.s_lineBreak.length()) + this.s_lineBreak;
 			}
 		}
@@ -1728,9 +1790,19 @@ public class JSON {
 				/* handle usual arrays */
 				java.util.List<String> a_primtiveArray = new java.util.ArrayList<String>();
 				
+				/* check object type */
+				if (o_object.getClass().getTypeName() == null) {
+					throw new IllegalAccessException("Could not retrieve type of object of json element(" + p_o_jsonElement.getName() + ")");
+				}
+
 				/* get array type */
 				String s_arrayType = o_object.getClass().getTypeName().substring(0, o_object.getClass().getTypeName().length() - 2);
 				
+				/* if array type of object could not be retrieved, throw an exception */
+				if (s_arrayType == null) {
+					throw new IllegalAccessException("Could not retrieve array element type of object(" + o_object.getClass().getTypeName() + ")");
+				}
+
 				if ( (s_arrayType.contentEquals("boolean")) || (s_arrayType.contentEquals("java.lang.Boolean")) ) {
 					/* cast current field of parameter object as array */
 					boolean[] a_objects = (boolean[])o_object;
@@ -1803,7 +1875,7 @@ public class JSON {
 							a_primtiveArray.add( this.castStringFromObject(a_objects[i], p_o_jsonElement.getChildren().get(0).getType()) );
 						}
 					}
-				} else if ( (s_arrayType.contentEquals("int")) || (s_arrayType.contentEquals("java.lang.Integer")) ) {
+				} else if ( (s_arrayType.contentEquals("int")) || (s_arrayType.contentEquals("integer")) || (s_arrayType.contentEquals("java.lang.Integer")) ) {
 					/* cast current field of parameter object as array */
 					int[] a_objects = (int[])o_object;
 					
@@ -1923,6 +1995,11 @@ public class JSON {
 	 */
 	private String castStringFromObject(Object p_o_object, String p_s_type) throws IllegalArgumentException {
 		String s_foo = "";
+
+		if (p_s_type == null) {
+			p_s_type = "parameter_not_assigned";
+		}
+
 		p_s_type = p_s_type.toLowerCase();
 		
 		if (p_o_object != null) {
@@ -1992,7 +2069,31 @@ public class JSON {
 	 * @throws IllegalArgumentException		unknown restriction name, restriction error or invalid type from json element object
 	 */
 	private void checkRestriction(String p_s_value, JSONRestriction p_o_jsonRestriction, JSONElement p_o_jsonElement) throws IllegalArgumentException {
-		String p_s_type = p_o_jsonElement.getType().toLowerCase();
+		if (p_s_value == null) {
+			throw new IllegalArgumentException("Restriction error: parameter for value is null");
+		}
+		
+		if (p_o_jsonRestriction == null) {
+			throw new IllegalArgumentException("Restriction error: parameter for restriction is null");
+		}
+
+		if (p_o_jsonRestriction.getName() == null) {
+			throw new IllegalArgumentException("Restriction error: restriction name is null");
+		}
+
+		if (p_o_jsonElement == null) {
+			throw new IllegalArgumentException("Restriction error: parameter for element is null");
+		}
+
+		if (p_o_jsonElement.getName() == null) {
+			throw new IllegalArgumentException("Restriction error: element name is null");
+		}
+
+		if (p_o_jsonElement.getType() == null) {
+			throw new IllegalArgumentException("Restriction error: element type of '" + p_o_jsonElement.getName() + "' is null");
+		}
+		
+		String s_type = p_o_jsonElement.getType().toLowerCase();
 		
 		/* remove surrounding '"' and '"' characters */
 		if ( (p_s_value.startsWith("\"")) && (p_s_value.endsWith("\"")) ) {
@@ -2000,7 +2101,7 @@ public class JSON {
 		}
 		
 		if (p_o_jsonRestriction.getName().toLowerCase().contentEquals("minimum")) {
-			if (p_s_type.contentEquals("number")) {
+			if (s_type.contentEquals("number")) {
 				java.math.BigDecimal o_value = new java.math.BigDecimal(p_s_value);
 				java.math.BigDecimal o_restriction = new java.math.BigDecimal(p_o_jsonRestriction.getStrValue());
 				int i_compare = o_value.compareTo(o_restriction);
@@ -2008,7 +2109,7 @@ public class JSON {
 				if (i_compare == -1) {
 					throw new IllegalArgumentException("Restriction error: value[" + o_value + "] does not match " + p_o_jsonRestriction.getName() + " restriction[" + p_o_jsonRestriction.getStrValue() + "]");
 				}
-			} else if (p_s_type.contentEquals("integer")) {
+			} else if (s_type.contentEquals("integer")) {
 				Integer i_value = Integer.parseInt(p_s_value);
 				Integer i_restriction = p_o_jsonRestriction.getIntValue();
 				int i_compare = i_value.compareTo(i_restriction);
@@ -2017,10 +2118,10 @@ public class JSON {
 					throw new IllegalArgumentException("Restriction error: value[" + i_value + "] does not match " + p_o_jsonRestriction.getName() + " restriction[" + p_o_jsonRestriction.getIntValue() + "]");
 				}
 			} else {
-				throw new IllegalArgumentException("Invalid type[" + p_s_type + "] of '" + p_o_jsonElement.getName() + "' using restriction[" + p_o_jsonRestriction.getName() + "]");
+				throw new IllegalArgumentException("Invalid type[" + s_type + "] of '" + p_o_jsonElement.getName() + "' using restriction[" + p_o_jsonRestriction.getName() + "]");
 			}
 		} else if (p_o_jsonRestriction.getName().toLowerCase().contentEquals("exclusiveminimum")) {
-			if (p_s_type.contentEquals("number")) {
+			if (s_type.contentEquals("number")) {
 				java.math.BigDecimal o_value = new java.math.BigDecimal(p_s_value);
 				java.math.BigDecimal o_restriction = new java.math.BigDecimal(p_o_jsonRestriction.getStrValue());
 				int i_compare = o_value.compareTo(o_restriction);
@@ -2028,7 +2129,7 @@ public class JSON {
 				if ( (i_compare == -1) || (i_compare == 0) ) {
 					throw new IllegalArgumentException("Restriction error: value[" + o_value + "] does not match " + p_o_jsonRestriction.getName() + " restriction[" + p_o_jsonRestriction.getStrValue() + "]");
 				}
-			} else if (p_s_type.contentEquals("integer")) {
+			} else if (s_type.contentEquals("integer")) {
 				Integer i_value = Integer.parseInt(p_s_value);
 				Integer i_restriction = p_o_jsonRestriction.getIntValue();
 				int i_compare = i_value.compareTo(i_restriction);
@@ -2037,10 +2138,10 @@ public class JSON {
 					throw new IllegalArgumentException("Restriction error: value[" + i_value + "] does not match " + p_o_jsonRestriction.getName() + " restriction[" + p_o_jsonRestriction.getIntValue() + "]");
 				}
 			} else {
-				throw new IllegalArgumentException("Invalid type[" + p_s_type + "] of '" + p_o_jsonElement.getName() + "' using restriction[" + p_o_jsonRestriction.getName() + "]");
+				throw new IllegalArgumentException("Invalid type[" + s_type + "] of '" + p_o_jsonElement.getName() + "' using restriction[" + p_o_jsonRestriction.getName() + "]");
 			}
 		} else if (p_o_jsonRestriction.getName().toLowerCase().contentEquals("maximum")) {
-			if (p_s_type.contentEquals("number")) {
+			if (s_type.contentEquals("number")) {
 				java.math.BigDecimal o_value = new java.math.BigDecimal(p_s_value);
 				java.math.BigDecimal o_restriction = new java.math.BigDecimal(p_o_jsonRestriction.getStrValue());
 				int i_compare = o_value.compareTo(o_restriction);
@@ -2048,7 +2149,7 @@ public class JSON {
 				if (i_compare == 1) {
 					throw new IllegalArgumentException("Restriction error: value[" + o_value + "] does not match " + p_o_jsonRestriction.getName() + " restriction[" + p_o_jsonRestriction.getStrValue() + "]");
 				}
-			} else if (p_s_type.contentEquals("integer")) {
+			} else if (s_type.contentEquals("integer")) {
 				Integer i_value = Integer.parseInt(p_s_value);
 				Integer i_restriction = p_o_jsonRestriction.getIntValue();
 				int i_compare = i_value.compareTo(i_restriction);
@@ -2057,10 +2158,10 @@ public class JSON {
 					throw new IllegalArgumentException("Restriction error: value[" + i_value + "] does not match " + p_o_jsonRestriction.getName() + " restriction[" + p_o_jsonRestriction.getIntValue() + "]");
 				}
 			} else {
-				throw new IllegalArgumentException("Invalid type[" + p_s_type + "] of '" + p_o_jsonElement.getName() + "' using restriction[" + p_o_jsonRestriction.getName() + "]");
+				throw new IllegalArgumentException("Invalid type[" + s_type + "] of '" + p_o_jsonElement.getName() + "' using restriction[" + p_o_jsonRestriction.getName() + "]");
 			}
 		} else if (p_o_jsonRestriction.getName().toLowerCase().contentEquals("exclusivemaximum")) {
-			if (p_s_type.contentEquals("number")) {
+			if (s_type.contentEquals("number")) {
 				java.math.BigDecimal o_value = new java.math.BigDecimal(p_s_value);
 				java.math.BigDecimal o_restriction = new java.math.BigDecimal(p_o_jsonRestriction.getStrValue());
 				int i_compare = o_value.compareTo(o_restriction);
@@ -2068,7 +2169,7 @@ public class JSON {
 				if ( (i_compare == 1) || (i_compare == 0) ) {
 					throw new IllegalArgumentException("Restriction error: value[" + o_value + "] does not match " + p_o_jsonRestriction.getName() + " restriction[" + p_o_jsonRestriction.getStrValue() + "]");
 				}
-			} else if (p_s_type.contentEquals("integer")) {
+			} else if (s_type.contentEquals("integer")) {
 				Integer i_value = Integer.parseInt(p_s_value);
 				Integer i_restriction = p_o_jsonRestriction.getIntValue();
 				int i_compare = i_value.compareTo(i_restriction);
@@ -2077,31 +2178,31 @@ public class JSON {
 					throw new IllegalArgumentException("Restriction error: value[" + i_value + "] does not match " + p_o_jsonRestriction.getName() + " restriction[" + p_o_jsonRestriction.getIntValue() + "]");
 				}
 			} else {
-				throw new IllegalArgumentException("Invalid type[" + p_s_type + "] of '" + p_o_jsonElement.getName() + "' using restriction[" + p_o_jsonRestriction.getName() + "]");
+				throw new IllegalArgumentException("Invalid type[" + s_type + "] of '" + p_o_jsonElement.getName() + "' using restriction[" + p_o_jsonRestriction.getName() + "]");
 			}
 		} else if (p_o_jsonRestriction.getName().toLowerCase().contentEquals("minlength")) {
-			if (p_s_type.contentEquals("string")) {
+			if (s_type.contentEquals("string")) {
 				if (p_s_value.length() < p_o_jsonRestriction.getIntValue()) {
 					throw new IllegalArgumentException("Restriction error: value[" + p_s_value + "] does not match " + p_o_jsonRestriction.getName() + " restriction[" + p_o_jsonRestriction.getIntValue() + "]");
 				}
 			} else {
-				throw new IllegalArgumentException("Invalid type[" + p_s_type + "] of '" + p_o_jsonElement.getName() + "' using restriction[" + p_o_jsonRestriction.getName() + "]");
+				throw new IllegalArgumentException("Invalid type[" + s_type + "] of '" + p_o_jsonElement.getName() + "' using restriction[" + p_o_jsonRestriction.getName() + "]");
 			}
 		} else if (p_o_jsonRestriction.getName().toLowerCase().contentEquals("maxlength")) {
-			if (p_s_type.contentEquals("string")) {
+			if (s_type.contentEquals("string")) {
 				if (p_s_value.length() > p_o_jsonRestriction.getIntValue()) {
 					throw new IllegalArgumentException("Restriction error: value[" + p_s_value + "] does not match " + p_o_jsonRestriction.getName() + " restriction[" + p_o_jsonRestriction.getIntValue() + "]");
 				}
 			} else {
-				throw new IllegalArgumentException("Invalid type[" + p_s_type + "] of '" + p_o_jsonElement.getName() + "' using restriction[" + p_o_jsonRestriction.getName() + "]");
+				throw new IllegalArgumentException("Invalid type[" + s_type + "] of '" + p_o_jsonElement.getName() + "' using restriction[" + p_o_jsonRestriction.getName() + "]");
 			}
 		} else if (p_o_jsonRestriction.getName().toLowerCase().contentEquals("pattern")) {
-			if ( (p_s_type.contentEquals("string")) || (p_s_type.contentEquals("boolean")) || (p_s_type.contentEquals("number")) || (p_s_type.contentEquals("integer")) )  {
+			if ( (s_type.contentEquals("string")) || (s_type.contentEquals("boolean")) || (s_type.contentEquals("number")) || (s_type.contentEquals("integer")) )  {
 				if (!net.forestany.forestj.lib.Helper.matchesRegex(p_s_value, p_o_jsonRestriction.getStrValue())) {
 					throw new IllegalArgumentException("Restriction error: value[" + p_s_value + "] does not match " + p_o_jsonRestriction.getName() + " restriction[" + p_o_jsonRestriction.getStrValue() + "]");
 				}
 			} else {
-				throw new IllegalArgumentException("Invalid type[" + p_s_type + "] of '" + p_o_jsonElement.getName() + "' using restriction[" + p_o_jsonRestriction.getName() + "]");
+				throw new IllegalArgumentException("Invalid type[" + s_type + "] of '" + p_o_jsonElement.getName() + "' using restriction[" + p_o_jsonRestriction.getName() + "]");
 			}
 		} else {
 			throw new IllegalArgumentException("Unknown Restriction: " + p_o_jsonRestriction.getName());
@@ -2172,6 +2273,11 @@ public class JSON {
 		/* remove all white spaces, but not between double quotes */
 		s_json = this.removeWhiteSpaces(s_json);
 		
+		/* check json content */
+		if (s_json == null) {
+			throw new IllegalArgumentException("JSON-file content is null");
+		}
+
 		/* check if json-schema starts with (curly) brackets */
 	    if (( ( (!s_json.startsWith("{")) || (!s_json.endsWith("}")) ) && ( (!s_json.startsWith("[")) || (!s_json.endsWith("]")) ) )) {
     		throw new IllegalArgumentException("JSON-file must start and end with curly bracket '{', '}' or must start and end with bracket '[', ']'");
@@ -2211,6 +2317,21 @@ public class JSON {
 	private boolean validateAgainstSchemaRecursive(JSONElement p_o_jsonDataElement, JSONElement p_o_jsonSchemaElement) throws NullPointerException, IllegalArgumentException, java.text.ParseException, java.time.DateTimeException {
 		boolean b_return = true;
 		
+		/* check parameter */
+		if (p_o_jsonDataElement == null) {
+			throw new NullPointerException("Data-element is null");
+		}
+
+		/* check parameter */
+		if (p_o_jsonSchemaElement == null) {
+			throw new NullPointerException("Schema-element is null");
+		}
+
+		/* check if schema name is set */
+		if (p_o_jsonSchemaElement.getName() == null) {
+			throw new NullPointerException("Schema-element name is null");
+		}
+
 		/* if type and mapping class are not set, we need at least a reference to continue */
 		if ( (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_jsonSchemaElement.getType())) && (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_jsonSchemaElement.getMappingClass())) ) {
 			if (p_o_jsonSchemaElement.getReference() == null) {
@@ -2239,7 +2360,7 @@ public class JSON {
 				String s_objectType = p_o_jsonSchemaElement.getMappingClass();
 				
 				/* if object has reference, we create new object instance by mapping of reference */
-				if ( (p_o_jsonSchemaElement.getReference() != null) && (p_o_jsonSchemaElement.getReference().getType().toLowerCase().contentEquals("object")) ) {
+				if ( (p_o_jsonSchemaElement.getReference() != null) && (p_o_jsonSchemaElement.getReference().getType() != null) && (p_o_jsonSchemaElement.getReference().getType().toLowerCase().contentEquals("object")) ) {
 					s_objectType = p_o_jsonSchemaElement.getReference().getMappingClass();
 				}
 				
@@ -2305,6 +2426,10 @@ public class JSON {
 						int j = 0;
 						
 						for (int i = 0; i < p_o_jsonSchemaElement.getChildren().size(); i++) {
+							if (p_o_jsonSchemaElement.getChildren().get(i).getName() == null) {
+								continue;
+							}
+
 																	net.forestany.forestj.lib.Global.ilogFinest(this.printIndentation() + "compare schema-child-name(" + p_o_jsonSchemaElement.getChildren().get(i).getName() + ") with data-child-name(" + p_o_jsonDataElement.getChildren().get(j).getName() + ")");
 							
 							/* check if current element in schema has data element by name, otherwise skip this element */
@@ -2343,6 +2468,10 @@ public class JSON {
 					throw new IllegalArgumentException("Schema-array[" + p_o_jsonSchemaElement.getName() + "] with mapping[" + p_o_jsonSchemaElement.getMappingClass() + "] must have just one child");
 				}
 				
+				if (p_o_jsonSchemaElement.getChildren().get(0).getName() == null) {
+					throw new IllegalArgumentException("Schema-array[" + p_o_jsonSchemaElement.getName() + "] with mapping[" + p_o_jsonSchemaElement.getMappingClass() + "] first child name is null");
+				}
+
 				if (!p_o_jsonSchemaElement.getChildren().get(0).getName().toLowerCase().contentEquals("items")) {
 					throw new IllegalArgumentException("Schema-array[" + p_o_jsonSchemaElement.getName() + "] with mapping[" + p_o_jsonSchemaElement.getMappingClass() + "] must have one child with name[items]");
 				}
@@ -2363,6 +2492,10 @@ public class JSON {
 			/* check minItems and maxItems restrictions and save them for items check afterwards */
 			if (p_o_jsonSchemaElement.getRestrictions().size() > 0) {
 				for (JSONRestriction o_jsonRestriction : p_o_jsonSchemaElement.getRestrictions()) {
+					if ((o_jsonRestriction == null) || (o_jsonRestriction.getName() == null)) {
+						continue;
+					}
+
 					if ( (o_jsonRestriction.getName().toLowerCase().contentEquals("minitems")) || (o_jsonRestriction.getName().toLowerCase().contentEquals("maxitems"))) {
 						a_restrictions.add(o_jsonRestriction);
 						s_amountProperty = p_o_jsonSchemaElement.getName();
@@ -2390,6 +2523,10 @@ public class JSON {
 					/* check minItems and maxItems restrictions */
 					if (a_restrictions.size() > 0) {
 						for (JSONRestriction o_jsonRestriction : a_restrictions) {
+							if ((o_jsonRestriction == null) || (o_jsonRestriction.getName() == null)) {
+								continue;
+							}
+
 							if (o_jsonRestriction.getName().toLowerCase().contentEquals("minitems")) {
 								/* check minItems restriction */
 								if (p_o_jsonDataElement.getChildren().size() < o_jsonRestriction.getIntValue()) {
@@ -2434,6 +2571,10 @@ public class JSON {
 					/* check minItems and maxItems restrictions */
 					if (a_restrictions.size() > 0) {
 						for (JSONRestriction o_jsonRestriction : a_restrictions) {
+							if ((o_jsonRestriction == null) || (o_jsonRestriction.getName() == null)) {
+								continue;
+							}
+
 							if (o_jsonRestriction.getName().toLowerCase().contentEquals("minitems")) {
 								/* check minItems restriction */
 								if (a_values.length < o_jsonRestriction.getIntValue()) {
@@ -2491,6 +2632,11 @@ public class JSON {
 				}
 			}
 			
+			/* check data value element */
+			if (p_o_jsonDataElement.getValue() == null) {
+				throw new IllegalArgumentException("'" + p_o_jsonSchemaElement.getName() + "'; value of data element is null");
+			}
+
 			/* check if json-element is required */
 			if (p_o_jsonSchemaElement.getRequired()) {
 				/* check if value is empty */
@@ -2617,6 +2763,11 @@ public class JSON {
 		/* remove all white spaces, but not between double quotes */
 		s_json = this.removeWhiteSpaces(s_json);
 		
+		/* check json content */
+		if (s_json == null) {
+			throw new IllegalArgumentException("JSON-file content is null");
+		}
+
 		/* check if json-schema starts with (curly) brackets */
 	    if (( ( (!s_json.startsWith("{")) || (!s_json.endsWith("}")) ) && ( (!s_json.startsWith("[")) || (!s_json.endsWith("]")) ) )) {
     		throw new IllegalArgumentException("JSON-file must start and end with curly bracket '{', '}' or must start and end with bracket '[', ']'");
@@ -2665,6 +2816,16 @@ public class JSON {
 	 * @throws ClassNotFoundException							could not retrieve class by string class name
 	 */
 	private Object jsonDecodeRecursive(JSONElement p_o_jsonDataElement, JSONElement p_o_jsonSchemaElement, Object p_o_object) throws NullPointerException, IllegalArgumentException, NoSuchFieldException, NoSuchMethodException, java.lang.reflect.InvocationTargetException, IllegalAccessException, java.text.ParseException, java.time.DateTimeException, InstantiationException, ClassNotFoundException {
+		/* check parameter */
+		if (p_o_jsonDataElement == null) {
+			throw new NullPointerException("Data-element is null");
+		}
+
+		/* check parameter */
+		if (p_o_jsonSchemaElement == null) {
+			throw new NullPointerException("Schema-element is null");
+		}
+
 		/* if type and mapping class are not set, we need at least a reference to continue */
 		if ( (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_jsonSchemaElement.getType())) && (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_jsonSchemaElement.getMappingClass())) ) {
 			if (p_o_jsonSchemaElement.getReference() == null) {
@@ -2674,7 +2835,12 @@ public class JSON {
 				p_o_jsonSchemaElement = p_o_jsonSchemaElement.getReference();
 			}
 		}
-		
+
+		/* check schema parameter name */
+		if (p_o_jsonSchemaElement.getName() == null) {
+			throw new NullPointerException("Schema-element name is null");
+		}
+
 		/* check if type is set */
 		if (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_jsonSchemaElement.getType())) {
 			throw new IllegalArgumentException("Schema-element[" + p_o_jsonSchemaElement.getName() + "] has no type");
@@ -2696,7 +2862,7 @@ public class JSON {
 				String s_objectType = p_o_jsonSchemaElement.getMappingClass();
 				
 				/* if object has reference, we create new object instance by mapping of reference */
-				if ( (p_o_jsonSchemaElement.getReference() != null) && (p_o_jsonSchemaElement.getReference().getType().toLowerCase().contentEquals("object")) ) {
+				if ( (p_o_jsonSchemaElement.getReference() != null) && (p_o_jsonSchemaElement.getReference().getType() != null) && (p_o_jsonSchemaElement.getReference().getType().toLowerCase().contentEquals("object")) ) {
 					s_objectType = p_o_jsonSchemaElement.getReference().getMappingClass();
 				}
 				
@@ -2706,7 +2872,7 @@ public class JSON {
 				Object o_object = null;
 				
 				/* check if class type of object is a inner class */
-				if (s_objectType.contains("$")) {
+				if ((s_objectType != null) && (s_objectType.contains("$"))) {
 					/* get target class */
 					Class<?> o_targetClass = Class.forName(s_objectType);
 					
@@ -2808,6 +2974,16 @@ public class JSON {
 						int j = 0;
 						
 						for (int i = 0; i < p_o_jsonSchemaElement.getChildren().size(); i++) {
+							/* check schema element child name */
+							if (p_o_jsonSchemaElement.getChildren().get(i).getName() == null) {
+								throw new IllegalArgumentException("Schema-element[" + p_o_jsonSchemaElement.getName() + "] child #" + (i + 1) + " name is null");
+							}
+
+							/* check data element child name */
+							if (p_o_jsonDataElement.getChildren().get(j).getName() == null) {
+								throw new IllegalArgumentException("Data-element for schema-element[" + p_o_jsonSchemaElement.getName() + "] child #" + (j + 1) + " name is null");
+							}
+
 																	net.forestany.forestj.lib.Global.ilogFinest(this.printIndentation() + "compare schema-child-name(" + p_o_jsonSchemaElement.getChildren().get(i).getName() + ") with data-child-name(" + p_o_jsonDataElement.getChildren().get(j).getName() + ")");
 							
 							/* check if current element in schema has data element by name, otherwise skip this element */
@@ -2861,6 +3037,10 @@ public class JSON {
 					throw new IllegalArgumentException("Schema-array[" + p_o_jsonSchemaElement.getName() + "] with p_o_object[" + p_o_object.getClass().getTypeName() + "] must have just one child");
 				}
 				
+				if (p_o_jsonSchemaElement.getChildren().get(0).getName() == null) {
+					throw new IllegalArgumentException("Schema-array[" + p_o_jsonSchemaElement.getName() + "] with p_o_object[" + p_o_object.getClass().getTypeName() + "] first child name is null");
+				}
+
 				if (!p_o_jsonSchemaElement.getChildren().get(0).getName().toLowerCase().contentEquals("items")) {
 					throw new IllegalArgumentException("Schema-array[" + p_o_jsonSchemaElement.getName() + "] with p_o_object[" + p_o_object.getClass().getTypeName() + "] must have one child with name[items]");
 				}
@@ -2917,6 +3097,10 @@ public class JSON {
 			/* check minItems and maxItems restrictions and save them for items check afterwards */
 			if (p_o_jsonSchemaElement.getRestrictions().size() > 0) {
 				for (JSONRestriction o_jsonRestriction : p_o_jsonSchemaElement.getRestrictions()) {
+					if ((o_jsonRestriction == null) || (o_jsonRestriction.getName() == null)) {
+						continue;
+					}
+
 					if ( (o_jsonRestriction.getName().toLowerCase().contentEquals("minitems")) || (o_jsonRestriction.getName().toLowerCase().contentEquals("maxitems"))) {
 						a_restrictions.add(o_jsonRestriction);
 						s_amountProperty = p_o_jsonSchemaElement.getName();
@@ -2944,6 +3128,10 @@ public class JSON {
 					/* check minItems and maxItems restrictions */
 					if (a_restrictions.size() > 0) {
 						for (JSONRestriction o_jsonRestriction : a_restrictions) {
+							if ((o_jsonRestriction == null) || (o_jsonRestriction.getName() == null)) {
+								continue;
+							}
+
 							if (o_jsonRestriction.getName().toLowerCase().contentEquals("minitems")) {
 								/* check minItems restriction */
 								if (p_o_jsonDataElement.getChildren().size() < o_jsonRestriction.getIntValue()) {
@@ -3004,6 +3192,10 @@ public class JSON {
 					/* check minItems and maxItems restrictions */
 					if (a_restrictions.size() > 0) {
 						for (JSONRestriction o_jsonRestriction : a_restrictions) {
+							if ((o_jsonRestriction == null) || (o_jsonRestriction.getName() == null)) {
+								continue;
+							}
+
 							if (o_jsonRestriction.getName().toLowerCase().contentEquals("minitems")) {
 								/* check minItems restriction */
 								if (a_values.length < o_jsonRestriction.getIntValue()) {
@@ -3029,7 +3221,7 @@ public class JSON {
 						JSONValueType e_jsonValueType = this.getJSONValueType(s_value);
 						
 						/* check if JSON value types are matching between schema and data, if it is not 'null' */
-						if ( (e_jsonValueType != stringToJSONValueType(p_o_jsonSchemaElement.getType())) && (e_jsonValueType != JSONValueType.Null) &&  ( (s_value != null) && (!s_value.contentEquals("null")) ) ) {
+						if ( (e_jsonValueType != stringToJSONValueType(p_o_jsonSchemaElement.getType())) && (e_jsonValueType != JSONValueType.Null) && (s_value != null) && (!s_value.contentEquals("null")) ) {
 							throw new IllegalArgumentException("JSON schema type[" + stringToJSONValueType(p_o_jsonSchemaElement.getType()) + "] does not match with data value type[" + e_jsonValueType + "] with value[" + s_value + "]");
 						}
 						
@@ -3090,7 +3282,7 @@ public class JSON {
 			/* check if json-element is required */
 			if (p_o_jsonSchemaElement.getRequired()) {
 				/* check if value is empty */
-				if ( (p_o_jsonDataElement.getValue().contentEquals("")) || (p_o_jsonDataElement.getValue().contentEquals("null")) || (p_o_jsonDataElement.getValue().contentEquals("\"\"")) ) {
+				if ( (p_o_jsonDataElement.getValue() == null) || (p_o_jsonDataElement.getValue().contentEquals("")) || (p_o_jsonDataElement.getValue().contentEquals("null")) || (p_o_jsonDataElement.getValue().contentEquals("\"\"")) ) {
 					throw new IllegalArgumentException("'" + p_o_jsonSchemaElement.getName() + "' is required, but value[" + p_o_jsonDataElement.getValue() + "] is empty");
 				}
 			}
@@ -3120,6 +3312,10 @@ public class JSON {
 	private JSONValueType stringToJSONValueType(String p_s_jsonValueType) throws IllegalArgumentException {
 		p_s_jsonValueType = p_s_jsonValueType.toLowerCase();
 		
+		if (p_s_jsonValueType == null) {
+			p_s_jsonValueType = "parameter_not_assigned";
+		}
+
 		if (p_s_jsonValueType.contentEquals("string")) {
 			return JSONValueType.String;
 		} else if (p_s_jsonValueType.contentEquals("number")) {
@@ -3167,7 +3363,7 @@ public class JSON {
 			
 			/* look for get-property-method for list object */
 			for (java.lang.reflect.Method o_methodSearch : p_o_object.getClass().getDeclaredMethods()) {
-				if (o_methodSearch.getName().contentEquals("get" + s_field)) {
+				if ((o_methodSearch.getName() != null) && (o_methodSearch.getName().contentEquals("get" + s_field))) {
 					o_method = o_methodSearch;
 					b_methodFound = true;
 				}
@@ -3217,7 +3413,7 @@ public class JSON {
 	 */
 	private void setProperty(JSONElement p_o_jsonSchemaElement, Object p_o_object, String p_s_objectValue) throws NoSuchMethodException, NoSuchFieldException, java.lang.reflect.InvocationTargetException, IllegalAccessException, java.text.ParseException, java.time.DateTimeException {
 		/* detect null value */
-		if (p_s_objectValue.contentEquals("null")) {
+		if ((p_s_objectValue == null) || (p_s_objectValue.contentEquals("null"))) {
 			return;
 		} else {
 			/* remove surrounded double quotes from value */
@@ -3240,7 +3436,7 @@ public class JSON {
 			boolean b_methodFound = false;
 			
 			for (java.lang.reflect.Method o_methodSearch : p_o_object.getClass().getDeclaredMethods()) {
-				if (o_methodSearch.getName().contentEquals("set" + s_field)) {
+				if ((o_methodSearch.getName() != null) && (o_methodSearch.getName().contentEquals("set" + s_field))) {
 					o_method = o_methodSearch;
 					b_methodFound = true;
 				}
@@ -3287,7 +3483,7 @@ public class JSON {
 			boolean b_methodFound = false;
 			
 			for (java.lang.reflect.Method o_methodSearch : p_o_object.getClass().getDeclaredMethods()) {
-				if (o_methodSearch.getName().contentEquals("set" + p_s_mapping)) {
+				if ((o_methodSearch.getName() != null) && (o_methodSearch.getName().contentEquals("set" + p_s_mapping))) {
 					o_method = o_methodSearch;
 					b_methodFound = true;
 				}
@@ -3334,7 +3530,7 @@ public class JSON {
 			
 			/* look for set-property-method of current parameter object value */
 			for (java.lang.reflect.Method o_methodSearch : p_o_object.getClass().getDeclaredMethods()) {
-				if (o_methodSearch.getName().contentEquals("set" + p_s_mapping)) {
+				if ((o_methodSearch.getName() != null) && (o_methodSearch.getName().contentEquals("set" + p_s_mapping))) {
 					o_method = o_methodSearch;
 					b_methodFound = true;
 				}
@@ -3344,9 +3540,19 @@ public class JSON {
 				throw new NoSuchMethodException("Method[" + "set" + p_s_mapping + "] does not exist for object: " + p_o_object.getClass().getTypeName());
 			}
 			
+			/* check object type */
+			if ((o_method.getParameterTypes()[0] == null) || (o_method.getParameterTypes()[0].getTypeName() == null)) {
+				throw new IllegalAccessException("Could not retrieve first parameter type of method(" + "set" + p_s_mapping + ")");
+			}
+
 			/* get primitive array type */
 			String s_primitiveArrayType = o_method.getParameterTypes()[0].getTypeName();
 			
+			/* if primitve array type of method could not be retrieved, throw an exception */
+			if (s_primitiveArrayType == null) {
+				throw new IllegalAccessException("Could not retrieve primitive array type of method(" + "set" + p_s_mapping + ")");
+			}
+
 			/* remove '[]' from type value */
 			if (s_primitiveArrayType.endsWith("[]")) {
 				s_primitiveArrayType = s_primitiveArrayType.substring(0, s_primitiveArrayType.length() - 2);
@@ -3405,7 +3611,7 @@ public class JSON {
 					}
 					
 					o_method.invoke(p_o_object, new Object[] {o_bar});
-				} else if ( (s_primitiveArrayType.contentEquals("int")) || (s_primitiveArrayType.contentEquals("java.lang.Integer")) ) {
+				} else if ( (s_primitiveArrayType.contentEquals("int")) || (s_primitiveArrayType.contentEquals("integer")) || (s_primitiveArrayType.contentEquals("java.lang.Integer")) ) {
 					int[] o_bar = new int[o_foo.size()];
 					
 					for (int i = 0; i < o_foo.size(); i++) {
@@ -3418,6 +3624,14 @@ public class JSON {
 					
 					for (int i = 0; i < o_foo.size(); i++) {
 						o_bar[i] = (long)this.castObjectFromString( (o_foo.get(i) == null ? null : o_foo.get(i).toString()), s_primitiveArrayType );
+					}
+					
+					o_method.invoke(p_o_object, new Object[] {o_bar});
+				} else if ( (s_primitiveArrayType.toLowerCase().contentEquals("string")) || (s_primitiveArrayType.contentEquals("java.lang.String")) ) {
+					String[] o_bar = new String[o_foo.size()];
+					
+					for (int i = 0; i < o_foo.size(); i++) {
+						o_bar[i] = (String)this.castObjectFromString( (o_foo.get(i) == null ? null : o_foo.get(i).toString()), s_primitiveArrayType );
 					}
 					
 					o_method.invoke(p_o_object, new Object[] {o_bar});
@@ -3468,9 +3682,19 @@ public class JSON {
 		} else {
 			/* call array field directly to set object array values */
 			try {
+				/* check object type */
+				if ((p_o_object.getClass().getDeclaredField(p_s_mapping) == null) || (p_o_object.getClass().getDeclaredField(p_s_mapping).getType().getTypeName() == null)) {
+					throw new IllegalAccessException("Could not retrieve type of object(" + p_s_mapping + ")");
+				}
+
 				/* get primitive array type */
 				String s_primitiveArrayType = p_o_object.getClass().getDeclaredField(p_s_mapping).getType().getTypeName();
-				
+			
+				/* if primitve array type of method could not be retrieved, throw an exception */
+				if (s_primitiveArrayType == null) {
+					throw new IllegalAccessException("Could not retrieve primitive array type of object(" + p_s_mapping + "|" + p_o_object.getClass().getDeclaredField(p_s_mapping).toString() + ")");
+				}
+
 				/* remove '[]' from type value */
 				if (s_primitiveArrayType.endsWith("[]")) {
 					s_primitiveArrayType = s_primitiveArrayType.substring(0, s_primitiveArrayType.length() - 2);
@@ -3529,7 +3753,7 @@ public class JSON {
 						}
 						
 						p_o_object.getClass().getDeclaredField(p_s_mapping).set(p_o_object, o_bar);
-					} else if ( (s_primitiveArrayType.contentEquals("int")) || (s_primitiveArrayType.contentEquals("java.lang.Integer")) ) {
+					} else if ( (s_primitiveArrayType.contentEquals("int")) || (s_primitiveArrayType.contentEquals("int"))  || (s_primitiveArrayType.contentEquals("java.lang.Integer")) ) {
 						int[] o_bar = new int[o_foo.size()];
 						
 						for (int i = 0; i < o_foo.size(); i++) {
@@ -3542,6 +3766,14 @@ public class JSON {
 						
 						for (int i = 0; i < o_foo.size(); i++) {
 							o_bar[i] = (long)this.castObjectFromString( (o_foo.get(i) == null ? null : o_foo.get(i).toString()), s_primitiveArrayType );
+						}
+						
+						p_o_object.getClass().getDeclaredField(p_s_mapping).set(p_o_object, o_bar);
+					} else if ( (s_primitiveArrayType.toLowerCase().contentEquals("string")) || (s_primitiveArrayType.contentEquals("java.lang.String")) ) {
+						String[] o_bar = new String[o_foo.size()];
+						
+						for (int i = 0; i < o_foo.size(); i++) {
+							o_bar[i] = (String)this.castObjectFromString( (o_foo.get(i) == null ? null : o_foo.get(i).toString()), s_primitiveArrayType );
 						}
 						
 						p_o_object.getClass().getDeclaredField(p_s_mapping).set(p_o_object, o_bar);
@@ -3615,13 +3847,17 @@ public class JSON {
 		
 		/* check if value is not empty */
 		if (!p_s_value.contentEquals("")) {
+			if (p_s_type == null) {
+				p_s_type = "parameter_not_assigned";
+			}
+
 			p_s_type = p_s_type.toLowerCase();
 			
 			/* cast string value into object */
-			if (p_s_type.contentEquals("string")) {
+			if ( (p_s_type.contentEquals("string")) || (p_s_type.contentEquals("java.lang.string")) ) {
 				/* recognize date format ISO-8601 */
 				if (net.forestany.forestj.lib.Helper.isDateTime(p_s_value)) {
-					o_foo = net.forestany.forestj.lib.Helper.fromISO8601UTCToUtilDate(p_s_value);
+					o_foo = net.forestany.forestj.lib.Helper.fromISO8601UTC(p_s_value);
 				} else {
 					/* undo escape double quote with backslash */
 					o_foo = p_s_value.replaceAll("\\\\\"", "\"");
@@ -3673,7 +3909,7 @@ public class JSON {
 				if (!p_s_value.contentEquals("null")) {
 					o_foo = Long.parseLong(p_s_value);
 				}
-			} else if ( (p_s_type.contentEquals("integer")) || (p_s_type.contentEquals("java.lang.integer")) ) {
+			} else if ( (p_s_type.contentEquals("int")) || (p_s_type.contentEquals("integer")) || (p_s_type.contentEquals("java.lang.integer")) ) {
 				if (!p_s_value.contentEquals("null")) {
 					o_foo = Integer.parseInt(p_s_value);
 				}
@@ -4021,7 +4257,7 @@ public class JSON {
 			
 			for (java.lang.reflect.Field o_field : this.getClass().getDeclaredFields()) {
 				try {
-					if (o_field.getName().startsWith("this$")) {
+					if ((o_field.getName() == null) || (o_field.getName().startsWith("this$"))) {
 						continue;
 					}
 					
@@ -4235,7 +4471,7 @@ public class JSON {
 			String s_foo = "\n" + this.printIndentation() + "\t" + "JSONRestriction: ";
 			
 			for (java.lang.reflect.Field o_field : this.getClass().getDeclaredFields()) {
-				if (o_field.getName().startsWith("this$")) {
+				if ((o_field.getName() == null) || (o_field.getName().startsWith("this$"))) {
 					continue;
 				}
 				

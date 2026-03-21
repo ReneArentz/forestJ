@@ -6,13 +6,13 @@
 	<parent>
 		<groupId>net.forestany.forestj</groupId>
 		<artifactId>Parent</artifactId>
-		<version>1.14</version>
+		<version>1.16</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
 	<groupId>net.forestany.forestj.sql</groupId>
 	<artifactId>fJ-sql-oracle</artifactId>
-	<version>1.0.6</version>
+	<version>1.0.8</version>
 	<packaging>jar</packaging>
 
 	<name>forestj sql oracle</name>
@@ -110,7 +110,7 @@
 		<dependency>
 			<groupId>com.oracle.database.jdbc</groupId>
 			<artifactId>ojdbc11</artifactId>
-			<version>23.8.0.25.04</version>
+			<version>23.26.1.0.0</version>
 		</dependency>
 	</dependencies>
 

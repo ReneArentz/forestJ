@@ -6,7 +6,7 @@ module net.forestany.forestj.lib.sql.nosqlmdb {
 
 	requires java.sql;
 	
-	requires transitive org.mongodb.bson;
+	requires org.mongodb.bson;
 	requires org.mongodb.driver.core;
 	requires org.mongodb.driver.sync.client;
 	

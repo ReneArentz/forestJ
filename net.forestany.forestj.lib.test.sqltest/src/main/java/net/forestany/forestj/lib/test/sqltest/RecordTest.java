@@ -23,7 +23,7 @@ public class RecordTest {
 			net.forestany.forestj.lib.Global o_glob = net.forestany.forestj.lib.Global.get();
 			
 			try {
-				/* o_glob.LogCompleteSqlQuery(true); */
+				/* o_glob.setLogCompleteSqlQuery(true); */
 				
 				try {
 					cleanupRecordTest(false);
@@ -34,10 +34,12 @@ public class RecordTest {
 				prepareRecordTest();
 				testLanguageRecord();
 				testDDLRecord();
-				cleanupRecordTest(true);
+				testShortRecord();
+				testFinancialEntryRecord();
 			} catch (Exception o_exc) {
 				throw o_exc;
 			} finally {
+				cleanupRecordTest(true);
 				o_glob.Base.closeConnection();
 			}
 		} catch (Exception o_exc) {
@@ -681,6 +683,185 @@ public class RecordTest {
 				
 			i++;
 		}
+
+		/* #### ######  ############################################################################ */
+		/* #### CREATE  ############################################################################ */
+		/* #### ######  ############################################################################ */
+		
+		o_queryCreate = new net.forestany.forestj.lib.sql.Query<net.forestany.forestj.lib.sql.Create>(o_glob.BaseGateway, net.forestany.forestj.lib.sqlcore.SqlType.CREATE, "sys_forestj_short_table");
+		
+		/* #### Columns ############################################################################ */
+		a_columnsDefinition = new java.util.ArrayList<java.util.Properties>();
+		
+		o_properties = new java.util.Properties();
+		o_properties.put("name", "Key");
+		o_properties.put("columnType", "integer [int]");
+		o_properties.put("constraints", "NOT NULL;PRIMARY KEY");
+		a_columnsDefinition.add(o_properties);
+		
+		o_properties = new java.util.Properties();
+		o_properties.put("name", "Text");
+		o_properties.put("columnType", "text [255]");
+		o_properties.put("constraints", "NULL");
+		a_columnsDefinition.add(o_properties);
+
+		o_properties = new java.util.Properties();
+		o_properties.put("name", "Number");
+		o_properties.put("columnType", "integer [int]");
+		o_properties.put("constraints", "NULL");
+		a_columnsDefinition.add(o_properties);
+		
+		/* #### Query ############################################################################ */
+		
+		for (java.util.Properties o_columnDefinition : a_columnsDefinition) {
+			net.forestany.forestj.lib.sql.ColumnStructure o_column = new net.forestany.forestj.lib.sql.ColumnStructure(o_queryCreate);
+			o_column.columnTypeAllocation(o_columnDefinition.getProperty("columnType"));
+			o_column.s_name = o_columnDefinition.getProperty("name");
+			o_column.setAlterOperation("ADD");
+			
+			if (o_columnDefinition.containsKey("constraints")) {
+				String[] a_constraints = o_columnDefinition.getProperty("constraints").split(";");
+				
+				for (int k = 0; k < a_constraints.length; k++) {
+					o_column.addConstraint(o_queryCreate.constraintTypeAllocation(a_constraints[k]));
+					
+					if ( (a_constraints[k].compareTo("DEFAULT") == 0) && (o_columnDefinition.containsKey("constraintDefaultValue")) ) {
+						o_column.setConstraintDefaultValue((Object)o_columnDefinition.getProperty("constraintDefaultValue"));
+					}
+				}
+			}
+			
+			o_queryCreate.getQuery().a_columns.add(o_column);
+		}
+
+		a_result = o_glob.Base.fetchQuery(o_queryCreate);
+		
+			i_expectedAffectedRows = 0;
+			
+			if (o_glob.BaseGateway == net.forestany.forestj.lib.sqlcore.BaseGateway.NOSQLMDB) {
+				i_expectedAffectedRows = 1;
+			}
+			
+			/* `sqlite3_changes()` reflects only rows with actual data modifications, so the previous INSERT statement return of AffectedRows is still there */
+			if (o_glob.BaseGateway == net.forestany.forestj.lib.sqlcore.BaseGateway.SQLITE) {
+				i_expectedAffectedRows = 1;
+			}
+
+			assertTrue(
+				a_result.size() == 1,
+				"Result row amount of create query is not '1', it is '" + a_result.size() + "'"
+			);
+			
+			o_resultEntry = a_result.get(0).entrySet().iterator().next();
+			
+			assertTrue(
+				o_resultEntry.getKey().contentEquals("AffectedRows"),
+				"Result row key of create query is not 'AffectedRows', it is '" + o_resultEntry.getKey() + "'"
+			);
+			
+			assertTrue(
+				Integer.valueOf(o_resultEntry.getValue().toString()) == i_expectedAffectedRows,
+				"Result row value of create query is not '" + i_expectedAffectedRows + "', it is '" + o_resultEntry.getValue().toString() + "'"
+			);
+
+		/* #### ######  ############################################################################ */
+		/* #### CREATE  ############################################################################ */
+		/* #### ######  ############################################################################ */
+		
+		o_queryCreate = new net.forestany.forestj.lib.sql.Query<net.forestany.forestj.lib.sql.Create>(o_glob.BaseGateway, net.forestany.forestj.lib.sqlcore.SqlType.CREATE, "sys_forestj_financial_entry");
+		
+		/* #### Columns ############################################################################ */
+		a_columnsDefinition = new java.util.ArrayList<java.util.Properties>();
+		
+		o_properties = new java.util.Properties();
+		o_properties.put("name", "Id");
+		o_properties.put("columnType", "integer [int]");
+		o_properties.put("constraints", "NOT NULL;PRIMARY KEY;AUTO_INCREMENT");
+		a_columnsDefinition.add(o_properties);
+		
+		o_properties = new java.util.Properties();
+		o_properties.put("name", "UUID");
+		o_properties.put("columnType", "text [36]");
+		o_properties.put("constraints", "NOT NULL;UNIQUE");
+		a_columnsDefinition.add(o_properties);
+		
+		o_properties = new java.util.Properties();
+		o_properties.put("name", "From");
+		o_properties.put("columnType", "integer [int]");
+		o_properties.put("constraints", "NULL");
+		a_columnsDefinition.add(o_properties);
+
+		o_properties = new java.util.Properties();
+		o_properties.put("name", "To");
+		o_properties.put("columnType", "integer [int]");
+		o_properties.put("constraints", "NULL");
+		a_columnsDefinition.add(o_properties);
+		
+		o_properties = new java.util.Properties();
+		o_properties.put("name", "Amount");
+		o_properties.put("columnType", "decimal");
+		o_properties.put("constraints", "NULL");
+		a_columnsDefinition.add(o_properties);
+
+		o_properties = new java.util.Properties();
+		o_properties.put("name", "Created");
+		o_properties.put("columnType", "datetime");
+		o_properties.put("constraints", "NOT NULL;DEFAULT");
+		o_properties.put("constraintDefaultValue", "CURRENT_TIMESTAMP");
+		a_columnsDefinition.add(o_properties);
+		
+		/* #### Query ############################################################################ */
+		
+		for (java.util.Properties o_columnDefinition : a_columnsDefinition) {
+			net.forestany.forestj.lib.sql.ColumnStructure o_column = new net.forestany.forestj.lib.sql.ColumnStructure(o_queryCreate);
+			o_column.columnTypeAllocation(o_columnDefinition.getProperty("columnType"));
+			o_column.s_name = o_columnDefinition.getProperty("name");
+			o_column.setAlterOperation("ADD");
+			
+			if (o_columnDefinition.containsKey("constraints")) {
+				String[] a_constraints = o_columnDefinition.getProperty("constraints").split(";");
+				
+				for (int k = 0; k < a_constraints.length; k++) {
+					o_column.addConstraint(o_queryCreate.constraintTypeAllocation(a_constraints[k]));
+					
+					if ( (a_constraints[k].compareTo("DEFAULT") == 0) && (o_columnDefinition.containsKey("constraintDefaultValue")) ) {
+						o_column.setConstraintDefaultValue((Object)o_columnDefinition.getProperty("constraintDefaultValue"));
+					}
+				}
+			}
+			
+			o_queryCreate.getQuery().a_columns.add(o_column);
+		}
+
+		a_result = o_glob.Base.fetchQuery(o_queryCreate);
+		
+			i_expectedAffectedRows = 0;
+			
+			if (o_glob.BaseGateway == net.forestany.forestj.lib.sqlcore.BaseGateway.NOSQLMDB) {
+				i_expectedAffectedRows = 1;
+			}
+
+			/* `sqlite3_changes()` reflects only rows with actual data modifications, so the previous INSERT statement return of AffectedRows is still there */
+			if (o_glob.BaseGateway == net.forestany.forestj.lib.sqlcore.BaseGateway.SQLITE) {
+				i_expectedAffectedRows = 1;
+			}
+			
+			assertTrue(
+				a_result.size() == 1,
+				"Result row amount of create query is not '1', it is '" + a_result.size() + "'"
+			);
+			
+			o_resultEntry = a_result.get(0).entrySet().iterator().next();
+			
+			assertTrue(
+				o_resultEntry.getKey().contentEquals("AffectedRows"),
+				"Result row key of create query is not 'AffectedRows', it is '" + o_resultEntry.getKey() + "'"
+			);
+			
+			assertTrue(
+				Integer.valueOf(o_resultEntry.getValue().toString()) == i_expectedAffectedRows,
+				"Result row value of create query is not '" + i_expectedAffectedRows + "', it is '" + o_resultEntry.getValue().toString() + "'"
+			);
 	}
 	
 	private static void cleanupRecordTest(boolean p_b_checkResult) throws Exception {
@@ -743,6 +924,66 @@ public class RecordTest {
 			assertTrue(
 				Integer.valueOf(o_resultEntry.getValue().toString()) == i_expectedAffectedRows,
 				"Result row value of query #2 is not '" + i_expectedAffectedRows + "', it is '" + o_resultEntry.getValue().toString() + "'"
+			);
+		}
+
+		o_queryDrop = new net.forestany.forestj.lib.sql.Query<net.forestany.forestj.lib.sql.Drop>(o_glob.BaseGateway, net.forestany.forestj.lib.sqlcore.SqlType.DROP, "sys_forestj_short_table");
+		
+		a_result = o_glob.Base.fetchQuery(o_queryDrop);
+		
+		i_expectedAffectedRows = 0;
+		
+		/* nosqlmdb has expected value 1 */
+		if (net.forestany.forestj.lib.Global.get().BaseGateway == net.forestany.forestj.lib.sqlcore.BaseGateway.NOSQLMDB) {
+			i_expectedAffectedRows = 1;
+		}
+		
+		if (p_b_checkResult) {
+			assertTrue(
+				a_result.size() == 1,
+				"Result row amount of drop query #3 is not '1', it is '" + a_result.size() + "'"
+			);
+			
+			java.util.Map.Entry<String, Object> o_resultEntry = a_result.get(0).entrySet().iterator().next();
+			
+			assertTrue(
+				o_resultEntry.getKey().contentEquals("AffectedRows"),
+				"Result row key of query #3 is not 'AffectedRows', it is '" + o_resultEntry.getKey() + "'"
+			);
+			
+			assertTrue(
+				Integer.valueOf(o_resultEntry.getValue().toString()) == i_expectedAffectedRows,
+				"Result row value of query #3 is not '" + i_expectedAffectedRows + "', it is '" + o_resultEntry.getValue().toString() + "'"
+			);
+		}
+
+		o_queryDrop = new net.forestany.forestj.lib.sql.Query<net.forestany.forestj.lib.sql.Drop>(o_glob.BaseGateway, net.forestany.forestj.lib.sqlcore.SqlType.DROP, "sys_forestj_financial_entry");
+		
+		a_result = o_glob.Base.fetchQuery(o_queryDrop);
+		
+		i_expectedAffectedRows = 0;
+		
+		/* nosqlmdb has expected value 1 */
+		if (net.forestany.forestj.lib.Global.get().BaseGateway == net.forestany.forestj.lib.sqlcore.BaseGateway.NOSQLMDB) {
+			i_expectedAffectedRows = 1;
+		}
+		
+		if (p_b_checkResult) {
+			assertTrue(
+				a_result.size() == 1,
+				"Result row amount of drop query #4 is not '1', it is '" + a_result.size() + "'"
+			);
+			
+			java.util.Map.Entry<String, Object> o_resultEntry = a_result.get(0).entrySet().iterator().next();
+			
+			assertTrue(
+				o_resultEntry.getKey().contentEquals("AffectedRows"),
+				"Result row key of query #4 is not 'AffectedRows', it is '" + o_resultEntry.getKey() + "'"
+			);
+			
+			assertTrue(
+				Integer.valueOf(o_resultEntry.getValue().toString()) == i_expectedAffectedRows,
+				"Result row value of query #4 is not '" + i_expectedAffectedRows + "', it is '" + o_resultEntry.getValue().toString() + "'"
 			);
 		}
 	}
@@ -1609,5 +1850,199 @@ public class RecordTest {
 			assertEquals(null, p_a_record.ColumnText2, "ColumnText2[" + p_a_record.ColumnText2 + "] is not equal to 'null'");				
 			assertEquals(null, p_a_record.ColumnShortText2, "ColumnShortText2[" + p_a_record.ColumnShortText2 + "] is not equal to 'null'");
 		}
+	}
+
+	private static void testShortRecord() throws Exception {
+		/* test access to ShortRecord */
+		ShortRecord o_shortRecord = new ShortRecord();
+		
+		assertTrue(
+			o_shortRecord.getCount() == 0,
+			"Records amount is not 0"
+		);
+
+		/* prepare data for insert many */
+		java.util.List<ShortRecord> a_newRecords = new java.util.ArrayList<ShortRecord>();
+
+		java.util.List<Integer> a_keyValues = java.util.Arrays.asList(
+			1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
+		);
+
+		java.util.List<String> a_textValues = java.util.Arrays.asList(
+			"Lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing", "elit", "sed", "do", "eiusmod", "tempor", "incididunt", "ut", "labore", "et", "dolore", "magna"
+		);
+
+		java.util.List<Integer> a_numberValues = java.util.Arrays.asList(
+			10, 20, 30, 40, 50, 60, 70, 80, 90, -10, -20, -30, -40, -50, -60, -70, -80, -90
+		);
+
+		/* fill list parameter for insert many */
+		for (int i = 0; i < a_keyValues.size(); i++) {
+			ShortRecord o_newShortRecord = new ShortRecord();
+			o_newShortRecord.ColumnKey = a_keyValues.get(i);
+			o_newShortRecord.ColumnText = a_textValues.get(i);
+			o_newShortRecord.ColumnNumber = a_numberValues.get(i);
+			a_newRecords.add(o_newShortRecord);
+		}
+
+		/* execute insert many records */
+		int i_affectedRows = o_shortRecord.insertManyRecords(a_newRecords, true);
+
+		assertTrue(
+			i_affectedRows == 18,
+			"AffectedRows is not '18', but '" + i_affectedRows + "'"
+		);
+
+		String s_text = "";
+		int i_sum = 0;
+
+		/* select all records */
+		for (ShortRecord o_record : (new ShortRecord()).getRecords(true)) {
+			s_text += o_record.ColumnText + " ";
+			i_sum += o_record.ColumnNumber;
+		}
+		
+		assertTrue(
+			s_text.contentEquals("Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna "),
+			"Concatenated text is not 'Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna ', but '" + s_text + "'"
+		);
+
+		assertTrue(
+			i_sum == 0,
+			"Sum of Column 'Number' is not '0', but '" + i_sum + "'"
+		);
+
+		/* get record with key 5 */
+		o_shortRecord = new ShortRecord();
+		o_shortRecord.ColumnKey = 5;
+		
+		assertTrue(
+			o_shortRecord.getRecord(),
+			"Could not get record with Key '5'"
+		);
+
+		/* try an update which will fail */
+		o_shortRecord.ColumnKey = 9999;
+		o_shortRecord.ColumnText = "update will fail";
+
+		i_affectedRows = o_shortRecord.updateRecord();
+
+		assertTrue(
+			i_affectedRows == 0,
+			"AffectedRows is not '0', but '" + i_affectedRows + "'"
+		);
+	}
+
+	private static void testFinancialEntryRecord() throws Exception {
+		/* test access to FinancialEntryRecord */
+		FinancialEntryRecord o_financialEntryRecord = new FinancialEntryRecord();
+		
+		assertTrue(
+			o_financialEntryRecord.getCount() == 0,
+			"Records amount is not 0"
+		);
+
+		/* prepare data for insert many */
+		java.util.List<FinancialEntryRecord> a_newRecords = new java.util.ArrayList<FinancialEntryRecord>();
+
+		java.util.List<Integer> a_fromValues = java.util.Arrays.asList(
+			600, 600, 200, 200, 400, 200, 400, 100, 600, 500, 600, 600, 300, 100, 100, 300, 200, 200, 500, 100, 600, 400, 600, 200, 200, 
+			400, 500, 300, 300, 500, 600, 400, 300, 400, 400, 500, 500, 300, 600, 500, 500, 600, 300, 400, 400, 200, 300, 600, 600, 600, 
+			500, 500, 100, 300, 200, 600, 400, 300, 400, 300, 500, 200, 500, 600, 600, 200, 400, 500, 200, 500, 400, 500, 100, 200, 600, 
+			300
+		);
+			
+		java.util.List<Integer> a_toValues = java.util.Arrays.asList(
+			300, 100, 600, 100, 300, 500, 100, 400, 400, 600, 300, 500, 600, 600, 500, 600, 600, 600, 300, 600, 400, 100, 500, 100, 400, 
+			300, 300, 500, 100, 600, 400, 100, 500, 600, 300, 100, 100, 100, 500, 200, 100, 400, 600, 600, 500, 100, 200, 300, 400, 100, 
+			600, 200, 300, 100, 100, 200, 200, 200, 300, 500, 200, 600, 600, 100, 300, 300, 300, 600, 100, 200, 300, 100, 200, 300, 100, 
+			100
+		);
+			
+		java.util.List<java.math.BigDecimal> a_amountValues = java.util.Arrays.asList(
+			java.math.BigDecimal.valueOf(509.410001), java.math.BigDecimal.valueOf(6689.250001), java.math.BigDecimal.valueOf(7553.490001), java.math.BigDecimal.valueOf(8362.140001), java.math.BigDecimal.valueOf(3152.880001), 
+			java.math.BigDecimal.valueOf(5352.790001), java.math.BigDecimal.valueOf(2788.820001), java.math.BigDecimal.valueOf(1733.300001), java.math.BigDecimal.valueOf(8291.340001), java.math.BigDecimal.valueOf(2879.270001), 
+			java.math.BigDecimal.valueOf(200.980001), java.math.BigDecimal.valueOf(1966.590001), java.math.BigDecimal.valueOf(5605.590001), java.math.BigDecimal.valueOf(3437.120001), java.math.BigDecimal.valueOf(9200.050001), 
+			java.math.BigDecimal.valueOf(8414.740001), java.math.BigDecimal.valueOf(328.630001), java.math.BigDecimal.valueOf(8873.380001), java.math.BigDecimal.valueOf(702.200001), java.math.BigDecimal.valueOf(1459.780001), 
+			java.math.BigDecimal.valueOf(7762.180001), java.math.BigDecimal.valueOf(7511.230001), java.math.BigDecimal.valueOf(1739.100001), java.math.BigDecimal.valueOf(4816.670001), java.math.BigDecimal.valueOf(8445.740001), 
+			java.math.BigDecimal.valueOf(5194.580001), java.math.BigDecimal.valueOf(8148.840001), java.math.BigDecimal.valueOf(5203.180001), java.math.BigDecimal.valueOf(5023.310001), java.math.BigDecimal.valueOf(7242.860001), 
+			java.math.BigDecimal.valueOf(6931.270001), java.math.BigDecimal.valueOf(2854.300001), java.math.BigDecimal.valueOf(6592.230001), java.math.BigDecimal.valueOf(8862.900001), java.math.BigDecimal.valueOf(7011.320001), 
+			java.math.BigDecimal.valueOf(9443.890001), java.math.BigDecimal.valueOf(7688.160001), java.math.BigDecimal.valueOf(337.020001), java.math.BigDecimal.valueOf(6080.080001), java.math.BigDecimal.valueOf(7093.540001), 
+			java.math.BigDecimal.valueOf(7880.560001), java.math.BigDecimal.valueOf(1706.250001), java.math.BigDecimal.valueOf(2144.770001), java.math.BigDecimal.valueOf(4028.290001), java.math.BigDecimal.valueOf(4053.070001), 
+			java.math.BigDecimal.valueOf(9894.970001), java.math.BigDecimal.valueOf(1905.690001), java.math.BigDecimal.valueOf(9441.830001), java.math.BigDecimal.valueOf(504.010001), java.math.BigDecimal.valueOf(8739.020001), 
+			java.math.BigDecimal.valueOf(3569.920001), java.math.BigDecimal.valueOf(1259.400001), java.math.BigDecimal.valueOf(2443.120001), java.math.BigDecimal.valueOf(42.230001), java.math.BigDecimal.valueOf(9339.400001), 
+			java.math.BigDecimal.valueOf(6504.800001), java.math.BigDecimal.valueOf(5962.030001), java.math.BigDecimal.valueOf(957.710001), java.math.BigDecimal.valueOf(2823.170001), java.math.BigDecimal.valueOf(5139.270001), 
+			java.math.BigDecimal.valueOf(2287.390001), java.math.BigDecimal.valueOf(9778.640001), java.math.BigDecimal.valueOf(8522.110001), java.math.BigDecimal.valueOf(3044.040001), java.math.BigDecimal.valueOf(6057.640001), 
+			java.math.BigDecimal.valueOf(8690.590001), java.math.BigDecimal.valueOf(5147.290001), java.math.BigDecimal.valueOf(565.070001), java.math.BigDecimal.valueOf(6586.560001), java.math.BigDecimal.valueOf(8321.190001), 
+			java.math.BigDecimal.valueOf(452.110001), java.math.BigDecimal.valueOf(7428.190001), java.math.BigDecimal.valueOf(7109.210001), java.math.BigDecimal.valueOf(4965.820001), java.math.BigDecimal.valueOf(4472.010001), 
+			java.math.BigDecimal.valueOf(4585.330001)
+		);
+		
+		/* fill list parameter for insert many */
+		for (int i = 0; i < a_fromValues.size(); i++) {
+			FinancialEntryRecord o_newFinancialEntryRecord = new FinancialEntryRecord();
+			o_newFinancialEntryRecord.ColumnUUID = net.forestany.forestj.lib.Helper.generateUUID();
+			o_newFinancialEntryRecord.ColumnFrom = a_fromValues.get(i);
+			o_newFinancialEntryRecord.ColumnTo = a_toValues.get(i);
+			o_newFinancialEntryRecord.ColumnAmount = a_amountValues.get(i);
+			o_newFinancialEntryRecord.ColumnCreated = java.time.LocalDateTime.now();
+			a_newRecords.add(o_newFinancialEntryRecord);
+		}
+
+		/* execute insert many records */
+		net.forestany.forestj.lib.Global.get().Base.setInsertManyRecordChunkAmount(22);
+		int i_affectedRows = o_financialEntryRecord.insertManyRecords(a_newRecords);
+		net.forestany.forestj.lib.Global.get().Base.setInsertManyRecordChunkAmount(-1);
+
+		assertTrue(
+			i_affectedRows == 10,
+			"AffectedRows is not '10', but '" + i_affectedRows + "'"
+		);
+
+		int i_sumFrom = 0;
+		int i_sumTo = 0;
+		java.math.BigDecimal o_sumAmount = new java.math.BigDecimal(0);
+
+		/* select all records */
+		for (FinancialEntryRecord o_record : (new FinancialEntryRecord()).getRecords(true)) {
+			i_sumFrom += o_record.ColumnFrom;
+			i_sumTo += o_record.ColumnTo;
+			o_sumAmount = o_sumAmount.add(o_record.ColumnAmount);
+		}
+		
+		assertTrue(
+			i_sumFrom == 29700,
+			"Sum of Column 'From' is not '29700', but '" + i_sumFrom + "'"
+		);
+
+		assertTrue(
+			i_sumTo == 25200,
+			"Sum of Column 'To' is not '25200', but '" + i_sumTo + "'"
+		);
+
+		assertTrue(
+			o_sumAmount.setScale(2, java.math.RoundingMode.HALF_EVEN).equals(new java.math.BigDecimal(387836.85d).setScale(2, java.math.RoundingMode.HALF_EVEN)),
+			"Sum of Column 'Amount' is not '" + new java.math.BigDecimal(387836.85d).setScale(2, java.math.RoundingMode.HALF_EVEN) + "', but '" + o_sumAmount.setScale(2, java.math.RoundingMode.HALF_EVEN) + "'"
+		);
+
+		/* get record with id 5 */
+		o_financialEntryRecord = new FinancialEntryRecord();
+		o_financialEntryRecord.ColumnId = 5;
+		
+		assertTrue(
+			o_financialEntryRecord.getRecord(),
+			"Could not get record with Id '5'"
+		);
+
+		/* try an update which will fail */
+		o_financialEntryRecord.ColumnId = 9999;
+		o_financialEntryRecord.ColumnAmount = new java.math.BigDecimal("987654.12");
+
+		i_affectedRows = o_financialEntryRecord.updateRecord();
+
+		assertTrue(
+			i_affectedRows == 0,
+			"AffectedRows is not '0', but '" + i_affectedRows + "'"
+		);
 	}
 }

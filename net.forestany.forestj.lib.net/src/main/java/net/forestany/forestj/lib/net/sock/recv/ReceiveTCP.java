@@ -216,6 +216,11 @@ public class ReceiveTCP<T extends java.net.ServerSocket> extends net.forestany.f
 		this.o_sslContext = p_o_sslContext;
 		this.i_bufferSize = p_i_receiveBufferSize;
 		
+		/* check host parameter */
+		if (p_s_host == null) {
+			throw new IllegalArgumentException("Receive host address is 'null'");
+		}
+
 		/* check port min. value */
 		if (p_i_port < 1) {
 			throw new IllegalArgumentException("Receive port must be at least '1', but was set to '" + p_i_port + "'");

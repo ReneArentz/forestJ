@@ -33,6 +33,8 @@ public class Request {
 	private java.util.Map<String,Object> a_requestParamters;
 	private String s_lineBreak;
 	private java.util.Map<String,String> a_attachments;
+	private String s_rawPostBody;
+	private String s_soapAction;
 	private String s_downloadFilename;
 	private boolean b_downloadFileExtensionNeeded;
 	private boolean b_overwriteDownload;
@@ -257,6 +259,42 @@ public class Request {
 	}
 	
 	/**
+	 * get raw post body
+	 * 
+	 * @return String
+	 */
+	public String getRawPostBody() {
+		return this.s_rawPostBody;
+	}
+	
+	/**
+	 * set raw post body
+	 * 
+	 * @param p_s_value String
+	 */
+	public void setRawPostBody(String p_s_value) {
+		this.s_rawPostBody = p_s_value;
+	}
+
+	/**
+	 * get soap action
+	 * 
+	 * @return String
+	 */
+	public String getSOAPAction() {
+		return this.s_soapAction;
+	}
+	
+	/**
+	 * set soap action
+	 * 
+	 * @param p_s_value String
+	 */
+	public void setSOAPAction(String p_s_value) {
+		this.s_soapAction = p_s_value;
+	}
+
+	/**
 	 * get line break
 	 * 
 	 * @return String
@@ -466,6 +504,8 @@ public class Request {
 		this.s_lineBreak = net.forestany.forestj.lib.io.File.NEWLINE;
 		this.b_overwriteDownload = true;
 		this.a_attachments = new java.util.LinkedHashMap<String,String>();
+		this.s_rawPostBody = null;
+		this.s_soapAction = null;
 		this.b_useLog = false;
 		this.itf_delegate = null;
 	}
@@ -628,6 +668,13 @@ public class Request {
             o_httpsUrlConnection.setUseCaches(false);
             o_httpsUrlConnection.setRequestProperty("Cache-Control", "no-cache");
             
+			/* set SOAP action header if set */
+			if (!net.forestany.forestj.lib.Helper.isStringEmpty(this.s_soapAction)) {
+				o_httpsUrlConnection.setRequestProperty("SOAPAction", this.s_soapAction);
+
+														if (this.b_useLog) net.forestany.forestj.lib.Global.ilogConfig("set soap action '" + this.s_soapAction + "'");
+			}
+
             /* check if content type is not null, necessary for type 'POST' */
             if (this.e_contentType == null) {
             	throw new IllegalArgumentException("No content type for POST web request specified");
@@ -638,8 +685,17 @@ public class Request {
             	/* set content type with random boundary */
         		o_httpsUrlConnection.setRequestProperty("Content-Type", net.forestany.forestj.lib.net.http.PostType.HTMLATTACHMENTS.getContentType() + "; boundary=" + s_boundary);
             } else {
-            	/* set normal content type */
-            	o_httpsUrlConnection.setRequestProperty("Content-Type", this.e_contentType.getContentType());
+				if (
+					(this.e_contentType == net.forestany.forestj.lib.net.http.PostType.SOAPXMLWITHCHARSET) ||
+					(this.e_contentType == net.forestany.forestj.lib.net.http.PostType.XMLWITHCHARSET) ||
+					(this.e_contentType == net.forestany.forestj.lib.net.http.PostType.XMLTEXTWITHCHARSET)
+				) {
+					/* set content type with charset */
+					o_httpsUrlConnection.setRequestProperty("Content-Type", this.e_contentType.getContentType() + "; charset=" + this.o_charset.displayName());
+				} else {
+					/* set content type */
+					o_httpsUrlConnection.setRequestProperty("Content-Type", this.e_contentType.getContentType());
+				}
             }
             
             										if (this.b_useLog) net.forestany.forestj.lib.Global.ilogConfig("set content type for web request 'POST': '" + o_httpsUrlConnection.getRequestProperty("Content-Type") + "'");
@@ -652,7 +708,13 @@ public class Request {
             
             /* variable for web request 'POST' output stream for easy handling of adding post data, auto close of output stream when try block is closed */
 			try (java.io.OutputStream o_outputStream = o_httpsUrlConnection.getOutputStream()) {
-				if (this.a_attachments.size() > 0) {
+				/* check if raw post body is available */
+				if (!net.forestany.forestj.lib.Helper.isStringEmpty(this.s_rawPostBody)) {
+					/* add raw post body with a line break at the end */
+            		o_outputStream.write(new String(this.s_rawPostBody + this.s_lineBreak).getBytes(this.o_charset));
+        		    /* flush output stream at the end */
+        			o_outputStream.flush();
+				} else if (this.a_attachments.size() > 0) { /* handle POST with attachments and optional parameters */
 															if (this.b_useLog) net.forestany.forestj.lib.Global.ilogConfig("iterate all request parameters with key->value pairs");
             		
             		/* iterate all request parameters with key->value pairs */

@@ -19,8 +19,32 @@ public enum PostType {
 	/**
 	 * JSON post type
 	 */
-	JSON("application/json");
-    
+	JSON("application/json"),
+    /**
+     * SOAP post type
+     */
+    SOAPXML("application/soap+xml"),
+    /**
+     * XML post type
+     */
+    XML("application/xml"),
+    /**
+     * XML text post type
+     */
+    XMLTEXT("text/xml"),
+    /**
+     * SOAP post type with charset
+     */
+    SOAPXMLWITHCHARSET("application/soap+xml"),
+    /**
+     * XML post type with charset
+     */
+    XMLWITHCHARSET("application/xml"),
+    /**
+     * XML text post type with charset
+     */
+    XMLTEXTWITHCHARSET("text/xml");
+
     private String ContentType;
     
     PostType(String p_s_value) {

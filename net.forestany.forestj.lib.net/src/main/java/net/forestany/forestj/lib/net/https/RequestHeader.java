@@ -35,6 +35,7 @@ public class RequestHeader {
 	private String s_acceptCharset;
 	private boolean b_noCacheControl;
 	private String s_authorization;
+	private String s_soapAction;
 	
 	/* Properties */
 	
@@ -398,6 +399,24 @@ public class RequestHeader {
 		this.s_authorization = p_s_value;
 	}
 	
+	/**
+	 * get soap action
+	 * 
+	 * @return String
+	 */
+	public String getSOAPAction() {
+		return this.s_soapAction;
+	}
+	
+	/**
+	 * set soap action
+	 * 
+	 * @param p_s_value String
+	 */
+	public void setSOAPAction(String p_s_value) {
+		this.s_soapAction = p_s_value;
+	}
+
 	/* Methods */
 	
 	/**
@@ -432,6 +451,7 @@ public class RequestHeader {
 		this.s_acceptCharset = "";
 		this.b_noCacheControl = true;
 		this.s_authorization = "";
+		this.s_soapAction = "";
 	}
 	
 	/**
@@ -476,13 +496,13 @@ public class RequestHeader {
 		}
 		
 		/* check http method value */
-		if (a_firstLine[0].contentEquals("GET")) {
+		if ((a_firstLine[0] != null) && (a_firstLine[0].contentEquals("GET"))) {
 			this.s_method = "GET";
-		} else if (a_firstLine[0].contentEquals("POST")) {
+		} else if ((a_firstLine[0] != null) && (a_firstLine[0].contentEquals("POST"))) {
 			this.s_method = "POST";
-		} else if (a_firstLine[0].contentEquals("PUT")) {
+		} else if ((a_firstLine[0] != null) && (a_firstLine[0].contentEquals("PUT"))) {
 			this.s_method = "PUT";
-		} else if (a_firstLine[0].contentEquals("DELETE")) {
+		} else if ((a_firstLine[0] != null) && (a_firstLine[0].contentEquals("DELETE"))) {
 			this.s_method = "DELETE";
 		} else {
 			net.forestany.forestj.lib.Global.ilogWarning("405 Method Not Allowed: Invalid HTTP-Method in request '" + a_firstLine[0] + "', must be [GET|POST|PUT|DELETE]'");
@@ -490,7 +510,7 @@ public class RequestHeader {
 		}
 		
 		/* check if http protocol is 1.0 or 1.1 */
-		if ( (a_firstLine[2].contentEquals("HTTP/1.1")) || (a_firstLine[2].contentEquals("HTTP/1.0")) ) {
+		if ((a_firstLine[2] != null) && ( (a_firstLine[2].contentEquals("HTTP/1.1")) || (a_firstLine[2].contentEquals("HTTP/1.0")) )) {
 			this.s_protocol = a_firstLine[2];
 		} else {
 			net.forestany.forestj.lib.Global.ilogWarning("505 HTTP Version Not Supported: Unsupported HTTP-Protocol in request '" + a_firstLine[2] + "', must be [HTTP/1.0|HTTP/1.1]'");
@@ -502,7 +522,7 @@ public class RequestHeader {
 		this.s_requestPath = a_firstLine[1];
 		
 		/* request path must start with '/' */
-		if (!this.s_requestPath.startsWith("/")) {
+		if ((a_firstLine[1] == null) || (!this.s_requestPath.startsWith("/"))) {
 			net.forestany.forestj.lib.Global.ilogWarning("400 Bad Request: Request path does not start with '/'");
 			return 400;
 		}
@@ -510,7 +530,7 @@ public class RequestHeader {
 		/* iterate all other request header lines */
 		for (String s_requestHeaderLine : p_a_requestHeaderLines) {
 			/* header name and value are separated by a ':' */
-			if (s_requestHeaderLine.contains(":")) {
+			if ((s_requestHeaderLine != null) && (s_requestHeaderLine.contains(":"))) {
 				/* get header name */
 				String s_headerName = s_requestHeaderLine.substring(0, s_requestHeaderLine.indexOf(":")).trim().toLowerCase();
 				/* get header value */ 
@@ -533,11 +553,13 @@ public class RequestHeader {
 						break;
 					case "content-type":
 						/* recognize boundary value for POST requests */
-						if (s_headerValue.contains("boundary")) {
-							this.s_contentType = s_headerValue.substring(0, s_headerValue.indexOf(";")).trim();
-							this.s_boundary = s_headerValue.substring(s_headerValue.indexOf("boundary=") + new String("boundary=").length()).trim();
-						} else {
-							this.s_contentType = s_headerValue;
+						if (s_headerValue != null) {
+							if (s_headerValue.contains("boundary")) {
+								this.s_contentType = s_headerValue.substring(0, s_headerValue.indexOf(";")).trim();
+								this.s_boundary = s_headerValue.substring(s_headerValue.indexOf("boundary=") + new String("boundary=").length()).trim();
+							} else {
+								this.s_contentType = s_headerValue;
+							}
 						}
 						break;
 					case "cookie":
@@ -560,6 +582,9 @@ public class RequestHeader {
 						break;
 					case "authorization":
 						this.s_authorization = s_headerValue;
+						break;
+					case "soapaction":
+						this.s_soapAction = s_headerValue;
 						break;
 				}
 			}
@@ -605,7 +630,7 @@ public class RequestHeader {
 				/* iterate each request parameter */
 				for (String s_parameterPair : a_parameters) {
 					/* key and value are divided by '=' */
-					if (s_parameterPair.contains("=")) {
+					if ((s_parameterPair != null) && (s_parameterPair.contains("="))) {
 						/* get request parameter key and value */
 						String s_parameterKey = s_parameterPair.substring(0, s_parameterPair.indexOf("="));
 						String s_parameterValue = s_parameterPair.substring(s_parameterPair.indexOf("=") + 1);
@@ -649,12 +674,12 @@ public class RequestHeader {
 				String s_relativePath = this.s_referrer.substring(this.s_domain.length());
 				
 				/* remove first '/' character */
-				if (s_relativePath.startsWith("/")) {
+				if ((s_relativePath != null) && (s_relativePath.startsWith("/"))) {
 					s_relativePath = s_relativePath.substring(1);
 				}
 				
 				/* add '/' at the end if it is missing */
-				if (!s_relativePath.endsWith("/")) {
+				if ((s_relativePath != null) && (!s_relativePath.endsWith("/"))) {
 					s_relativePath += "/";
 				}
 				
@@ -662,7 +687,7 @@ public class RequestHeader {
 				s_relativePath = s_relativePath.replace("/", net.forestany.forestj.lib.io.File.DIR);
 
 				/* if it is not starting with relative path, change path value with relative value */
-				if (!this.s_path.startsWith(s_relativePath)) {
+				if ((this.s_path != null) && (!this.s_path.startsWith(s_relativePath))) {
 					this.s_path = s_relativePath + this.s_path;
 				}
 			}
@@ -685,7 +710,7 @@ public class RequestHeader {
 		String s_foo = "";
 		String s_foo2 = this.s_method;
 		
-		if (this.s_method.contentEquals("DOWNLOAD")) {
+		if ((this.s_method != null) && (this.s_method.contentEquals("DOWNLOAD"))) {
 			s_foo2 = "GET";
 		}
 		
@@ -747,6 +772,11 @@ public class RequestHeader {
 		/* add authorization value if it is not empty */
 		if (!net.forestany.forestj.lib.Helper.isStringEmpty(this.s_authorization)) {
 			s_foo += "Authorization: " + this.s_authorization + Config.HTTP_LINEBREAK;
+		}
+
+		/* add soap action value if it is not empty */
+		if (!net.forestany.forestj.lib.Helper.isStringEmpty(this.s_soapAction)) {
+			s_foo += "SOAPAction: " + this.s_soapAction + Config.HTTP_LINEBREAK;
 		}
 		
 		/* add line break, so we have two line breaks after http request header - this will always separate request header from request body(POST) */

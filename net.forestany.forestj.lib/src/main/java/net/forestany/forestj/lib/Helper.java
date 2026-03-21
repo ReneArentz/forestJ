@@ -76,6 +76,10 @@ public class Helper {
 	 */
 	public static boolean isByte(String p_s_string) {
 	    try {
+			if (!matchesRegex(p_s_string, "^(\\+|-)?\\d*$")) {
+				return false;
+			}
+
 	    	Byte.parseByte(p_s_string);
 	    } catch (NumberFormatException | NullPointerException e) {
 	        return false;
@@ -94,6 +98,10 @@ public class Helper {
 	 */
 	public static boolean isShort(String p_s_string) {
 	    try {
+			if (!matchesRegex(p_s_string, "^(\\+|-)?\\d*$")) {
+				return false;
+			}
+			
 	    	Short.parseShort(p_s_string);
 	    } catch (NumberFormatException | NullPointerException e) {
 	        return false;
@@ -112,6 +120,10 @@ public class Helper {
 	 */
 	public static boolean isInteger(String p_s_string) {
 	    try {
+			if (!matchesRegex(p_s_string, "^(\\+|-)?\\d*$")) {
+				return false;
+			}
+
 	        Integer.parseInt(p_s_string);
 	    } catch (NumberFormatException | NullPointerException e) {
 	        return false;
@@ -130,6 +142,10 @@ public class Helper {
 	 */
 	public static boolean isLong(String p_s_string) {
 	    try {
+			if (!matchesRegex(p_s_string, "^(\\+|-)?\\d*$")) {
+				return false;
+			}
+
 	        Long.parseLong(p_s_string);
 	    } catch (NumberFormatException | NullPointerException e) {
 	        return false;
@@ -148,6 +164,10 @@ public class Helper {
 	 */
 	public static boolean isFloat(String p_s_string) {
 	    try {
+			if (!matchesRegex(p_s_string, "^(\\+|-)?\\d*(\\.|,)?\\d+$")) {
+				return false;
+			}
+
 	    	p_s_string = p_s_string.replace(',', '.');
 	    	Float.parseFloat(p_s_string);
 	    } catch (NumberFormatException | NullPointerException e) {
@@ -167,6 +187,10 @@ public class Helper {
 	 */
 	public static boolean isDouble(String p_s_string) {
 	    try {
+			if (!matchesRegex(p_s_string, "^(\\+|-)?\\d*(\\.|,)?\\d+$")) {
+				return false;
+			}
+
 	    	p_s_string = p_s_string.replace(',', '.');
 	    	Double.parseDouble(p_s_string);
 	    } catch (NumberFormatException | NullPointerException e) {
@@ -305,7 +329,9 @@ public class Helper {
 	public static boolean isDateTime(String p_s_string) {
 		String[] a_dateAndTimeParts = null;
 		
-		if (p_s_string.contains("T")) {
+		if (p_s_string == null) {
+			return false;
+		} else if (p_s_string.contains("T")) {
 			/* date and time are separated by 'T' */
 			a_dateAndTimeParts = p_s_string.split("T");
 			
@@ -388,7 +414,9 @@ public class Helper {
 	public static java.time.LocalDateTime fromISO8601UTC(String p_s_string) throws java.time.DateTimeException {
 		String[] a_dateAndTimeParts = null;
 		
-		if (p_s_string.contains("T")) {
+		if (p_s_string == null) {
+			throw new java.time.DateTimeException("Invalid date time string[null]");
+		} else if (p_s_string.contains("T")) {
 			/* date and time are separated by 'T' */
 			a_dateAndTimeParts = p_s_string.split("T");
 			
@@ -515,15 +543,19 @@ public class Helper {
 	 */
 	public static String toDateTimeString(java.time.LocalDateTime p_o_datetime) {
 		String s_zoneOffset = java.time.OffsetDateTime.now().getOffset().toString();
-		String s_plus_or_minus = s_zoneOffset.substring(0, 1);
-		s_zoneOffset = s_zoneOffset.substring(1);
-		int i_hours = Integer.valueOf(s_zoneOffset.split(":")[0]);
-		int i_minutes = Integer.valueOf(s_zoneOffset.split(":")[1]);
-		
-		if (s_plus_or_minus.contentEquals("+")) {
-			p_o_datetime = p_o_datetime.plusHours(i_hours).plusMinutes(i_minutes);
-		} else {
-			p_o_datetime = p_o_datetime.minusHours(i_hours).minusMinutes(i_minutes);
+
+		/* check if we have an utc offset */
+		if ((s_zoneOffset != null) && (s_zoneOffset.contains(":")) && ((s_zoneOffset.contains("+")) || (s_zoneOffset.contains("-")))) {
+			String s_plus_or_minus = s_zoneOffset.substring(0, 1);
+			s_zoneOffset = s_zoneOffset.substring(1);
+			int i_hours = Integer.valueOf(s_zoneOffset.split(":")[0]);
+			int i_minutes = Integer.valueOf(s_zoneOffset.split(":")[1]);
+			
+			if (s_plus_or_minus.contentEquals("+")) {
+				p_o_datetime = p_o_datetime.plusHours(i_hours).plusMinutes(i_minutes);
+			} else {
+				p_o_datetime = p_o_datetime.minusHours(i_hours).minusMinutes(i_minutes);
+			}
 		}
 		
 		java.time.ZonedDateTime o_zonedDatetime = p_o_datetime.atZone(java.time.ZoneId.systemDefault());
@@ -543,7 +575,9 @@ public class Helper {
 	public static java.time.LocalDateTime fromDateTimeString(String p_s_string) throws java.time.DateTimeException {
 		String[] a_dateAndTimeParts = null;
 		
-		if (p_s_string.contains("T")) {
+		if (p_s_string == null) {
+			throw new java.time.DateTimeException("Invalid date time string[null]");
+		} else if (p_s_string.contains("T")) {
 			/* date and time are separated by 'T' */
 			a_dateAndTimeParts = p_s_string.split("T");
 			
@@ -1290,7 +1324,7 @@ public class Helper {
 		}
 		
 		/* check if concatenated string ends with delimiter */
-		if  (s_foo.endsWith("" + p_c_delimiter)) {
+		if ((s_foo != null) && (s_foo.endsWith("" + p_c_delimiter))) {
 			/* delete last delimiter */
 			s_foo = s_foo.substring(0, s_foo.length() - 1);
 		}
@@ -1317,7 +1351,7 @@ public class Helper {
 			for (T o_foo : p_a_list) {
 				i_index++;
 				
-				if (o_foo.equals(p_o_search)) {
+				if (((o_foo == null) && (p_o_search == null)) || ((o_foo != null) && (o_foo.equals(p_o_search)))) {
 					b_found = true;
 					break;
 				}
@@ -1730,7 +1764,7 @@ public class Helper {
     				) {
     					String s_foo = o_inetAddress.getHostAddress();
     					
-    					if (s_foo.contains("%")) {
+    					if ((s_foo != null) && (s_foo.contains("%"))) {
     						s_foo = s_foo.substring(0, s_foo.indexOf("%"));
     					}
     					
@@ -1738,23 +1772,23 @@ public class Helper {
     				}
     			}
     		
-              /* delete last pipe */
-              if (s_ips.endsWith("|")) {
-                  s_ips = s_ips.substring(0, s_ips.length() - 1);
-              }
+              	/* delete last pipe */
+				if ((s_ips != null) && (s_ips.endsWith("|"))) {
+					s_ips = s_ips.substring(0, s_ips.length() - 1);
+				}
 
-              /* check if we have multiple ip addresses to one network interface */
-              if (s_ips.contains("|")) {
-                  int i = 1;
+				/* check if we have multiple ip addresses to one network interface */
+				if ((s_ips != null) && (s_ips.contains("|"))) {
+					int i = 1;
 
-                  for (String s_ip : s_ips.split("\\|")) {
-                      /* give network interface an additional number for multiple ip address */
-                	  a_networkInterfaces.add(new java.util.AbstractMap.SimpleEntry<String, String>(s_name + " #" + i++, s_ip));
-                  }
-              } else {
-                  /* add network interface name and its ip address */
-                  a_networkInterfaces.add(new java.util.AbstractMap.SimpleEntry<String, String>(s_name, s_ips));
-              }
+					for (String s_ip : s_ips.split("\\|")) {
+						/* give network interface an additional number for multiple ip address */
+						a_networkInterfaces.add(new java.util.AbstractMap.SimpleEntry<String, String>(s_name + " #" + i++, s_ip));
+					}
+				} else {
+					/* add network interface name and its ip address */
+					a_networkInterfaces.add(new java.util.AbstractMap.SimpleEntry<String, String>(s_name, s_ips));
+				}
     		}
     	}
 
@@ -1858,7 +1892,7 @@ public class Helper {
 				net.forestany.forestj.lib.Global.ilogFiner(o_field.getName() + " - " + o_field.getType().getTypeName() + " - [" + java.lang.reflect.Modifier.toString(o_field.getModifiers()) + "]");
 				
 				/* skip fields that starts with 'this$' */
-				if (o_field.getName().startsWith("this$")) {
+				if ((o_field.getName() != null) && (o_field.getName().startsWith("this$"))) {
 					continue;
 				}
 				
@@ -1940,7 +1974,7 @@ public class Helper {
 					return false;
 				} else if ( (o_objectOne != null) && (o_objectTwo != null) ) { /* if help variable got access to object field */
 					/* if field of parameter object is of type list */
-					if (o_field.getType().getTypeName().contains("java.util.List")) {
+					if ((o_field.getType().getTypeName() != null) && (o_field.getType().getTypeName().contains("java.util.List"))) {
 						/* cast current field of parameter object as list with unknown generic type */
 						java.util.List<?> a_objectsOne = (java.util.List<?>)o_objectOne;
 						java.util.List<?> a_objectsTwo = (java.util.List<?>)o_objectTwo;
@@ -1965,7 +1999,7 @@ public class Helper {
 									}
 					        	} else {
 									/* compare each array element of both object arrays or accept if both elements in array are null */
-									if (!( ( (a_objectsOne.get(i) == null) && (a_objectsTwo.get(i) == null) ) || (a_objectsOne.get(i).equals(a_objectsTwo.get(i))) )) {
+									if (!( ( (a_objectsOne.get(i) == null) && (a_objectsTwo.get(i) == null) ) || ((a_objectsOne.get(i) != null) && (a_objectsOne.get(i).equals(a_objectsTwo.get(i)))) )) {
 										net.forestany.forestj.lib.Global.ilogWarning("both object parameter array elements are not equal or not both null '" + ( (a_objectsOne.get(i) == null) ? "null" : a_objectsOne.get(i).toString() ) + "' != '" + ( (a_objectsTwo.get(i) == null) ? "null" : a_objectsTwo.get(i).toString() ) + "'");
 										return false;
 									}
@@ -1976,6 +2010,11 @@ public class Helper {
 						/* get array type as string */
 						String s_arrayType = o_objectOne.getClass().getTypeName().substring(0, o_objectOne.getClass().getTypeName().length() - 2);
 						
+						/* check if array type is not null or empty */
+						if (net.forestany.forestj.lib.Helper.isStringEmpty(s_arrayType)) {
+							throw new NoSuchFieldException("array type is null or empty for object with class '" + o_objectOne.getClass().getTypeName() + "'");
+						}
+
 						/* check if we can handle this type of array, otherwise this and the whole field will be just skipped */
 						if (a_allowedTypes.contains(s_arrayType)) {
 							s_arrayType = s_arrayType.toLowerCase();
@@ -2088,7 +2127,7 @@ public class Helper {
 										return false;
 									}
 								}
-							} else if ( (s_arrayType.contentEquals("int")) || (s_arrayType.contentEquals("java.lang.integer")) ) {
+							} else if ( (s_arrayType.contentEquals("int")) || (s_arrayType.contentEquals("integer")) || (s_arrayType.contentEquals("java.lang.integer")) ) {
 								/* cast current field of parameter object as array */
 								int[] a_objectsOne = (int[])o_objectOne;
 								int[] a_objectsTwo = (int[])o_objectTwo;
@@ -2301,7 +2340,7 @@ public class Helper {
 							}
 						}
 					} else {
-						net.forestany.forestj.lib.Global.ilogFiner(o_field.getName() + " objects equal: " + o_objectOne.equals(o_objectTwo) + "\t" + o_objectOne.toString() + "\t\t" + o_objectTwo.toString());
+						net.forestany.forestj.lib.Global.ilogFiner(o_field.getName() + " objects equal: " + o_objectOne.equals(o_objectTwo) + "\t" + o_objectOne.toString() + "\t\t" + ((o_objectTwo != null) ? o_objectTwo.toString() : "null"));
 						
 						/* only execute deep comparison if both objects are not allowed types */
 						if ( (p_b_deepComparison) && (!(a_allowedTypes.contains(o_objectOne.getClass().getTypeName()))) ) {
@@ -2309,13 +2348,13 @@ public class Helper {
 							if (!Helper.objectsEqualUsingReflections(o_objectOne, o_objectTwo, p_b_usePropertyMethods, p_b_deepComparison)) {
 								return false;
 							}
-			        	} else {
+						} else {
 							/* check if field values of both parameter objects are equal */
 							if (!o_objectOne.equals(o_objectTwo)) {
-								net.forestany.forestj.lib.Global.ilogWarning("both object parameter are not equal '" + o_objectOne.toString() + "' != '" + o_objectTwo.toString() + "'");
+								net.forestany.forestj.lib.Global.ilogWarning("both object parameter are not equal '" + o_objectOne.toString() + "' != '" + ((o_objectTwo != null) ? o_objectTwo.toString() : "null") + "'");
 								return false;
 							}
-			        	}
+						}
 					}
 				} else {
 					net.forestany.forestj.lib.Global.ilogFiner(o_field.getName() + " objects equal: true\tnull\t\tnull");

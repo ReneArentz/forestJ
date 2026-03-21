@@ -69,7 +69,6 @@ public class MessageBoxMarshallingTest {
 			testMessageBoxMarshallingPrimitives(o_messageBox, i_dataLengthInBytes, b_usePropertyMethods);
 			testMessageBoxMarshallingArrays(o_messageBox, i_dataLengthInBytes, b_usePropertyMethods);
 		} catch (Exception o_exc) {
-			o_exc.printStackTrace();
 			fail(o_exc.getMessage());
 		}
 	}

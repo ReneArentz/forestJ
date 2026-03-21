@@ -17,7 +17,7 @@ public class FTPTest {
 		try {
 			net.forestany.forestj.lib.LoggingConfig.initiateTestLogging();
 			
-			runFtp("172.24.87.100", 12220, "user", "user", "/");
+			runFtp("192.168.122.89", 12220, "user", "user", "/");
 		} catch (Exception o_exc) {
 			fail(o_exc.getMessage());
 		}
@@ -87,7 +87,7 @@ public class FTPTest {
 		assertTrue(p_o_ftpClient.download(p_s_startingFolderRemote + "first_subfolder/test.txt", s_testDirectory + "text.txt"), "could not download file from '" + p_s_startingFolderRemote + "first_subfolder/test.txt'; " + p_o_ftpClient.getFTPReply());
 		assertTrue(p_o_ftpClient.getFTPReplyCode() == 226, "ftp reply code is not '226', but '" + p_o_ftpClient.getFTPReply() + "'");
 		
-		net.forestany.forestj.lib.io.File o_file = new net.forestany.forestj.lib.io.File(s_testDirectory + "text.txt", false);
+		net.forestany.forestj.lib.io.File o_file = new net.forestany.forestj.lib.io.File(s_testDirectory + "text.txt", false, "\r\n");
 		assertTrue(o_file.getFileContent().contentEquals("Hello World!\r\nHello World!!\r\n"), "downloaded file content from '" + p_s_startingFolderRemote + "first_subfolder/test.txt' is not equal to uploaded bytes from before");
 		
 		assertTrue(p_o_ftpClient.rename(p_s_startingFolderRemote + "first_subfolder/test.txt", p_s_startingFolderRemote + "renamed_test.txt"), "could not rename file '" + p_s_startingFolderRemote + "first_subfolder/test.txt' to '" + p_s_startingFolderRemote + "renamed_test.txt'; " + p_o_ftpClient.getFTPReply());

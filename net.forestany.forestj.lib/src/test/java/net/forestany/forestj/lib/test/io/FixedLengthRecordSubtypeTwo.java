@@ -1,6 +1,6 @@
 package net.forestany.forestj.lib.test.io;
 
-import net.forestany.forestj.lib.io.StandardTransposeMethods.FloatingPointNumbers;
+import net.forestany.forestj.lib.io.StandardTransposeMethods.*;
 
 public class FixedLengthRecordSubtypeTwo extends net.forestany.forestj.lib.io.FixedLengthRecord<FixedLengthRecordSubtypeTwo> {
 

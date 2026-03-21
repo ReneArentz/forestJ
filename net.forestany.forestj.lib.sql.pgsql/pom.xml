@@ -6,13 +6,13 @@
 	<parent>
 		<groupId>net.forestany.forestj</groupId>
 		<artifactId>Parent</artifactId>
-		<version>1.14</version>
+		<version>1.16</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
 	<groupId>net.forestany.forestj.sql</groupId>
 	<artifactId>fJ-sql-pgsql</artifactId>
-	<version>1.0.6</version>
+	<version>1.0.8</version>
 	<packaging>jar</packaging>
 
 	<name>forestj sql pgsql</name>
@@ -110,7 +110,7 @@
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
-			<version>42.7.5</version>
+			<version>42.7.10</version>
 		</dependency>
 	</dependencies>
 

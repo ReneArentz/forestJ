@@ -261,8 +261,8 @@ public class File {
 	 * @throws IllegalArgumentException			invalid line break parameter
 	 */
 	public File(String p_s_fullfilename, java.nio.charset.Charset p_o_charset, boolean p_b_new, String p_s_lineBreak) throws java.io.FileNotFoundException, java.io.IOException, IllegalArgumentException {
-		if ( (!p_s_lineBreak.contentEquals("\n")) && (!p_s_lineBreak.contentEquals("\r\n")) && (!p_s_lineBreak.contentEquals("\r")) ) {
-			throw new IllegalArgumentException("Line break parameter must be '\n', '\r\n' or '\r'");
+		if ((p_s_lineBreak == null) || ( (!p_s_lineBreak.contentEquals("\n")) && (!p_s_lineBreak.contentEquals("\r\n")) && (!p_s_lineBreak.contentEquals("\r")) )) {
+			throw new IllegalArgumentException("Line break parameter must be '\\n', '\\r\n' or '\\r'");
 		}
 		
 		this.s_fullFilename = p_s_fullfilename;
@@ -726,6 +726,7 @@ public class File {
 	 * @return			true - directory does exist, false - directory does not exist
 	 */
 	public static boolean folderExists(String p_s_path) {
+		if (p_s_path == null) return false;
 		p_s_path = p_s_path.substring(0, p_s_path.lastIndexOf(File.DIR));
 		return File.isDirectory(p_s_path);
 	}
@@ -737,6 +738,7 @@ public class File {
 	 * @return			true - file has an extension, false - file has not an extension
 	 */
 	public static boolean hasFileExtension(String p_s_file) {
+		if (p_s_file == null) return false;
 		p_s_file = p_s_file.substring(p_s_file.lastIndexOf(File.DIR) + 1);
 		return p_s_file.contains(".");
 	}
@@ -769,7 +771,7 @@ public class File {
 	 * @return					true - path parameter is a sub directory of other path , false - path parameter is not a sub directory of other path
 	 */
 	public static boolean isSubDirectory(String p_s_currentPath, String p_s_otherPath) {
-		return java.nio.file.Paths.get(p_s_currentPath).toAbsolutePath().startsWith( java.nio.file.Paths.get(p_s_otherPath).toAbsolutePath() );
+		return (java.nio.file.Paths.get(p_s_currentPath) != null) ? java.nio.file.Paths.get(p_s_currentPath).toAbsolutePath().startsWith( java.nio.file.Paths.get(p_s_otherPath).toAbsolutePath() ) : false;
 	}
 	
 	/**
@@ -1261,7 +1263,7 @@ public class File {
 			    /* iterate all elements in directory */
 				o_stream.forEach(o_fileWalk -> {
 					/* not iterate a file walk element with the same file name as parameter, preventing endless loop in recursion */
-			    	if (!o_path.getFileName().equals(o_fileWalk.getFileName())) {
+			    	if ((o_path.getFileName() != null) && (!o_path.getFileName().equals(o_fileWalk.getFileName()))) {
 			    		/* retrieve file attributes */
 						try {
 							java.nio.file.attribute.BasicFileAttributes o_basicFileAttributes = java.nio.file.Files.readAttributes(o_fileWalk, java.nio.file.attribute.BasicFileAttributes.class);

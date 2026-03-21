@@ -201,6 +201,11 @@ public class ReceiveUDP<T extends java.net.DatagramSocket> extends net.forestany
 		this.b_stopServer = false;
 		this.i_terminations = 0;
 		
+		/* check host parameter */
+		if (p_s_host == null) {
+			throw new IllegalArgumentException("Receive host address is 'null'");
+		}
+		
 		/* check port min. value */
 		if (p_i_port < 1) {
 			throw new IllegalArgumentException("Receive port must be at least '1', but was set to '" + p_i_port + "'");

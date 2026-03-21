@@ -65,7 +65,7 @@ public class StandardTransposeMethods {
 		}
 		
 		/* return string with set length */
-		return p_o_value.toString().substring(0, p_i_length);
+		return String.format("%-" + p_i_length + "." + p_i_length + "s", p_o_value.toString());
 	}
 	
 	/* Boolean */
@@ -79,7 +79,7 @@ public class StandardTransposeMethods {
 	 */
 	public static Object TransposeBoolean(String p_s_value) throws ClassCastException {
 		/* recognize '1', 'true', 'y' and 'j' as boolean true, otherwise we recognize false */
-		if ( (p_s_value.contentEquals("1")) || (p_s_value.contentEquals("true")) || (p_s_value.contentEquals("y")) || (p_s_value.contentEquals("j")) ) {
+		if ( (p_s_value != null) && ((p_s_value.contentEquals("1")) || (p_s_value.contentEquals("true")) || (p_s_value.contentEquals("y")) || (p_s_value.contentEquals("j"))) ) {
 			p_s_value = "true";
 		} else {
 			p_s_value = "false";
@@ -170,14 +170,16 @@ public class StandardTransposeMethods {
 			byte by_multiply = (byte)1;
 			
 			/* check sign */
-			if (p_s_value.startsWith("+")) {
-				/* remove '+' sign */
-				p_s_value = p_s_value.substring(1);
-			} else if (p_s_value.startsWith("-")) {
-				/* remove '-' sign */
-				p_s_value = p_s_value.substring(1);
-				/* set multiply sign to '-1' */
-				by_multiply = (byte)-1;
+			if (p_s_value != null) {
+				if (p_s_value.startsWith("+")) {
+					/* remove '+' sign */
+					p_s_value = p_s_value.substring(1);
+				} else if (p_s_value.startsWith("-")) {
+					/* remove '-' sign */
+					p_s_value = p_s_value.substring(1);
+					/* set multiply sign to '-1' */
+					by_multiply = (byte)-1;
+				}
 			}
 			
 			/* check byte value */
@@ -263,14 +265,16 @@ public class StandardTransposeMethods {
 			short sh_multiply = (short)1;
 			
 			/* check sign */
-			if (p_s_value.startsWith("+")) {
-				/* remove '+' sign */
-				p_s_value = p_s_value.substring(1);
-			} else if (p_s_value.startsWith("-")) {
-				/* remove '-' sign */
-				p_s_value = p_s_value.substring(1);
-				/* set multiply sign to '-1' */
-				sh_multiply = (short)-1;
+			if (p_s_value != null) {
+				if (p_s_value.startsWith("+")) {
+					/* remove '+' sign */
+					p_s_value = p_s_value.substring(1);
+				} else if (p_s_value.startsWith("-")) {
+					/* remove '-' sign */
+					p_s_value = p_s_value.substring(1);
+					/* set multiply sign to '-1' */
+					sh_multiply = (short)-1;
+				}
 			}
 			
 			/* check short value */
@@ -356,14 +360,16 @@ public class StandardTransposeMethods {
 			int i_multiply = 1;
 			
 			/* check sign */
-			if (p_s_value.startsWith("+")) {
-				/* remove '+' sign */
-				p_s_value = p_s_value.substring(1);
-			} else if (p_s_value.startsWith("-")) {
-				/* remove '-' sign */
-				p_s_value = p_s_value.substring(1);
-				/* set multiply sign to '-1' */
-				i_multiply = -1;
+			if (p_s_value != null) {
+				if (p_s_value.startsWith("+")) {
+					/* remove '+' sign */
+					p_s_value = p_s_value.substring(1);
+				} else if (p_s_value.startsWith("-")) {
+					/* remove '-' sign */
+					p_s_value = p_s_value.substring(1);
+					/* set multiply sign to '-1' */
+					i_multiply = -1;
+				}
 			}
 			
 			/* check integer value */
@@ -449,14 +455,16 @@ public class StandardTransposeMethods {
 			long l_multiply = (long)1;
 			
 			/* check sign */
-			if (p_s_value.startsWith("+")) {
-				/* remove '+' sign */
-				p_s_value = p_s_value.substring(1);
-			} else if (p_s_value.startsWith("-")) {
-				/* remove '-' sign */
-				p_s_value = p_s_value.substring(1);
-				/* set multiply sign to '-1' */
-				l_multiply = (long)-1;
+			if (p_s_value != null) {
+				if (p_s_value.startsWith("+")) {
+					/* remove '+' sign */
+					p_s_value = p_s_value.substring(1);
+				} else if (p_s_value.startsWith("-")) {
+					/* remove '-' sign */
+					p_s_value = p_s_value.substring(1);
+					/* set multiply sign to '-1' */
+					l_multiply = (long)-1;
+				}
 			}
 			
 			/* check long value */
@@ -518,8 +526,13 @@ public class StandardTransposeMethods {
 			java.text.DateFormat o_dateFormat;
 			
 			try {
+				/* recognize empty year */
+				if ((p_s_value != null) && (p_s_value.contains("0000"))) {
+					return null;
+				}
+
 				/* check if we use format for RFC 1123 */
-				if (p_s_format.endsWith("zzz")) {
+				if ((p_s_format != null) && (p_s_format.endsWith("zzz"))) {
 					/* set util date format with Locale.US */
 					o_dateFormat = new java.text.SimpleDateFormat(p_s_format, java.util.Locale.US);
 				} else {
@@ -528,7 +541,7 @@ public class StandardTransposeMethods {
 				}
 				
 				/* check if format ends with "'Z'" or "z" */
-				if ( (p_s_format.endsWith("'Z'")) || (p_s_format.endsWith("zzz")) ) {
+				if ((p_s_format != null) && ( (p_s_format.endsWith("'Z'")) || (p_s_format.endsWith("zzz")) )) {
 					/* set UTC timezone for date format */
 					o_dateFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
 				}
@@ -570,7 +583,7 @@ public class StandardTransposeMethods {
 				
 				try {
 					/* check if we use format for RFC 1123 */
-					if (p_s_format.endsWith("zzz")) {
+					if ((p_s_format != null) && (p_s_format.endsWith("zzz"))) {
 						/* set util date format with Locale.US */
 						o_dateFormat = new java.text.SimpleDateFormat(p_s_format, java.util.Locale.US);
 					} else {
@@ -579,7 +592,7 @@ public class StandardTransposeMethods {
 					}
 					
 					/* check if format ends with "'Z'" or "z" */
-					if ( (p_s_format.endsWith("'Z'")) || (p_s_format.endsWith("zzz")) ) {
+					if ((p_s_format != null) && ( (p_s_format.endsWith("'Z'")) || (p_s_format.endsWith("zzz")) )) {
 						/* set UTC timezone for date format */
 						o_dateFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
 					}
@@ -591,7 +604,7 @@ public class StandardTransposeMethods {
 				String s_foo = o_dateFormat.format((java.util.Date)p_o_value);
 				
 				/* check if we use format for RFC 1123 */
-				if (p_s_format.endsWith("zzz")) {
+				if ((p_s_format != null) && (p_s_format.endsWith("zzz"))) {
 					/* get rid of 'UTC' at the end and write 'GMT' */
 					s_foo = s_foo.substring(0, s_foo.length() - 3) + "GMT";
 				}
@@ -614,7 +627,7 @@ public class StandardTransposeMethods {
 			String s_format = "yyyy-MM-dd'T'HH:mm:ss'Z'";
 			
 			/* accept parameter value without date and time separator 'T' */
-			if (!p_s_value.contains("T")) {
+			if ((p_s_value != null) && (!p_s_value.contains("T"))) {
 				s_format = "yyyy-MM-dd' 'HH:mm:ss'Z'";
 			}
 			
@@ -1123,6 +1136,11 @@ public class StandardTransposeMethods {
 		 */
 		public static Object TransposeLocalDateTime_ISO8601(String p_s_value) throws ClassCastException {
 			try {
+				/* recognize empty year */
+				if ((p_s_value != null) && (p_s_value.contains("0000"))) {
+					return null;
+				}
+
 				/* return string as local date time object */
 				return net.forestany.forestj.lib.Helper.fromISO8601UTC(p_s_value);
 			} catch (java.time.DateTimeException o_exc) {
@@ -1165,6 +1183,11 @@ public class StandardTransposeMethods {
 		 */
 		public static Object TransposeLocalDateTime_RFC1123(String p_s_value) throws ClassCastException {
 			try {
+				/* recognize empty year */
+				if ((p_s_value != null) && (p_s_value.contains("0000"))) {
+					return null;
+				}
+
 				/* create zoned date time in UTC */
 				java.time.ZonedDateTime o_zonedDatetime = java.time.ZonedDateTime.parse(p_s_value, java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME);
 				/* adjust to system time zone */
@@ -1212,6 +1235,11 @@ public class StandardTransposeMethods {
 		 */
 		private static Object TransposeLocalDateTime_any(String p_s_value) throws ClassCastException {
 			try {
+				/* recognize empty year */
+				if ((p_s_value != null) && (p_s_value.contains("0000"))) {
+					return null;
+				}
+
 				/* return string as local date time object */
 				return net.forestany.forestj.lib.Helper.fromDateTimeString(p_s_value);
 			} catch (java.time.DateTimeException o_exc) {
@@ -1477,6 +1505,11 @@ public class StandardTransposeMethods {
 		 */
 		private static Object TransposeLocalDate_any(String p_s_value) throws ClassCastException {
 			try {
+				/* recognize empty year */
+				if ((p_s_value != null) && (p_s_value.contains("0000"))) {
+					return null;
+				}
+
 				/* return string as local date object */
 				return net.forestany.forestj.lib.Helper.fromDateString(p_s_value);
 			} catch (java.time.DateTimeException o_exc) {
@@ -1739,6 +1772,11 @@ public class StandardTransposeMethods {
 		 */
 		private static Object TransposeLocalTime_any(String p_s_value) throws ClassCastException {
 			try {
+				/* recognize empty time */
+				if ((p_s_value != null) && (p_s_value.contains("000000"))) {
+					return null;
+				}
+
 				/* return string as local time object */
 				return net.forestany.forestj.lib.Helper.fromTimeString(p_s_value);
 			} catch (java.time.DateTimeException o_exc) {
@@ -2324,6 +2362,20 @@ public class StandardTransposeMethods {
 				p_s_value = p_s_value.substring(0, p_i_positionDecimalSeparator) + "." + p_s_value.substring(p_i_positionDecimalSeparator);
 			}
 			
+			/* multiplicant to set value as negative at the end if we find a '-' sign */
+			java.math.BigDecimal o_multiplicand = new java.math.BigDecimal(1);
+
+			/* check if we only have one '+' or only one '-' sign in parameter string */
+			if ((p_s_value.contains("+")) && (p_s_value.replaceAll("[^+]", "").length() == 1)) {
+				/* replace '+' sign with '0' */
+				p_s_value = p_s_value.replace('+', '0');
+			} else if ((p_s_value.contains("-")) && (p_s_value.replaceAll("[^-]", "").length() == 1)) {
+				/* replace '-' sign with '0' */
+				p_s_value = p_s_value.replace('-', '0');
+				/* set mutliplicand as '-1' */
+				o_multiplicand = new java.math.BigDecimal(-1);
+			}
+
 			/* check big decimal value */
 			if (!net.forestany.forestj.lib.Helper.isDouble(p_s_value)) {
 				throw new ClassCastException("Value '" + p_s_value + "' cannot be cast to BigDecimal");
@@ -2333,7 +2385,7 @@ public class StandardTransposeMethods {
 			p_s_value = p_s_value.replace(',', '.');
 			
 			/* return big decimal value */
-			return new java.math.BigDecimal(p_s_value);
+			return new java.math.BigDecimal(p_s_value).multiply(o_multiplicand);
 		}
 		
 		/**
@@ -2426,7 +2478,7 @@ public class StandardTransposeMethods {
 		}
 		
 		/**
-		 * Transpose big decimal value to big decimal string value, using system separators
+		 * Transpose big decimal value to big decimal string value with sign character, using system separators
 		 * 
 		 * @param p_o_value						big decimal value
 		 * @param p_i_amountDigits				amount of digits for a floating point number (write only)
@@ -2439,7 +2491,7 @@ public class StandardTransposeMethods {
 		}
 		
 		/**
-		 * Transpose big decimal value to big decimal string value, use '$' for decimal separator to use system settings, no grouping
+		 * Transpose big decimal value to big decimal string value with sign character, use '$' for decimal separator to use system settings, no grouping
 		 * 
 		 * @param p_o_value						big decimal value
 		 * @param p_i_amountDigits				amount of digits for a floating point number (write only)
@@ -2453,7 +2505,7 @@ public class StandardTransposeMethods {
 		}
 		
 		/**
-		 * Transpose big decimal value to big decimal string value, use '$' for decimal and group separator to use system separators
+		 * Transpose big decimal value to big decimal string value with sign character, use '$' for decimal and group separator to use system separators
 		 * 
 		 * @param p_o_value						big decimal value
 		 * @param p_i_amountDigits				amount of digits for a floating point number (write only)
@@ -2500,6 +2552,95 @@ public class StandardTransposeMethods {
 				
 				/* set positive and negative prefixes */
 				o_decimalFormat.setPositivePrefix("+");
+				o_decimalFormat.setNegativePrefix("-");
+				
+				if (net.forestany.forestj.lib.Helper.isStringEmpty(p_s_decimalSeparator)) {
+					/* return big decimal string, remove decimal separator, because we only want digits */
+					return o_decimalFormat.format(((java.math.BigDecimal)p_o_value).setScale(o_decimalFormat.getMinimumFractionDigits(), o_decimalFormat.getRoundingMode())).replace(""+o_decimalFormatSymbols.getDecimalSeparator(), "");
+				} else {
+					/* return big decimal string */
+					return o_decimalFormat.format(((java.math.BigDecimal)p_o_value).setScale(o_decimalFormat.getMinimumFractionDigits(), o_decimalFormat.getRoundingMode()));
+				}
+			} else {
+				throw new ClassCastException("Parameter '" + p_o_value + "' is not a BigDecimal");
+			}
+		}
+
+		/**
+		 * Transpose big decimal value to big decimal string value with negative sign character only, using system separators
+		 * 
+		 * @param p_o_value						big decimal value
+		 * @param p_i_amountDigits				amount of digits for a floating point number (write only)
+		 * @param p_i_amountFractionDigits		amount of fractional digits for a floating point number (write only)
+		 * @return								big decimal string value
+		 * @throws ClassCastException			cannot cast parameter to big decimal type
+		 */
+		public static String TransposeBigDecimalWithNegativeSignOnly(Object p_o_value, int p_i_amountDigits, int p_i_amountFractionDigits) throws ClassCastException {
+			return TransposeBigDecimalWithNegativeSignOnly(p_o_value, p_i_amountDigits, p_i_amountFractionDigits, "$", "$");
+		}
+		
+		/**
+		 * Transpose big decimal value to big decimal string value with negative sign character only, use '$' for decimal separator to use system settings, no grouping
+		 * 
+		 * @param p_o_value						big decimal value
+		 * @param p_i_amountDigits				amount of digits for a floating point number (write only)
+		 * @param p_i_amountFractionDigits		amount of fractional digits for a floating point number (write only)
+		 * @param p_s_decimalSeparator			string for decimal separator
+		 * @return								big decimal string value
+		 * @throws ClassCastException			cannot cast parameter to big decimal type
+		 */
+		public static String TransposeBigDecimalWithNegativeSignOnly(Object p_o_value, int p_i_amountDigits, int p_i_amountFractionDigits, String p_s_decimalSeparator) throws ClassCastException {
+			return TransposeBigDecimalWithNegativeSignOnly(p_o_value, p_i_amountDigits, p_i_amountFractionDigits, p_s_decimalSeparator, null);
+		}
+		
+		/**
+		 * Transpose big decimal value to big decimal string value with negative sign character only, use '$' for decimal and group separator to use system separators
+		 * 
+		 * @param p_o_value						big decimal value
+		 * @param p_i_amountDigits				amount of digits for a floating point number (write only)
+		 * @param p_i_amountFractionDigits		amount of fractional digits for a floating point number (write only)
+		 * @param p_s_decimalSeparator			string for decimal separator
+		 * @param p_s_groupSeparator			string for group separator
+		 * @return								big decimal string value
+		 * @throws ClassCastException			cannot cast parameter to big decimal type
+		 */
+		public static String TransposeBigDecimalWithNegativeSignOnly(Object p_o_value, int p_i_amountDigits, int p_i_amountFractionDigits, String p_s_decimalSeparator, String p_s_groupSeparator) throws ClassCastException {
+			/* if parameter is null, use object value as 0 */
+			if (p_o_value == null) {
+				p_o_value = (Object)new java.math.BigDecimal("0.0");
+			}
+			
+			/* check if parameter is a big decimal */
+			if (p_o_value instanceof java.math.BigDecimal) {
+				/* get decimal format from current system */
+				java.text.DecimalFormatSymbols o_decimalFormatSymbols = new java.text.DecimalFormatSymbols(java.util.Locale.getDefault());
+				
+				/* overwrite decimal separator if it is not empty and not set to '$' */
+				if ( (!net.forestany.forestj.lib.Helper.isStringEmpty(p_s_decimalSeparator)) && (p_s_decimalSeparator.charAt(0) != '$') ) {
+					o_decimalFormatSymbols.setDecimalSeparator(p_s_decimalSeparator.charAt(0));
+				}
+				
+				/* overwrite group separator if it is not empty and not set to '$' */
+				if ( (!net.forestany.forestj.lib.Helper.isStringEmpty(p_s_groupSeparator)) && (p_s_groupSeparator.charAt(0) != '$') ) {
+					o_decimalFormatSymbols.setGroupingSeparator(p_s_groupSeparator.charAt(0));
+				}
+				
+				/* create decimal format with decimal symbols and set amount of digits and fraction digits */
+				java.text.DecimalFormat o_decimalFormat = new java.text.DecimalFormat("###,###,###,###,###.##", o_decimalFormatSymbols);
+				o_decimalFormat.setMinimumIntegerDigits(p_i_amountDigits);
+				o_decimalFormat.setMinimumFractionDigits(p_i_amountFractionDigits);
+				
+				/* set rounding mode */
+				o_decimalFormat.setRoundingMode(java.math.RoundingMode.HALF_EVEN);
+				
+				/* no group separator available */
+				if (net.forestany.forestj.lib.Helper.isStringEmpty(p_s_groupSeparator)) {
+					/* disable grouping */
+					o_decimalFormat.setGroupingUsed(false);
+				}
+				
+				/* set positive and negative prefixes */
+				o_decimalFormat.setPositivePrefix("0");
 				o_decimalFormat.setNegativePrefix("-");
 				
 				if (net.forestany.forestj.lib.Helper.isStringEmpty(p_s_decimalSeparator)) {

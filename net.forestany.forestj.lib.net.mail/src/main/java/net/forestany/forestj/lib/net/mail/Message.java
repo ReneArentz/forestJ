@@ -1160,7 +1160,7 @@ public class Message {
 			/* change all letters to upper case */
 			p_s_flag = p_s_flag.toUpperCase();
 			
-			/* check if parameter value corresponds to specified values  */
+			/* check if parameter value corresponds to specified values */
 			if (!java.util.Arrays.asList(Message.FLAGS).contains(p_s_flag)) {
 				throw new IllegalArgumentException("Flag[" + p_s_flag + "] is invalid.");
 			}

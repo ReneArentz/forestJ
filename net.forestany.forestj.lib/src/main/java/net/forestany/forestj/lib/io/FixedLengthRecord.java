@@ -101,6 +101,10 @@ public abstract class FixedLengthRecord<T> {
 	 * Flag to allow empty unique fields
 	 */
 	protected boolean AllowEmptyUniqueFields = false;
+	/**
+	 * Flag to store information about optional sub-types within current fixed length record
+	 */
+	private boolean OptionalSubTypes = false;
 	
 	/* Properties */
 	
@@ -111,6 +115,15 @@ public abstract class FixedLengthRecord<T> {
 	 */
 	public int getKnownOverallLength() {
 		return this.KnownOverallLength;
+	}
+
+	/**
+	 * get optional sub-types flag
+	 * 
+	 * @return int
+	 */
+	public boolean getOptionalSubTypes() {
+		return this.OptionalSubTypes;
 	}
 	
 	/**
@@ -165,7 +178,7 @@ public abstract class FixedLengthRecord<T> {
                 FixedLengthRecord<?> o_subtype = null;
         		
         		/* check if class type of object is a inner class */
-        		if (o_structureElement.getValue().getSubType().getTypeName().contains("$")) {
+        		if ((o_structureElement.getValue().getSubType().getTypeName() != null) && (o_structureElement.getValue().getSubType().getTypeName().contains("$"))) {
         			/* get target class */
         			Class<?> o_targetClass = Class.forName(o_structureElement.getValue().getSubType().getTypeName());
         			
@@ -200,8 +213,13 @@ public abstract class FixedLengthRecord<T> {
                 if (o_structureElement.getValue().getSubTypeKnownOverallLength() == -1) {
                     o_structureElement.getValue().setSubTypeKnownOverallLength(((FixedLengthRecord<?>) o_subtype).getKnownOverallLength());
                 }
+
+				/* set flag for optional structure for later use */
+				if (!net.forestany.forestj.lib.Helper.isStringEmpty(o_structureElement.getValue().getSubTypeRegex())) {
+					this.OptionalSubTypes = true;
+				}
             }
-			
+
 			/* sum up the field lengths */
 			this.KnownOverallLength += o_structureElement.getValue().getLength();
 		}
@@ -209,7 +227,7 @@ public abstract class FixedLengthRecord<T> {
 		/* check if each field in unique list really exists in current class */
 		for (String s_unique : this.Unique) {
 			/* it is possible that a unique constraint exists of multiple columns, separated by semicolon */
-			if (s_unique.contains(";")) {
+			if ((s_unique != null) && (s_unique.contains(";"))) {
 				String[] a_uniques = s_unique.split(";");
 				
 				/* iterate each unique field */
@@ -259,7 +277,7 @@ public abstract class FixedLengthRecord<T> {
 			java.lang.reflect.Field o_field =  this.getClass().getDeclaredFields()[i];
 			
 			/* check if field starts with 'Field', but is not equal to 'Fields' */
-			if ( (o_field.getName().startsWith("Field")) && (o_field.getName().compareTo("Fields") != 0) ) {
+			if ( (o_field.getName() != null) && (o_field.getName().startsWith("Field")) && (o_field.getName().compareTo("Fields") != 0) ) {
 				/* field name without 'Field' prefix must match parameter value */
 				if (o_field.getName().substring(5).compareTo(p_s_field) == 0) {
 					/* set return value to true */
@@ -365,7 +383,7 @@ public abstract class FixedLengthRecord<T> {
 	protected void setFieldValue(String p_s_field, Object o_value) throws NoSuchFieldException, IllegalAccessException {
 		p_s_field = "Field" + p_s_field;
 		
-		if (o_value != null) {
+		if ((o_value != null) && (this.getClass().getDeclaredField(p_s_field).getType().getTypeName() != null)) {
 													if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("set field value for: '" + p_s_field + "'" + "\t\tfield type: " + this.getClass().getDeclaredField(p_s_field).getType().getTypeName() + "\t\tvalue type: " + o_value.getClass().getTypeName());
 			
 			if (this.getClass().getDeclaredField(p_s_field).getType().getTypeName().contentEquals("java.time.LocalDateTime")) {
@@ -402,7 +420,7 @@ public abstract class FixedLengthRecord<T> {
 			java.lang.reflect.Field o_field =  this.getClass().getDeclaredFields()[i];
 			
 			/* check if field starts with 'Field', but is not equal to 'Fields' */
-			if ( (o_field.getName().startsWith("Field")) && (o_field.getName().compareTo("Fields") != 0) ) {
+			if ( (o_field.getName() != null) && (o_field.getName().startsWith("Field")) && (o_field.getName().compareTo("Fields") != 0) ) {
 				try {
 					String s_object = "NOT_INITIALIZED";
 					
@@ -466,7 +484,7 @@ public abstract class FixedLengthRecord<T> {
 		T o_temp = null;
 		
 		/* check if class type of object is a inner class */
-		if (this.FLRImageClass.getTypeName().contains("$")) {
+		if ((this.FLRImageClass.getTypeName() != null) && (this.FLRImageClass.getTypeName().contains("$"))) {
 			/* get target class */
 			Class<?> o_targetClass = Class.forName(this.FLRImageClass.getTypeName());
 			
@@ -494,9 +512,23 @@ public abstract class FixedLengthRecord<T> {
 			o_temp = this.FLRImageClass.getDeclaredConstructor().newInstance();
 		}
 		
-		/* check if line length matches known overall length */
-		if (p_s_line.length() != this.KnownOverallLength) {
-			throw new IllegalArgumentException("Line length parameter '" + p_s_line.length() + "' does not match known overall length of all flr fields '" + this.KnownOverallLength + "'");
+		/* check if line length matches known overall length or does not exceed max amount if we have optional sub-types */
+		if (p_s_line == null) {
+			throw new IllegalArgumentException("Line parameter is null");
+		} else if ((this.OptionalSubTypes) && (p_s_line.length() > this.KnownOverallLength)) {
+			/* maybe all lines are filled with blanks at the end, so we try once more after a trim */
+			p_s_line = p_s_line.trim();
+
+			if (p_s_line.length() > this.KnownOverallLength) {
+				throw new IllegalArgumentException("Line length parameter '" + p_s_line.length() + "' exceeds known overall length of all flr fields '" + this.KnownOverallLength + "'");
+			}
+		} else if ((!this.OptionalSubTypes) && (p_s_line.length() != this.KnownOverallLength)) {
+			/* maybe all lines are filled with blanks at the end, so we try once more after a trim */
+			p_s_line = p_s_line.trim();
+
+			if (p_s_line.length() != this.KnownOverallLength) {
+				throw new IllegalArgumentException("Line length parameter '" + p_s_line.length() + "' does not match known overall length of all flr fields '" + this.KnownOverallLength + "'");
+			}
 		}
 		
 		int i_position = 0;
@@ -504,7 +536,7 @@ public abstract class FixedLengthRecord<T> {
 		/* iterate each structure element */
 		for (java.util.Map.Entry<Integer, StructureElement> o_structureElement : this.Structure.entrySet()) {
 			/* check if we have a constant field */
-			if (!net.forestany.forestj.lib.Helper.isStringEmpty(o_structureElement.getValue().getConstant())) {
+			if ((o_structureElement.getValue().getConstant()) != null && (o_structureElement.getValue().getConstant().length() > 0)) {
 				/* increase position pointer */
 				i_position += o_structureElement.getValue().getLength();
 				
@@ -522,100 +554,322 @@ public abstract class FixedLengthRecord<T> {
                 /* create instance of generic list */
                 java.util.List<Object> o_genericList = new java.util.ArrayList<Object>();
                 
-                /* iterate expected amount of generic list field values */
-                for (int i = 0; i < o_structureElement.getValue().getSubTypeAmount(); i++) {
-                    /* get generic list field value out of line parameter */
-                    String s_value = p_s_line.substring(i_position, i_position + o_structureElement.getValue().getSubTypeKnownOverallLength());
-                    /* increase position pointer */
-                    i_position += o_structureElement.getValue().getSubTypeKnownOverallLength();
+				/* sub-type regex available - we have optional sub-type elements */
+				if (!net.forestany.forestj.lib.Helper.isStringEmpty(o_structureElement.getValue().getSubTypeRegex())) {
+					/* check if we have a nested complex structure with different lengths */
+					if (o_structureElement.getValue().getSubTypeRegex().contains("___")) {
+						/* extract lengths from regex value */
+						String[] a_regexParts = o_structureElement.getValue().getSubTypeRegex().split("___");
+						String s_lengths = a_regexParts[0];
+						String[] a_lengths = new String[]{s_lengths};
 
-                    /* create instance of subtype object */
-                    FixedLengthRecord<?> o_subtypeInstance = null;
-            		
-            		/* check if class type of object is a inner class */
-            		if (o_structureElement.getValue().getSubType().getTypeName().contains("$")) {
-            			/* get target class */
-            			Class<?> o_targetClass = Class.forName(o_structureElement.getValue().getSubType().getTypeName());
-            			
-            			/* get instance of parent class */
-            			Object o_parentClass = Class.forName(o_structureElement.getValue().getSubType().getTypeName().split("\\$")[0]).getDeclaredConstructor().newInstance();
-            			boolean b_found = false;
-            			
-            			/* look for declared inner classes in parent class */
-            			for (Class<?> o_subClass : o_parentClass.getClass().getDeclaredClasses()) {
-            				/* inner class must match with Class<?> type parameter of dynamic generic list */
-            				if (o_subClass == o_targetClass) {
-            					b_found = true;
-            					/* create new object instance of inner class, with help of parent class instance */
-            					o_subtypeInstance = (FixedLengthRecord<?>) o_targetClass.getDeclaredConstructor(o_parentClass.getClass()).newInstance(o_parentClass);
-            					break;
-            				}
-            			}
-            			
-            			/* throw exception if inner class could not be found */
-            			if (!b_found) {
-            				throw new ClassNotFoundException("Could not found inner class in scope '" + o_targetClass.getTypeName() + "'");
-            			}
-            		} else {
-            			/* create new instance of inherited class */
-            			o_subtypeInstance = (FixedLengthRecord<?>) o_structureElement.getValue().getSubType().getDeclaredConstructor().newInstance();
-            		}
-                    
-                    /* read fields from substring line for subtype */
-                    o_subtypeInstance = (FixedLengthRecord<?>) o_subtypeInstance.readFieldsFromString(s_value);
+						/* check if we have multiple lengths */
+						if (s_lengths.contains("|")) {
+							a_lengths = s_lengths.split("\\|");
+						}
+						
+						/* iterate max. amount of sub-type field values */
+						for (int i = 0; i < o_structureElement.getValue().getSubTypeAmount(); i++) {
+							/* iterate each length possibility */
+							for (int j = 0; j < a_lengths.length; j++) {
+								/* parse length to int */
+								int i_lengthPossibility = Integer.valueOf(a_lengths[j]);
 
-                    /* check unique fields of subtype instance */
-                    if (o_subtypeInstance.Unique.size() > 0) {
-                        /* iterate unique keys */
-                        for (String s_unique : o_subtypeInstance.Unique) {
-                            /* retrieve unique field value variable */
-                            Object o_fieldValue = o_subtypeInstance.getFieldValue(s_unique);
-                            /* unique key name for subtype */
-                            String s_uniqueName = "__Subtype__" + s_unique;
+								/* look for sub-type elements if line is not at end and regex match is valid */
+								while (
+									(p_s_line.length() >= i_position + i_lengthPossibility)
+									&&
+									(java.util.regex.Pattern.matches(
+										a_regexParts[1],
+										p_s_line.substring(i_position, i_position + i_lengthPossibility)
+									))
+								) {
+									/* get generic list field value out of line parameter */
+									String s_value = p_s_line.substring(i_position, i_position + i_lengthPossibility);
+									/* increase position pointer */
+									i_position += i_lengthPossibility;
+									
+									/* create instance of subtype object */
+									FixedLengthRecord<?> o_subtypeInstance = null;
+									
+									/* check if class type of object is a inner class */
+									if ((o_structureElement.getValue().getSubType().getTypeName() != null) && (o_structureElement.getValue().getSubType().getTypeName().contains("$"))) {
+										/* get target class */
+										Class<?> o_targetClass = Class.forName(o_structureElement.getValue().getSubType().getTypeName());
+										
+										/* get instance of parent class */
+										Object o_parentClass = Class.forName(o_structureElement.getValue().getSubType().getTypeName().split("\\$")[0]).getDeclaredConstructor().newInstance();
+										boolean b_found = false;
+										
+										/* look for declared inner classes in parent class */
+										for (Class<?> o_subClass : o_parentClass.getClass().getDeclaredClasses()) {
+											/* inner class must match with Class<?> type parameter of dynamic generic list */
+											if (o_subClass == o_targetClass) {
+												b_found = true;
+												/* create new object instance of inner class, with help of parent class instance */
+												o_subtypeInstance = (FixedLengthRecord<?>) o_targetClass.getDeclaredConstructor(o_parentClass.getClass()).newInstance(o_parentClass);
+												break;
+											}
+										}
+										
+										/* throw exception if inner class could not be found */
+										if (!b_found) {
+											throw new ClassNotFoundException("Could not found inner class in scope '" + o_targetClass.getTypeName() + "'");
+										}
+									} else {
+										/* create new instance of inherited class */
+										o_subtypeInstance = (FixedLengthRecord<?>) o_structureElement.getValue().getSubType().getDeclaredConstructor().newInstance();
+									}
+									
+									/* read fields from substring line for subtype */
+									o_subtypeInstance = (FixedLengthRecord<?>) o_subtypeInstance.readFieldsFromString(s_value);
 
-                            /* empty field values in unique fields are allowed and can be skipped */
-                            if (o_subtypeInstance.AllowEmptyUniqueFields) {
-                                /* field value is null or an empty string */
-                                if ((o_fieldValue == null) || (o_fieldValue.toString().trim().length() < 1)) {
-                                    continue;
-                                }
+									/* check unique fields of subtype instance */
+									if (o_subtypeInstance.Unique.size() > 0) {
+										/* iterate unique keys */
+										for (String s_unique : o_subtypeInstance.Unique) {
+											/* retrieve unique field value variable */
+											Object o_fieldValue = o_subtypeInstance.getFieldValue(s_unique);
+											/* unique key name for subtype */
+											String s_uniqueName = "__Subtype__" + s_unique;
 
-                                try {
-                                    /* field value can be parsed to int and is equal to zero */
-                                    if (Integer.parseInt(o_fieldValue.toString()) == 0) {
-                                        continue;
-                                    }
-                                } catch (Exception o_exc) {
-                                    /* nothing to do */
-                                }
-                            }
+											/* empty field values in unique fields are allowed and can be skipped */
+											if (o_subtypeInstance.AllowEmptyUniqueFields) {
+												/* field value is null or an empty string */
+												if ((o_fieldValue == null) || (o_fieldValue.toString().trim().length() < 1)) {
+													continue;
+												}
 
-		                    /* unique values are stored within temp map for current field */
-							if (this.a_uniqueTemp.containsKey(s_uniqueName)) {
-								/* check if field value already exists */
-								if ( this.a_uniqueTemp.get(s_uniqueName).contains(o_fieldValue) ) {
-									throw new IllegalStateException("field value for unique field '" + s_uniqueName.substring(11) + "' already exists");
-								} else {
-									/* add field value to unique temp list */
+												try {
+													/* field value can be parsed to int and is equal to zero */
+													if (Integer.parseInt(o_fieldValue.toString()) == 0) {
+														continue;
+													}
+												} catch (Exception o_exc) {
+													/* nothing to do */
+												}
+											}
+
+											/* unique values are stored within temp map for current field */
+											if (this.a_uniqueTemp.containsKey(s_uniqueName)) {
+												/* check if field value already exists */
+												if ( this.a_uniqueTemp.get(s_uniqueName).contains(o_fieldValue) ) {
+													throw new IllegalStateException("field value for unique field '" + s_uniqueName.substring(11) + "' already exists");
+												} else {
+													/* add field value to unique temp list */
+													this.a_uniqueTemp.get(s_uniqueName).add(o_fieldValue);
+												}
+											} else { /* no values for this fields stored so far */
+												/* create unique temp list for field and add value */
+												this.a_uniqueTemp.put(s_uniqueName, new java.util.ArrayList<>());
+												this.a_uniqueTemp.get(s_uniqueName).add(o_fieldValue);
+											}
+										}
+									}
+									
+									/* add instance to generic list */
+									o_genericList.add(o_subtypeInstance);
+								}
+							}
+						}
+					} else {
+						/* look for sub-type elements if line is not at end and regex match is valid */
+						while (
+							(p_s_line.length() >= i_position + o_structureElement.getValue().getSubTypeKnownOverallLength())
+							&&
+							(java.util.regex.Pattern.matches(
+								o_structureElement.getValue().getSubTypeRegex(),
+								p_s_line.substring(i_position, i_position + o_structureElement.getValue().getSubTypeKnownOverallLength())
+							))
+						) {
+							/* get generic list field value out of line parameter */
+							String s_value = p_s_line.substring(i_position, i_position + o_structureElement.getValue().getSubTypeKnownOverallLength());
+							/* increase position pointer */
+							i_position += o_structureElement.getValue().getSubTypeKnownOverallLength();
+
+							/* create instance of subtype object */
+							FixedLengthRecord<?> o_subtypeInstance = null;
+							
+							/* check if class type of object is a inner class */
+							if ((o_structureElement.getValue().getSubType().getTypeName() != null) && (o_structureElement.getValue().getSubType().getTypeName().contains("$"))) {
+								/* get target class */
+								Class<?> o_targetClass = Class.forName(o_structureElement.getValue().getSubType().getTypeName());
+								
+								/* get instance of parent class */
+								Object o_parentClass = Class.forName(o_structureElement.getValue().getSubType().getTypeName().split("\\$")[0]).getDeclaredConstructor().newInstance();
+								boolean b_found = false;
+								
+								/* look for declared inner classes in parent class */
+								for (Class<?> o_subClass : o_parentClass.getClass().getDeclaredClasses()) {
+									/* inner class must match with Class<?> type parameter of dynamic generic list */
+									if (o_subClass == o_targetClass) {
+										b_found = true;
+										/* create new object instance of inner class, with help of parent class instance */
+										o_subtypeInstance = (FixedLengthRecord<?>) o_targetClass.getDeclaredConstructor(o_parentClass.getClass()).newInstance(o_parentClass);
+										break;
+									}
+								}
+								
+								/* throw exception if inner class could not be found */
+								if (!b_found) {
+									throw new ClassNotFoundException("Could not found inner class in scope '" + o_targetClass.getTypeName() + "'");
+								}
+							} else {
+								/* create new instance of inherited class */
+								o_subtypeInstance = (FixedLengthRecord<?>) o_structureElement.getValue().getSubType().getDeclaredConstructor().newInstance();
+							}
+							
+							/* read fields from substring line for subtype */
+							o_subtypeInstance = (FixedLengthRecord<?>) o_subtypeInstance.readFieldsFromString(s_value);
+
+							/* check unique fields of subtype instance */
+							if (o_subtypeInstance.Unique.size() > 0) {
+								/* iterate unique keys */
+								for (String s_unique : o_subtypeInstance.Unique) {
+									/* retrieve unique field value variable */
+									Object o_fieldValue = o_subtypeInstance.getFieldValue(s_unique);
+									/* unique key name for subtype */
+									String s_uniqueName = "__Subtype__" + s_unique;
+
+									/* empty field values in unique fields are allowed and can be skipped */
+									if (o_subtypeInstance.AllowEmptyUniqueFields) {
+										/* field value is null or an empty string */
+										if ((o_fieldValue == null) || (o_fieldValue.toString().trim().length() < 1)) {
+											continue;
+										}
+
+										try {
+											/* field value can be parsed to int and is equal to zero */
+											if (Integer.parseInt(o_fieldValue.toString()) == 0) {
+												continue;
+											}
+										} catch (Exception o_exc) {
+											/* nothing to do */
+										}
+									}
+
+									/* unique values are stored within temp map for current field */
+									if (this.a_uniqueTemp.containsKey(s_uniqueName)) {
+										/* check if field value already exists */
+										if ( this.a_uniqueTemp.get(s_uniqueName).contains(o_fieldValue) ) {
+											throw new IllegalStateException("field value for unique field '" + s_uniqueName.substring(11) + "' already exists");
+										} else {
+											/* add field value to unique temp list */
+											this.a_uniqueTemp.get(s_uniqueName).add(o_fieldValue);
+										}
+									} else { /* no values for this fields stored so far */
+										/* create unique temp list for field and add value */
+										this.a_uniqueTemp.put(s_uniqueName, new java.util.ArrayList<>());
+										this.a_uniqueTemp.get(s_uniqueName).add(o_fieldValue);
+									}
+								}
+							}
+							
+							/* add instance to generic list */
+							o_genericList.add(o_subtypeInstance);
+						}
+					}
+					
+					/* set generic list null if we have not found any sub-type elements */
+					if (o_genericList.size() == 0) {
+						o_genericList = null;
+					}
+				} else {
+					/* iterate expected amount of generic list field values */
+					for (int i = 0; i < o_structureElement.getValue().getSubTypeAmount(); i++) {
+						/* get generic list field value out of line parameter */
+						String s_value = p_s_line.substring(i_position, i_position + o_structureElement.getValue().getSubTypeKnownOverallLength());
+						/* increase position pointer */
+						i_position += o_structureElement.getValue().getSubTypeKnownOverallLength();
+
+						/* create instance of subtype object */
+						FixedLengthRecord<?> o_subtypeInstance = null;
+						
+						/* check if class type of object is a inner class */
+						if ((o_structureElement.getValue().getSubType().getTypeName() != null) && (o_structureElement.getValue().getSubType().getTypeName().contains("$"))) {
+							/* get target class */
+							Class<?> o_targetClass = Class.forName(o_structureElement.getValue().getSubType().getTypeName());
+							
+							/* get instance of parent class */
+							Object o_parentClass = Class.forName(o_structureElement.getValue().getSubType().getTypeName().split("\\$")[0]).getDeclaredConstructor().newInstance();
+							boolean b_found = false;
+							
+							/* look for declared inner classes in parent class */
+							for (Class<?> o_subClass : o_parentClass.getClass().getDeclaredClasses()) {
+								/* inner class must match with Class<?> type parameter of dynamic generic list */
+								if (o_subClass == o_targetClass) {
+									b_found = true;
+									/* create new object instance of inner class, with help of parent class instance */
+									o_subtypeInstance = (FixedLengthRecord<?>) o_targetClass.getDeclaredConstructor(o_parentClass.getClass()).newInstance(o_parentClass);
+									break;
+								}
+							}
+							
+							/* throw exception if inner class could not be found */
+							if (!b_found) {
+								throw new ClassNotFoundException("Could not found inner class in scope '" + o_targetClass.getTypeName() + "'");
+							}
+						} else {
+							/* create new instance of inherited class */
+							o_subtypeInstance = (FixedLengthRecord<?>) o_structureElement.getValue().getSubType().getDeclaredConstructor().newInstance();
+						}
+						
+						/* read fields from substring line for subtype */
+						o_subtypeInstance = (FixedLengthRecord<?>) o_subtypeInstance.readFieldsFromString(s_value);
+
+						/* check unique fields of subtype instance */
+						if (o_subtypeInstance.Unique.size() > 0) {
+							/* iterate unique keys */
+							for (String s_unique : o_subtypeInstance.Unique) {
+								/* retrieve unique field value variable */
+								Object o_fieldValue = o_subtypeInstance.getFieldValue(s_unique);
+								/* unique key name for subtype */
+								String s_uniqueName = "__Subtype__" + s_unique;
+
+								/* empty field values in unique fields are allowed and can be skipped */
+								if (o_subtypeInstance.AllowEmptyUniqueFields) {
+									/* field value is null or an empty string */
+									if ((o_fieldValue == null) || (o_fieldValue.toString().trim().length() < 1)) {
+										continue;
+									}
+
+									try {
+										/* field value can be parsed to int and is equal to zero */
+										if (Integer.parseInt(o_fieldValue.toString()) == 0) {
+											continue;
+										}
+									} catch (Exception o_exc) {
+										/* nothing to do */
+									}
+								}
+
+								/* unique values are stored within temp map for current field */
+								if (this.a_uniqueTemp.containsKey(s_uniqueName)) {
+									/* check if field value already exists */
+									if ( this.a_uniqueTemp.get(s_uniqueName).contains(o_fieldValue) ) {
+										throw new IllegalStateException("field value for unique field '" + s_uniqueName.substring(11) + "' already exists");
+									} else {
+										/* add field value to unique temp list */
+										this.a_uniqueTemp.get(s_uniqueName).add(o_fieldValue);
+									}
+								} else { /* no values for this fields stored so far */
+									/* create unique temp list for field and add value */
+									this.a_uniqueTemp.put(s_uniqueName, new java.util.ArrayList<>());
 									this.a_uniqueTemp.get(s_uniqueName).add(o_fieldValue);
 								}
-							} else { /* no values for this fields stored so far */
-								/* create unique temp list for field and add value */
-								this.a_uniqueTemp.put(s_uniqueName, new java.util.ArrayList<>());
-								this.a_uniqueTemp.get(s_uniqueName).add(o_fieldValue);
 							}
-                        }
-                    }
-                    
-                    /* add instance to generic list */
-                    o_genericList.add(o_subtypeInstance);
-                }
+						}
+						
+						/* add instance to generic list */
+						o_genericList.add(o_subtypeInstance);
+					}
+				}
 
                 /* clear all unique temp values for subtypes */
                 java.util.List<String> a_listRemoveSubtypes = new java.util.ArrayList<String>();
                 
                 for (String s_key : this.a_uniqueTemp.keySet()) {
-                	if (s_key.startsWith("__Subtype__")) {
+                	if ((s_key != null) && (s_key.startsWith("__Subtype__"))) {
                 		a_listRemoveSubtypes.add(s_key);
                 	}
                 }
@@ -652,7 +906,7 @@ public abstract class FixedLengthRecord<T> {
 					String s_class = o_class.getName();
 					
 					/* set null if we have a date/time object */
-					if ( (s_class.contentEquals("java.util.Date")) || (s_class.contentEquals("java.time.LocalDateTime")) || (s_class.contentEquals("java.time.LocalDate")) || (s_class.contentEquals("java.time.LocalTime")) ) {
+					if ( (s_class != null) && ( (s_class.contentEquals("java.util.Date")) || (s_class.contentEquals("java.time.LocalDateTime")) || (s_class.contentEquals("java.time.LocalDate")) || (s_class.contentEquals("java.time.LocalTime")) ) ) {
 																if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("field '" + o_structureElement.getValue().getField() + "(" + i_position + ".." + (i_position + o_structureElement.getValue().getLength()) + ")'\t\tunique '" + (this.Unique.contains(o_structureElement.getValue().getField()) ? "yes" : "no ") + "'\t\tvalue '" + s_value + "'\t\tconverted value 'null'");
 						
 						/* keep field value as 'null' */
@@ -670,7 +924,7 @@ public abstract class FixedLengthRecord<T> {
 				}
 				
 				/* check unique fields */
-				if (this.Unique.contains(o_structureElement.getValue().getField())) {
+				if ((this.Unique != null) && (this.Unique.contains(o_structureElement.getValue().getField()))) {
 					/* unique values are stored within temp map for current field */
 					if (this.a_uniqueTemp.containsKey(o_structureElement.getValue().getField())) {
 						/* check if field value already exists */
@@ -729,59 +983,70 @@ public abstract class FixedLengthRecord<T> {
                 /* get generic list as object */
                 Object o_foo = this.getFieldValue(s_field);
                 
-                /* check if generic list field value is set */
-                if (o_foo == null) {
+                /* check if generic list field value is set, but only force not null if we not have optional sub-types */
+                if ((o_foo == null) && (!this.OptionalSubTypes)) {
                 	throw new NullPointerException("Generic list field value is null");
                 }
                 
-                /* cast current object as list with unknown generic type */
-                @SuppressWarnings("unchecked")
-				java.util.List<FixedLengthRecord<?>> o_temp = (java.util.List<FixedLengthRecord<?>>)o_foo;
-                
-                /* iterate all configured amount of subtype instances */
-                for (int i = 0; i < o_structureElement.getValue().getSubTypeAmount(); i++) {
-                    /* check if we have an instance in our iteration */
-                    if (i < o_temp.size()) {
-                        /* add list element to current line of fixed length record */
-                        s_foo += o_temp.get(i).writeFieldsToString();
-                    } else { /* we have empty instances */
-                        /* create new instance of subtype in fixed length record class */
-                    	FixedLengthRecord<?> o_subtype = null;
-                		
-                		/* check if class type of object is a inner class */
-                		if (o_structureElement.getValue().getSubType().getTypeName().contains("$")) {
-                			/* get target class */
-                			Class<?> o_targetClass = Class.forName(o_structureElement.getValue().getSubType().getTypeName());
-                			
-                			/* get instance of parent class */
-                			Object o_parentClass = Class.forName(o_structureElement.getValue().getSubType().getTypeName().split("\\$")[0]).getDeclaredConstructor().newInstance();
-                			boolean b_found = false;
-                			
-                			/* look for declared inner classes in parent class */
-                			for (Class<?> o_subClass : o_parentClass.getClass().getDeclaredClasses()) {
-                				/* inner class must match with Class<?> type parameter of dynamic generic list */
-                				if (o_subClass == o_targetClass) {
-                					b_found = true;
-                					/* create new object instance of inner class, with help of parent class instance */
-                					o_subtype = (FixedLengthRecord<?>) o_targetClass.getDeclaredConstructor(o_parentClass.getClass()).newInstance(o_parentClass);
-                					break;
-                				}
-                			}
-                			
-                			/* throw exception if inner class could not be found */
-                			if (!b_found) {
-                				throw new ClassNotFoundException("Could not found inner class in scope '" + o_targetClass.getTypeName() + "'");
-                			}
-                		} else {
-                			/* create new instance of inherited class */
-                			o_subtype = (FixedLengthRecord<?>) o_structureElement.getValue().getSubType().getDeclaredConstructor().newInstance();
-                		}
+				/* continue if generic list is not null */
+				if (o_foo != null) {
+					/* cast current object as list with unknown generic type */
+					@SuppressWarnings("unchecked")
+					java.util.List<FixedLengthRecord<?>> o_temp = (java.util.List<FixedLengthRecord<?>>)o_foo;
+					
+					/* occurences how many times sub-type will be written to file line */
+					int i_amount = o_structureElement.getValue().getSubTypeAmount();
 
-                        /* add empty list element to current line of fixed length record */
-                        s_foo += o_subtype.writeFieldsToString();
-                    }
-                }
-            } else if (!net.forestany.forestj.lib.Helper.isStringEmpty(o_structureElement.getValue().getConstant())) { /* check if we have a constant field */
+					/* use dynamic amount of generic list if we have optional sub-types */
+					if (this.OptionalSubTypes) {
+						i_amount = o_temp.size();
+					}
+
+					/* iterate all configured amount of subtype instances */
+					for (int i = 0; i < i_amount; i++) {
+						/* check if we have an instance in our iteration */
+						if (i < o_temp.size()) {
+							/* add list element to current line of fixed length record */
+							s_foo += o_temp.get(i).writeFieldsToString();
+						} else { /* we have empty instances */
+							/* create new instance of subtype in fixed length record class */
+							FixedLengthRecord<?> o_subtype = null;
+							
+							/* check if class type of object is a inner class */
+							if ((o_structureElement.getValue().getSubType().getTypeName() != null) && (o_structureElement.getValue().getSubType().getTypeName().contains("$"))) {
+								/* get target class */
+								Class<?> o_targetClass = Class.forName(o_structureElement.getValue().getSubType().getTypeName());
+								
+								/* get instance of parent class */
+								Object o_parentClass = Class.forName(o_structureElement.getValue().getSubType().getTypeName().split("\\$")[0]).getDeclaredConstructor().newInstance();
+								boolean b_found = false;
+								
+								/* look for declared inner classes in parent class */
+								for (Class<?> o_subClass : o_parentClass.getClass().getDeclaredClasses()) {
+									/* inner class must match with Class<?> type parameter of dynamic generic list */
+									if (o_subClass == o_targetClass) {
+										b_found = true;
+										/* create new object instance of inner class, with help of parent class instance */
+										o_subtype = (FixedLengthRecord<?>) o_targetClass.getDeclaredConstructor(o_parentClass.getClass()).newInstance(o_parentClass);
+										break;
+									}
+								}
+								
+								/* throw exception if inner class could not be found */
+								if (!b_found) {
+									throw new ClassNotFoundException("Could not found inner class in scope '" + o_targetClass.getTypeName() + "'");
+								}
+							} else {
+								/* create new instance of inherited class */
+								o_subtype = (FixedLengthRecord<?>) o_structureElement.getValue().getSubType().getDeclaredConstructor().newInstance();
+							}
+
+							/* add empty list element to current line of fixed length record */
+							s_foo += o_subtype.writeFieldsToString();
+						}
+					}
+				}
+			} else if ((o_structureElement.getValue().getConstant()) != null && (o_structureElement.getValue().getConstant().length() > 0)) { /* check if we have a constant field */
 				/* add constant to line */
 				s_foo += o_structureElement.getValue().getConstant();
 			} else if (o_structureElement.getValue().getWriteTranspose() == null) {
@@ -799,7 +1064,8 @@ public abstract class FixedLengthRecord<T> {
 			}
 		}
 		
-		return s_foo;
+		/* remove line feed and carriage return from whole line */
+		return s_foo.replace("\n", "").replace("\r", "");
 	}
 	
 	/* Internal Classes */
@@ -825,6 +1091,7 @@ public abstract class FixedLengthRecord<T> {
 		private String s_groupSeparator;
 		private int i_subtypeAmount;
 		private Class<?> o_subtype;
+		private String s_subtypeRegex;
 		private int i_subtypeKnownOverallLength;
 		
 		/* Properties */
@@ -1081,6 +1348,24 @@ public abstract class FixedLengthRecord<T> {
 		}
 		
 		/**
+		 * get sub type regex recognition
+		 * 
+		 * @return String
+		 */
+		public String getSubTypeRegex() {
+			return this.s_subtypeRegex;
+		}
+		
+		/**
+		 * set sub type regex
+		 * 
+		 * @param p_s_value		string for sub-type recognition
+		 */
+		public void setSubTypeRegex(String p_s_value) {
+			this.s_subtypeRegex = p_s_value;
+		}
+
+		/**
 		 * get sub type known overall length
 		 * 
 		 * @return int
@@ -1106,7 +1391,7 @@ public abstract class FixedLengthRecord<T> {
 		 * @param p_s_constant			constant value within fixed length record
 		 */
 		public StructureElement(String p_s_constant) {
-			this(null, p_s_constant.length(), null, null, null, null, -1, -1, -1, null, null, p_s_constant, -1, null);
+			this(null, p_s_constant.length(), null, null, null, null, -1, -1, -1, null, null, p_s_constant, -1, null, null);
 		}
 		
 		/**
@@ -1116,7 +1401,7 @@ public abstract class FixedLengthRecord<T> {
 		 * @param p_i_length		length of field within flr
 		 */
 		public StructureElement(String p_s_field, int p_i_length) {
-			this(p_s_field, p_i_length, null, null, null, null, -1, -1, -1, null, null, null, -1, null);
+			this(p_s_field, p_i_length, null, null, null, null, -1, -1, -1, null, null, null, -1, null, null);
 		}
 		
 		/**
@@ -1127,7 +1412,20 @@ public abstract class FixedLengthRecord<T> {
 		 * @param p_o_subtype				subtype class
 		 */
 		public StructureElement(String p_s_field, int p_i_amountSubtypes, Class<?> p_o_subtype) {
-			this(p_s_field, 0, null, null, null, null, -1, -1, -1, null, null, null, p_i_amountSubtypes, p_o_subtype);
+			this(p_s_field, 0, null, null, null, null, -1, -1, -1, null, null, null, p_i_amountSubtypes, p_o_subtype, null);
+		}
+
+		/**
+		 * StructureElement constructor
+		 * 
+		 * @param p_s_field					name of field
+		 * @param p_i_maxAmountSubtypes		max. amount of subtype objects within flr
+		 * @param p_o_subtype				subtype class, which is now completely optional within fixed length record using subtype regex recognition for occurences
+		 * @param p_s_subtypeRegex			subtype regex recognition
+		 * 
+		 */
+		public StructureElement(String p_s_field, int p_i_maxAmountSubtypes, Class<?> p_o_subtype, String p_s_subtypeRegex) {
+			this(p_s_field, 0, null, null, null, null, -1, -1, -1, null, null, null, p_i_maxAmountSubtypes, p_o_subtype, p_s_subtypeRegex);
 		}
 				
 		/**
@@ -1139,7 +1437,7 @@ public abstract class FixedLengthRecord<T> {
 		 * @param p_del_writeTranspose			method delegate to transpose an object to a string value with a specific format
 		 */
 		public StructureElement(String p_s_field, int p_i_length, IReadDelegate p_del_readTranspose, IWriteDelegate p_del_writeTranspose) {
-			this(p_s_field, p_i_length, p_del_readTranspose, p_del_writeTranspose, null, null, -1, -1, -1, null, null, null, -1, null);
+			this(p_s_field, p_i_length, p_del_readTranspose, p_del_writeTranspose, null, null, -1, -1, -1, null, null, null, -1, null, null);
 		}
 		
 		/**
@@ -1151,7 +1449,7 @@ public abstract class FixedLengthRecord<T> {
 		 * @param p_del_writeFPNTranspose		method delegate to transpose a floating point number to a string value with a specific format
 		 */
 		public StructureElement(String p_s_field, int p_i_length, IReadFPNDelegate p_del_readFPNTranspose, IWriteFPNDelegate p_del_writeFPNTranspose) {
-			this(p_s_field, p_i_length, null, null, p_del_readFPNTranspose, p_del_writeFPNTranspose, -1, -1, -1, null, null, null, -1, null);
+			this(p_s_field, p_i_length, null, null, p_del_readFPNTranspose, p_del_writeFPNTranspose, -1, -1, -1, null, null, null, -1, null, null);
 		}
 		
 		/**
@@ -1164,7 +1462,7 @@ public abstract class FixedLengthRecord<T> {
 		 * @param p_i_positionDecimalSeparator		position of decimal separator within a floating point number string (read only)
 		 */
 		public StructureElement(String p_s_field, int p_i_length, IReadFPNDelegate p_del_readFPNTranspose, IWriteFPNDelegate p_del_writeFPNTranspose, int p_i_positionDecimalSeparator) {
-			this(p_s_field, p_i_length, null, null, p_del_readFPNTranspose, p_del_writeFPNTranspose, p_i_positionDecimalSeparator, -1, -1, null, null, null, -1, null);
+			this(p_s_field, p_i_length, null, null, p_del_readFPNTranspose, p_del_writeFPNTranspose, p_i_positionDecimalSeparator, -1, -1, null, null, null, -1, null, null);
 		}
 		
 		/**
@@ -1178,7 +1476,7 @@ public abstract class FixedLengthRecord<T> {
 		 * @param p_i_amountFractionDigits		amount of fractional digits for a floating point number (write only)
 		 */
 		public StructureElement(String p_s_field, int p_i_length, IReadFPNDelegate p_del_readFPNTranspose, IWriteFPNDelegate p_del_writeFPNTranspose, int p_i_amountDigits, int p_i_amountFractionDigits) {
-			this(p_s_field, p_i_length, null, null, p_del_readFPNTranspose, p_del_writeFPNTranspose, p_i_amountDigits, p_i_amountDigits, p_i_amountFractionDigits, null, null, null, -1, null);
+			this(p_s_field, p_i_length, null, null, p_del_readFPNTranspose, p_del_writeFPNTranspose, p_i_amountDigits, p_i_amountDigits, p_i_amountFractionDigits, null, null, null, -1, null, null);
 		}
 		
 		/**
@@ -1193,7 +1491,7 @@ public abstract class FixedLengthRecord<T> {
 		 * @param p_i_amountFractionDigits			amount of fractional digits for a floating point number (write only)
 		 */
 		public StructureElement(String p_s_field, int p_i_length, IReadFPNDelegate p_del_readFPNTranspose, IWriteFPNDelegate p_del_writeFPNTranspose, int p_i_positionDecimalSeparator, int p_i_amountDigits, int p_i_amountFractionDigits) {
-			this(p_s_field, p_i_length, null, null, p_del_readFPNTranspose, p_del_writeFPNTranspose, p_i_positionDecimalSeparator, p_i_amountDigits, p_i_amountFractionDigits, null, null, null, -1, null);
+			this(p_s_field, p_i_length, null, null, p_del_readFPNTranspose, p_del_writeFPNTranspose, p_i_positionDecimalSeparator, p_i_amountDigits, p_i_amountFractionDigits, null, null, null, -1, null, null);
 		}
 		
 		/**
@@ -1209,7 +1507,7 @@ public abstract class FixedLengthRecord<T> {
 		 * @param p_s_groupSeparator			string for group separator, use '$' for system settings
 		 */
 		public StructureElement(String p_s_field, int p_i_length, IReadFPNDelegate p_del_readFPNTranspose, IWriteFPNDelegate p_del_writeFPNTranspose, int p_i_amountDigits, int p_i_amountFractionDigits, String p_s_decimalSeparator, String p_s_groupSeparator) {
-			this(p_s_field, p_i_length, null, null, p_del_readFPNTranspose, p_del_writeFPNTranspose, p_i_amountDigits, p_i_amountDigits, p_i_amountFractionDigits, p_s_decimalSeparator, p_s_groupSeparator, null, -1, null);
+			this(p_s_field, p_i_length, null, null, p_del_readFPNTranspose, p_del_writeFPNTranspose, p_i_amountDigits, p_i_amountDigits, p_i_amountFractionDigits, p_s_decimalSeparator, p_s_groupSeparator, null, -1, null, null);
 		}
 		
 		/**
@@ -1226,7 +1524,7 @@ public abstract class FixedLengthRecord<T> {
 		 * @param p_s_groupSeparator			string for group separator, use '$' for system settings
 		 */
 		public StructureElement(String p_s_field, int p_i_length, IReadFPNDelegate p_del_readFPNTranspose, IWriteFPNDelegate p_del_writeFPNTranspose, int p_i_positionDecimalSeparator, int p_i_amountDigits, int p_i_amountFractionDigits, String p_s_decimalSeparator, String p_s_groupSeparator) {
-			this(p_s_field, p_i_length, null, null, p_del_readFPNTranspose, p_del_writeFPNTranspose, p_i_positionDecimalSeparator, p_i_amountDigits, p_i_amountFractionDigits, p_s_decimalSeparator, p_s_groupSeparator, null, -1, null);
+			this(p_s_field, p_i_length, null, null, p_del_readFPNTranspose, p_del_writeFPNTranspose, p_i_positionDecimalSeparator, p_i_amountDigits, p_i_amountFractionDigits, p_s_decimalSeparator, p_s_groupSeparator, null, -1, null, null);
 		}
 				
 		/**
@@ -1244,8 +1542,9 @@ public abstract class FixedLengthRecord<T> {
 		 * @param p_s_decimalSeparator				string for decimal separator, use '$' for system settings
 		 * @param p_s_groupSeparator				string for group separator, use '$' for system settings
 		 * @param p_s_constant						constant value within fixed length record
-		 * @param p_i_subTypeAmount					known amount of sub-type instances
+		 * @param p_i_subTypeAmount					known amount of sub-type instances or max. amount if sub-type regex recognition is used
 		 * @param p_o_subType						known class of sub-type instances
+		 * @param p_s_subTypeRegex					sub-type regex recognition
 		 */
 		public StructureElement(
 			String p_s_field,
@@ -1261,7 +1560,8 @@ public abstract class FixedLengthRecord<T> {
 			String p_s_groupSeparator,
 			String p_s_constant,
             int p_i_subTypeAmount,
-            Class<?> p_o_subType
+            Class<?> p_o_subType,
+			String p_s_subTypeRegex
 		) {
 			this.setField(p_s_field);
 			this.setLength(p_i_length);
@@ -1277,6 +1577,7 @@ public abstract class FixedLengthRecord<T> {
 			this.setConstant(p_s_constant);
 			this.setSubTypeAmount(p_i_subTypeAmount);
 			this.setSubType(p_o_subType);
+			this.setSubTypeRegex(p_s_subTypeRegex);
 			this.setSubTypeKnownOverallLength(-1);
 		}
 		
@@ -1288,8 +1589,8 @@ public abstract class FixedLengthRecord<T> {
 		 */
 		public boolean isEqual(StructureElement p_o_structureElement) {
 			if (
-				(this.getConstant().contentEquals(p_o_structureElement.getConstant())) &&
-				(this.getField().contentEquals(p_o_structureElement.getField())) &&
+				(((this.getConstant() == null) && (p_o_structureElement.getConstant() == null)) || ((this.getConstant() != null) && (this.getConstant().contentEquals(p_o_structureElement.getConstant())))) &&
+				(((this.getField() == null) && (p_o_structureElement.getField() == null)) || ((this.getField() != null) && (this.getField().contentEquals(p_o_structureElement.getField())))) &&
 				(this.getLength() == p_o_structureElement.getLength()) &&
 				(this.getPositionDecimalSeparator() == p_o_structureElement.getPositionDecimalSeparator()) &&
 				(this.getAmountDigits() == p_o_structureElement.getAmountDigits()) &&
@@ -1297,6 +1598,7 @@ public abstract class FixedLengthRecord<T> {
 				(this.getDecimalSeparator() == p_o_structureElement.getDecimalSeparator()) &&
 				(this.getGroupSeparator() == p_o_structureElement.getGroupSeparator()) &&
 				(this.getSubTypeAmount() == p_o_structureElement.getSubTypeAmount()) &&
+				(this.getSubTypeRegex() == p_o_structureElement.getSubTypeRegex()) &&
                 (((this.getSubType() == null) && (p_o_structureElement.getSubType() == null)) || ((this.getSubType() != null) && (this.getSubType().equals(p_o_structureElement.getSubType()))))
 			) {
 				return true;
@@ -1314,7 +1616,7 @@ public abstract class FixedLengthRecord<T> {
 			
 			for (java.lang.reflect.Field o_field : this.getClass().getDeclaredFields()) {
 				try {
-					if (o_field.getName().startsWith("this$")) {
+					if ((o_field.getName() == null) || (o_field.getName().startsWith("this$"))) {
 						continue;
 					}
 					

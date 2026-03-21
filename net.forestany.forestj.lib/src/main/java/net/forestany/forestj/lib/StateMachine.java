@@ -80,6 +80,14 @@ public class StateMachine {
 		p_s_returnCode = p_s_returnCode.toUpperCase();
 		p_s_toState = p_s_toState.toUpperCase();
     	
+		if (this.a_states == null) {
+			throw new IllegalArgumentException("State machine states are empty");
+		}
+
+		if (this.a_returnCodes == null) {
+			throw new IllegalArgumentException("State machine return codes are empty");
+		}
+
 		if (!this.a_states.contains(p_s_fromState)) {
     		throw new IllegalArgumentException("Invalid state '" + p_s_fromState + "', valid states are [" + net.forestany.forestj.lib.Helper.joinList(this.a_states, ',') + "]");
     	}
@@ -115,7 +123,7 @@ public class StateMachine {
 		/* look for state method in dynamic list */
 		for (StateMethodContainer o_stateMethodContainer : this.a_stateMethods) {
 			/* state method state must be equal to state parameter */
-			if (o_stateMethodContainer.getState().contentEquals(p_s_state.toUpperCase())) {
+			if ((o_stateMethodContainer.getState() != null) && (o_stateMethodContainer.getState().contentEquals(p_s_state.toUpperCase()))) {
 				/* execute state method shell with optional parameters */
 				return o_stateMethodContainer.getStateMethodInterface().MethodShell(p_a_param);
 			}
@@ -141,7 +149,7 @@ public class StateMachine {
 		
 		/* look if state of state method is in state dynamic list */
 		for (String s_state : this.a_states) {
-			if (o_stateMethodContainer.getState().contentEquals(s_state)) {
+			if ((o_stateMethodContainer.getState() != null) && (o_stateMethodContainer.getState().contentEquals(s_state))) {
 				b_found = true;
 			}
 		}
@@ -172,6 +180,14 @@ public class StateMachine {
 		
 		/* iterate each transition of state machine */
 		for (Transition o_transition : this.a_transitions) {
+			if (net.forestany.forestj.lib.Helper.isStringEmpty(o_transition.getFromState())) {
+				throw new IllegalStateException("From State in transition is null");
+			}
+
+			if (net.forestany.forestj.lib.Helper.isStringEmpty(o_transition.getReturnCode())) {
+				throw new IllegalStateException("Return Code in transition is null");
+			}
+
 			boolean currentStateMatches = o_transition.getFromState().equals(p_s_currentState.toUpperCase());
 			boolean conditionsMatch = o_transition.getReturnCode().equals(p_s_returnCode.toUpperCase());
 

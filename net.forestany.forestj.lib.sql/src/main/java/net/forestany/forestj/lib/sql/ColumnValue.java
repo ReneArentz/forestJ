@@ -37,6 +37,18 @@ public class ColumnValue extends QueryAbstract {
 	 * @throws IllegalArgumentException		could not parse java.util.Date to string or invalid database gateway
 	 */
 	public ColumnValue(Column p_o_column, Object p_o_value) throws IllegalArgumentException {
+		this(p_o_column, p_o_value, false);
+	}
+
+	/**
+	 * Constructor setting column and value with parameters
+	 * 
+	 * @param p_o_column					parameter column object
+	 * @param p_o_value						parmeter value object
+	 * @param p_b_markString				true - mark a string object as string, false - a string value could be interpreted as time with format 'hhmmss'
+	 * @throws IllegalArgumentException		could not parse java.util.Date to string or invalid database gateway
+	 */
+	public ColumnValue(Column p_o_column, Object p_o_value, boolean p_b_markString) throws IllegalArgumentException {
 		/* nothing to give to parent abstract class */
 		super(null);
 		
@@ -46,6 +58,12 @@ public class ColumnValue extends QueryAbstract {
 		this.s_table = p_o_column.s_table;
 		
 		this.o_column = p_o_column;
+
+		/* mark string value */
+		if ((p_b_markString) && (p_o_value instanceof String)) {
+			p_o_value = (Object)("___forestjStringValue___" + p_o_value.toString());
+		}
+
 		/* parse value with special method */
 		this.o_value = this.parseValue(p_o_value);
 	}

@@ -37,7 +37,11 @@ public class Dynamic {
  	 */
 	public int handlePostRequest() {
 		if (
-			(this.getSeed().getRequestHeader().getContentType().contentEquals(net.forestany.forestj.lib.net.http.PostType.HTMLATTACHMENTS.getContentType()))
+			(
+				(this.getSeed().getRequestHeader().getContentType() != null)
+				&&
+				(this.getSeed().getRequestHeader().getContentType().contentEquals(net.forestany.forestj.lib.net.http.PostType.HTMLATTACHMENTS.getContentType()))
+			)
 			||
 			(
 				(this.getSeed().getConfig().getMode() == net.forestany.forestj.lib.net.https.Mode.REST)
@@ -48,7 +52,11 @@ public class Dynamic {
 			/* post type 'multipart/form-data' or mode is REST and boundary value from request header content type is not empty */
 			return this.handlePostFileRequest();
 		} else if (
-			(this.getSeed().getRequestHeader().getContentType().contentEquals(net.forestany.forestj.lib.net.http.PostType.HTML.getContentType()))
+			(
+				(this.getSeed().getRequestHeader().getContentType() != null)
+				&&
+				(this.getSeed().getRequestHeader().getContentType().contentEquals(net.forestany.forestj.lib.net.http.PostType.HTML.getContentType()))
+			)
 			||
 			(
 				(this.getSeed().getConfig().getMode() == net.forestany.forestj.lib.net.https.Mode.REST)
@@ -289,11 +297,11 @@ public class Dynamic {
 			/* read so many bytes until we found '--' + boundary + '\n' */
 			s_foo2 = new String(Dynamic.readBytePartOfPostData(p_a_bytes, i_pointer, i_pointer + i_lengthFirstBoundary + 1), p_o_charset);
 
-			if (s_foo1.contentEquals(s_hyphen + p_s_boundary + new String(net.forestany.forestj.lib.net.https.Config.HTTP_LINEBREAK.getBytes(p_o_charset)))) {
+			if ( (s_foo1 != null) && (s_foo1.contentEquals(s_hyphen + p_s_boundary + new String(net.forestany.forestj.lib.net.https.Config.HTTP_LINEBREAK.getBytes(p_o_charset)))) ) {
 				/* we found that line break after first boundary is '\r\n' */
 				this.s_linebreak = new String(net.forestany.forestj.lib.net.https.Config.HTTP_LINEBREAK.getBytes(p_o_charset));
 				break;
-			} else if (s_foo2.contentEquals(s_hyphen + p_s_boundary + new String("\n".getBytes(p_o_charset)))) {
+			} else if ( (s_foo2 != null) && (s_foo2.contentEquals(s_hyphen + p_s_boundary + new String("\n".getBytes(p_o_charset)))) ) {
 				/* we found that line break after first boundary is "\n" */
 				this.s_linebreak = new String("\n".getBytes(p_o_charset));
 				break;
@@ -342,7 +350,7 @@ public class Dynamic {
 			s_foo = new String(Dynamic.readBytePartOfPostData(p_a_bytes, p_i_pointer, p_i_pointer + i_lengthFirstBoundary), p_o_charset);
 
 			/* return current pointer if it matches '--' + boundary + '\r\n' or '\n' */
-			if (s_foo.contentEquals(s_hyphen + p_s_boundary + s_lineBreak)) {
+			if ( (s_foo != null) && (s_foo.contentEquals(s_hyphen + p_s_boundary + s_lineBreak)) ) {
 				return p_i_pointer;
 			}
 			
@@ -352,7 +360,7 @@ public class Dynamic {
 				s_foo = new String(Dynamic.readBytePartOfPostData(p_a_bytes, p_i_pointer, p_i_pointer + i_lengthBoundary), p_o_charset);
 				
 				/* return current pointer if it matches '\r\n' or '\n' + '--' + boundary + '\r\n' or '\n' */
-				if (s_foo.contentEquals(s_lineBreak + s_hyphen + p_s_boundary + s_lineBreak)) {
+				if ( (s_foo != null) && (s_foo.contentEquals(s_lineBreak + s_hyphen + p_s_boundary + s_lineBreak)) ) {
 					return p_i_pointer;
 				}
 			}
@@ -363,7 +371,7 @@ public class Dynamic {
 				s_foo = new String(Dynamic.readBytePartOfPostData(p_a_bytes, p_i_pointer, p_i_pointer + i_lengthLastBoundary), p_o_charset);
 				
 				/* return current pointer if it matches '\r\n' or '\n' + '--' + boundary + '--' */
-				if (s_foo.contentEquals(s_lineBreak + s_hyphen + p_s_boundary + s_hyphen)) {
+				if ( (s_foo != null) && (s_foo.contentEquals(s_lineBreak + s_hyphen + p_s_boundary + s_hyphen)) ) {
 					return p_i_pointer;
 				}
 			}
@@ -408,7 +416,7 @@ public class Dynamic {
 			s_foo = new String(Dynamic.readBytePartOfPostData(p_a_bytes, p_i_pointer, p_i_pointer + s_lineBreak.length()), p_o_charset);
 			
 			/* we found that line break and return pointer position */
-			if (s_foo.contentEquals(s_lineBreak)) {
+			if ( (s_foo != null) && (s_foo.contentEquals(s_lineBreak)) ) {
 				return p_i_pointer;
 			}
 			
@@ -565,6 +573,11 @@ public class Dynamic {
 		String s_linebreak = this.getSeed().getConfig().getForestSeed().getLineBreak();
 		String s_forestAny = p_s_forestAny;
 		
+		/* check dynamic content command parameter */
+		if (s_forestAny == null) {
+			throw new NullPointerException("Parameter for dynamic content command is null");
+		}
+
 		/* remove all line breaks within our forestAny command */
 		s_forestAny = s_forestAny.replace(s_linebreak, "");
 		
@@ -769,6 +782,10 @@ public class Dynamic {
 		java.util.regex.Pattern o_regex = null;
 		java.util.regex.Matcher o_matcher = null;
 		
+		if (p_s_forestAnyDynamicCommand == null) {
+			throw new Exception("Error: ForestAny dynamic command parameter is null");
+		}
+
 		if (p_s_forestAnyDynamicCommand.startsWith("?")) { /* check for if construct */
 			o_regex = java.util.regex.Pattern.compile("^\\?\\s?\\(([a-zA-Z0-9\\[\\]]*)\\)\\s?\\{\\s?([a-zA-Z0-9\\s\\.\\_\\-\\+\\\\/\\[\\]\"\\{\\};:\\(\\)<>\\|%]*)\\s?\\}\\s?:\\s?\\{\\s?(([a-zA-Z0-9\\s\\.\\_\\-\\+\\\\/\\[\\]\"\\{\\};:\\(\\)<>\\|%]*))\\s?\\};$");
 			o_matcher = o_regex.matcher(p_s_forestAnyDynamicCommand);
@@ -967,7 +984,7 @@ public class Dynamic {
 	 */
 	private void handleIfConstruct(String p_s_expression, String p_s_if, String p_s_else, int p_i_line) throws Exception {
 		/* remove last semicolon from dynamic code for positive expression keyword (if) */
-		if (p_s_if.endsWith(";")) {
+		if ((p_s_if != null) && (p_s_if.endsWith(";"))) {
 			p_s_if = p_s_if.substring(0, p_s_if.length() - 1);
 		}
 		
@@ -1047,6 +1064,11 @@ public class Dynamic {
 	 * @throws Exception				any exception which occurred while handling dynamic content
 	 */
 	private void handleInclude(String p_s_includeFilePath, int p_i_line) throws Exception {
+		/* check parameter */
+		if (p_s_includeFilePath == null) {
+			throw new Exception("Error: Invalid include file path parameter 'null'");
+		}
+
 		/* '..' within include file path is not allowed */
 		if (p_s_includeFilePath.contains("..")) {
 			throw new Exception("Error: Invalid including resource path: '" + p_s_includeFilePath + "'");

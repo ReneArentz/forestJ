@@ -5,6 +5,17 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
 /**
+ * using java sockets with ports below 1024 under linux require some additonal configuration:
+ *     setcap 'cap_net_bind_service=+ep' /path/to/program
+ *     setcap -r /path/to/program
+ * 
+ *     /path/to/program would be /usr/bin/java
+ *     readlink -f /usr/bin/java
+ * 
+ *     but know that java binary is able to create any socket with standard ports if this is set permanently
+ */
+
+/**
  * class to test tcp tiny rest instance
  */
 class TCPTinyRestTest {
@@ -48,17 +59,13 @@ class TCPTinyRestTest {
 				
 				/* CLIENT */
 				
-				/* I don't know why exactly, but it is very important that for local test of TCP bidirectional on the same machine, truststore must be set right here with all trusting certificates */
-				System.setProperty("javax.net.ssl.trustStore", s_certificatesDirectory + "all/TrustStore-all.p12");
-				System.setProperty("javax.net.ssl.trustStorePassword", "123456");
-				
 				net.forestany.forestj.lib.net.https.Config o_clientConfig = new net.forestany.forestj.lib.net.https.Config("https://" + s_host, net.forestany.forestj.lib.net.https.Mode.REST, net.forestany.forestj.lib.net.sock.recv.ReceiveType.SOCKET);
 				net.forestany.forestj.lib.net.sock.task.send.https.TinyHttpsClient<javax.net.ssl.SSLSocket> o_clientTask = new net.forestany.forestj.lib.net.sock.task.send.https.TinyHttpsClient<javax.net.ssl.SSLSocket>( o_clientConfig );
 				
 				/* it is wrong to check reachability in this junit test, because server side is not online when creating socket instance for sending */
 				boolean b_checkReachability = false;
 				
-				net.forestany.forestj.lib.net.sock.send.SendTCP<javax.net.ssl.SSLSocket> o_socketSend = new net.forestany.forestj.lib.net.sock.send.SendTCP<javax.net.ssl.SSLSocket>(javax.net.ssl.SSLSocket.class, s_host, i_port, o_clientTask, 30000, b_checkReachability, 1, 25, 1500, java.net.InetAddress.getLocalHost().getHostAddress(), 0, null);
+				net.forestany.forestj.lib.net.sock.send.SendTCP<javax.net.ssl.SSLSocket> o_socketSend = new net.forestany.forestj.lib.net.sock.send.SendTCP<javax.net.ssl.SSLSocket>(javax.net.ssl.SSLSocket.class, s_host, i_port, o_clientTask, 30000, b_checkReachability, 1, 25, 1500, java.net.InetAddress.getLocalHost().getHostAddress(), 0, net.forestany.forestj.lib.Cryptography.createSSLContextWithTruststoreOnly(s_certificatesDirectory + "all/TrustStore-all.p12", "123456"));
 				o_clientConfig.setSendingSocketInstanceForHttpClient(o_socketSend);
 				
 				/* START SERVER + CLIENT */

@@ -743,6 +743,11 @@ public class MessageBox {
 		Class<?> o_targetType = null;
 		String s_type = p_s_type;
 		
+		/* return null if type parameter is null */
+		if (s_type == null) {
+			return null;
+		}
+
 		/* get class name and create new instance for return object by string object type value */
 		try {
 			/* map primitive types to class types */

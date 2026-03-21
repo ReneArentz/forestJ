@@ -23,6 +23,9 @@ forestJ framework will be released under the **GPLv3 license** and the **MIT lic
 
 ## Releases
 
+### fJ all 1.0.16 (stable)
+Major feature release. Hardened codebase agains null reference exceptions. Option to create an SSL context using certificates from both the keystore and the truststore, or just one of them. SQL unique field in Record class is not mandatory anymore and SQL statement instances are properly closed after queries. Introduction of subtypes for FixedLengthRecord structures that can themselves be FixedLengthRecords. New feature: Create and execute SQL inserts as batch or multiple inserts. *03/2026*
+
 ### fJ-sql-lib 1.0.4 (stable) + fJ-sql-mariadb 1.0.4 (stable) + fJ-sql-mssql 1.0.4 (stable) + fJ-sql-nosqlmdb 1.0.4 (stable) + fJ-sql-oracle 1.0.4 (stable) + fJ-sql-pgsql 1.0.4 (stable) + fJ-sql-sqlite 1.0.4 (stable)
 Added control of auto transaction within Record class. Bug fixed in connection with java.sql.Timestamp, java.sql.Date and java.sql.Time and fixed a null-pointer exception. *06/2025*
 
@@ -85,49 +88,92 @@ First release of the forestJ Framework 1.0.0 (stable). Provision of foundation f
 
 ## Tests
 
-* **Windows**
+* **Test Machine 2026 - Debian**
+	* Linux version 6.1.0-43-amd64 (debian-kernel@lists.debian.org) (gcc-12 (Debian 12.2.0-14+deb12u1) 12.2.0
+	* VSCodium Version: 1.105.17075
+  * OpenJDK Runtime Environment Temurin-21.0.10+7 (build 21.0.10+7-LTS)
+  * Apache Maven 3.8.7
+
+* **Test Machine 2025 - Windows**
 	* Microsoft Windows 11 Pro - OS Version: 10.0.26100 N/A Build 26100
 	* Eclipse 2024-03 (4.31.0)
   * OpenJDK Runtime Environment Corretto-21.0.5.11.1 (build 21.0.5+11-LTS)
   * Apache Maven 3.9.9
 
 * **Database**
-
-  * Linux - Linux version 6.1.0-33-amd64 (debian-kernel@lists.debian.org) (gcc-12 (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40) #1 SMP PREEMPT_DYNAMIC Debian 6.1.133-1 (2025-04-10)
-    * Mariadb
-      * 10.11.11-MariaDB-0+deb12u1
-    * MSSQL
-      * Microsoft SQL Server 2022 (RTM-CU16) (KB5048033) - 16.0.4165.4 (X64)
-    * Oracle
-      * Oracle Database 23ai Free Release 23.0.0.0.0 - Version 23.7.0.25.01
-    * PGSQL
-      * PostgreSQL 15.12 (Debian 15.12-0+deb12u2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
-    * MongoDB
-      * 7.0.19
-    * SQLite
-      * 3.48.0
-  * Windows - Microsoft Windows 11 Enterprise Evaluation - 10.0.22621 N/A Build 22621
-    * Mariadb
-      * 11.7.2-MariaDB
-    * MSSQL
-      * Microsoft SQL Server 2022 (RTM) - 16.0.1000.6 (X64)
-    * Oracle
-      * Oracle Database 21c Express Edition Release 21.0.0.0.0 - Version 21.3.0.0.0
-    * PGSQL
-      * PostgreSQL 17.4 on x86_64-windows, compiled by msvc-19.42.34436, 64-bit
-    * MongoDB
-      * 8.0.8
-    * SQLite
-      * 3.48.0
+  * **2026/03**
+    * Linux version 6.12.74+deb13+1-cloud-amd64 (debian-kernel@lists.debian.org) (x86_64-linux-gnu-gcc-14 (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP PREEMPT_DYNAMIC Debian 6.12.74-2 (2026-03-08)
+      * Mariadb
+        * 11.8.6-MariaDB-0+deb13u1
+      * MSSQL
+        * Microsoft SQL Server 2025 (RTM-CU3) (KB5077896) - 17.0.4025.3 (X64)
+      * Oracle
+        * Oracle AI Database 26ai Free Release 23.26.1.0.0 - Version 23.26.1.0.0
+      * PGSQL
+        * PostgreSQL 17.9 (Debian 17.9-0+deb13u1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+      * MongoDB
+        * 8.0.19
+      * SQLite
+        * 3.51.3
+    * Windows - Microsoft Windows 11 Pro - 10.0.26200 N/A Build 26200
+      * Mariadb
+        * 12.2.2-MariaDB
+      * MSSQL
+        * Microsoft SQL Server 2022 (RTM) - 16.0.1000.6 (X64)
+      * Oracle
+        * Oracle AI Database 26ai Free Release 23.26.1.0.0 - Version 23.26.1.0.0
+      * PGSQL
+        * PostgreSQL 18.3 on x86_64-windows, compiled by msvc-19.44.35223, 64-bit
+      * MongoDB
+        * 8.2.5
+      * SQLite
+        * 3.51.3
+  * **2025/04**
+    * Linux - Linux version 6.1.0-33-amd64 (debian-kernel@lists.debian.org) (gcc-12 (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40) #1 SMP PREEMPT_DYNAMIC Debian 6.1.133-1 (2025-04-10)
+      * Mariadb
+        * 10.11.11-MariaDB-0+deb12u1
+      * MSSQL
+        * Microsoft SQL Server 2022 (RTM-CU16) (KB5048033) - 16.0.4165.4 (X64)
+      * Oracle
+        * Oracle Database 23ai Free Release 23.0.0.0.0 - Version 23.7.0.25.01
+      * PGSQL
+        * PostgreSQL 15.12 (Debian 15.12-0+deb12u2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+      * MongoDB
+        * 7.0.19
+      * SQLite
+        * 3.48.0
+    * Windows - Microsoft Windows 11 Enterprise Evaluation - 10.0.22621 N/A Build 22621
+      * Mariadb
+        * 11.7.2-MariaDB
+      * MSSQL
+        * Microsoft SQL Server 2022 (RTM) - 16.0.1000.6 (X64)
+      * Oracle
+        * Oracle Database 21c Express Edition Release 21.0.0.0.0 - Version 21.3.0.0.0
+      * PGSQL
+        * PostgreSQL 17.4 on x86_64-windows, compiled by msvc-19.42.34436, 64-bit
+      * MongoDB
+        * 8.0.8
+      * SQLite
+        * 3.48.0
 
 * **FTP/SFTP**
 
-  * Linux - Linux version 6.1.0-33-amd64 (debian-kernel@lists.debian.org) (gcc-12 (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40) #1 SMP PREEMPT_DYNAMIC Debian 6.1.133-1 (2025-04-10)
-    * proftp
-      * 1.3.8+dfsg-4+deb12u4
+  * **2026/03**
+    * Linux version 6.12.74+deb13+1-cloud-amd64 (debian-kernel@lists.debian.org) (x86_64-linux-gnu-gcc-14 (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44) #1 SMP PREEMPT_DYNAMIC Debian 6.12.74-2 (2026-03-08)
+      * proftp
+        * 1.3.8.c+dfsg-4+deb13u1
+  * **2025/04**
+    * Linux - Linux version 6.1.0-33-amd64 (debian-kernel@lists.debian.org) (gcc-12 (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40) #1 SMP PREEMPT_DYNAMIC Debian 6.1.133-1 (2025-04-10)
+      * proftp
+        * 1.3.8+dfsg-4+deb12u4
 
 * **Mail**
 
-  * Linux - Linux version 6.1.0-33-amd64 (debian-kernel@lists.debian.org) (gcc-12 (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40) #1 SMP PREEMPT_DYNAMIC Debian 6.1.133-1 (2025-04-10)
-    * iRedMail
-      * 1.7.3
+  * **2026/03**
+    * Linux version 6.1.0-44-cloud-amd64 (debian-kernel@lists.debian.org) (gcc-12 (Debian 12.2.0-14+deb12u1) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40) #1 SMP PREEMPT_DYNAMIC Debian 6.1.164-1 (2026-03-09)
+      * iRedMail
+        * 1.7.4
+  * **2025/04**
+    * Linux - Linux version 6.1.0-33-amd64 (debian-kernel@lists.debian.org) (gcc-12 (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40) #1 SMP PREEMPT_DYNAMIC Debian 6.1.133-1 (2025-04-10)
+      * iRedMail
+        * 1.7.3

@@ -22,12 +22,11 @@ public class MailTest {
 			String s_currentDirectory = net.forestany.forestj.lib.io.File.getCurrentDirectory();
 			String s_testDirectory = s_currentDirectory + net.forestany.forestj.lib.io.File.DIR + "testMail" + net.forestany.forestj.lib.io.File.DIR;
 			String s_resourcesDirectory = s_currentDirectory + net.forestany.forestj.lib.io.File.DIR + "src" + net.forestany.forestj.lib.io.File.DIR + "test" + net.forestany.forestj.lib.io.File.DIR + "resources" + net.forestany.forestj.lib.io.File.DIR + "mail" + net.forestany.forestj.lib.io.File.DIR;
-		
-			MailLoginData o_mailLoginData = new MailLoginData(s_resourcesDirectory, "172.24.87.179", "172.24.87.179");
+			
+			MailLoginData o_mailLoginData = new MailLoginData(s_resourcesDirectory, "192.168.122.90", "192.168.122.90");
 			
 			runMail(s_testDirectory, s_resourcesDirectory, o_mailLoginData);
 		} catch (Exception o_exc) {
-			o_exc.printStackTrace();
 			fail(o_exc.getMessage());
 		}
 	}
@@ -149,6 +148,10 @@ public class MailTest {
 		
 		assertTrue(b_attachmentsFound, "no attachments found after reading all messages from pop3(s) inbox");
 		
+		/* modify attachment1.txt because of line break */
+		net.forestany.forestj.lib.io.File o_file = new net.forestany.forestj.lib.io.File(p_s_testDirectory + "attachment1.txt", false, "\n");
+		o_file.setFileContentFromList(o_file.getFileContentAsList());
+		
 		assertEquals(
 			net.forestany.forestj.lib.io.File.hashFile(p_s_resourcesDirectory +  "attachment1.txt", "SHA-256"),
 			net.forestany.forestj.lib.io.File.hashFile(p_s_testDirectory +  "attachment1.txt", "SHA-256"),
@@ -209,6 +212,10 @@ public class MailTest {
 		}
 		
 		assertTrue(b_attachmentsFound, "no attachments found after reading all messages from imap(s) inbox");
+		
+		/* modify attachment1.txt because of line break */
+		net.forestany.forestj.lib.io.File o_file = new net.forestany.forestj.lib.io.File(p_s_testDirectory + "attachment1.txt", false, "\n");
+		o_file.setFileContentFromList(o_file.getFileContentAsList());
 		
 		assertEquals(
 			net.forestany.forestj.lib.io.File.hashFile(p_s_resourcesDirectory +  "attachment1.txt", "SHA-256"),

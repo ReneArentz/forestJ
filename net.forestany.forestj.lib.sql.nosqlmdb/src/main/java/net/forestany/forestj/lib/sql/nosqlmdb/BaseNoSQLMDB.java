@@ -165,7 +165,7 @@ public class BaseNoSQLMDB extends Base {
 		Document o_tempResult = this.o_nosqlmdbDatabase.runCommand(new Document("ping", new org.bson.BsonInt64(1)));
 		
 		/* check if ping command returns '"ok" : 1.0' */
-		if ( (!o_tempResult.containsKey("ok")) && ((Double)o_tempResult.get("ok") != 1.0d) ) {
+		if ((o_tempResult == null) || ( (!o_tempResult.containsKey("ok")) && ((Double)o_tempResult.get("ok") != 1.0d) )) {
 			return false;
 		}
 		
@@ -263,6 +263,11 @@ public class BaseNoSQLMDB extends Base {
 	 * @throws IllegalAccessException	exception accessing column type, column name or just column value of current result set record
 	 */
 	public java.util.List<java.util.LinkedHashMap<String, Object>> fetchQuery(IQuery<?> p_o_sqlQuery, boolean p_b_autoTransaction) throws IllegalAccessException {
+		/* check parameter */
+		if (p_o_sqlQuery == null) {
+			throw new IllegalArgumentException("SQL query parameter is null");
+		}
+		
 		/* prepare return value */
 		java.util.List<java.util.LinkedHashMap<String, Object>> a_rows = new java.util.ArrayList<java.util.LinkedHashMap<String, Object>>();
 		
@@ -305,7 +310,7 @@ public class BaseNoSQLMDB extends Base {
 															if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("execute insert command");
 					this.o_result = this.o_nosqlmdbDatabase.runCommand(o_insertCommand);
 															if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("insert command executed");
-					if ( (!this.o_result.containsKey("ok")) && ((Double)this.o_result.get("ok") != 1.0d) ) {
+					if ((this.o_result == null) || ( (!this.o_result.containsKey("ok")) && ((Double)this.o_result.get("ok") != 1.0d) )) {
 						throw new Exception("Nosqlmdb command has no value for result key 'ok' or result key's value 'ok' is not '1.0'");
 					}
 					
@@ -322,7 +327,7 @@ public class BaseNoSQLMDB extends Base {
 																if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("execute command");
 						this.o_result = this.o_nosqlmdbDatabase.runCommand(o_command);
 																if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("command executed");
-						if ( (!this.o_result.containsKey("ok")) && ((Double)this.o_result.get("ok") != 1.0d) ) {
+						if ((this.o_result == null) || ( (!this.o_result.containsKey("ok")) && ((Double)this.o_result.get("ok") != 1.0d) )) {
 							throw new Exception("Nosqlmdb command has no value for result key 'ok' or result key's value 'ok' is not '1.0'");
 						}
 						
@@ -373,16 +378,23 @@ public class BaseNoSQLMDB extends Base {
 				throw new IllegalAccessException("Could not fetch row, issue get metadata and column information; " + o_exc.getMessage());
 			}
 		} else {
+			double d_ok = 0d;
+
 			try {
 				/* returning amount of affected rows by nosqlmdb commands (and last inserted id if insert statement) */
 				java.util.LinkedHashMap<String, Object> o_row = new java.util.LinkedHashMap<String, Object>();
 														if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("get affected rows");
-				double d_ok = Double.valueOf(this.o_result.get("ok").toString());
+				d_ok = Double.valueOf(this.o_result.get("ok").toString());
 				o_row.put("AffectedRows", (int)d_ok);
 														net.forestany.forestj.lib.Global.ilogFinest("affected rows: '" + o_row.get("AffectedRows") + "'");
 				
 				/* add last inserted id for result */
 				if (p_o_sqlQuery.getSqlType() == SqlType.INSERT) {
+															if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("get AffectedRows from 'n'");
+					int i_n = Integer.valueOf(this.o_result.get("n").toString());
+					o_row.put("AffectedRows", i_n);
+															net.forestany.forestj.lib.Global.ilogFinest("affected rows: '" + o_row.get("AffectedRows") + "'");
+					
 															net.forestany.forestj.lib.Global.ilogFinest("store LastInsertId '" + this.i_lastInsertId + "' in result row");
 					o_row.put("LastInsertId", this.i_lastInsertId);
 				}
@@ -390,7 +402,7 @@ public class BaseNoSQLMDB extends Base {
 				/* overwrite affected rows value for UPDATE or DELETE queries with 'n' result key value */ 
 				if ( (p_o_sqlQuery.getSqlType() == SqlType.UPDATE) || (p_o_sqlQuery.getSqlType() == SqlType.DELETE) ) {
 															if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("overwrite affected rows value for UPDATE or DELETE queries");
-					if (this.o_result.containsKey("n")) {
+					if ((this.o_result != null) && (this.o_result.containsKey("n"))) {
 						o_row.put("AffectedRows", (Integer)this.o_result.get("n"));
 																net.forestany.forestj.lib.Global.ilogFinest("affected rows: '" + o_row.get("AffectedRows") + "'");
 					}
@@ -401,6 +413,11 @@ public class BaseNoSQLMDB extends Base {
 			} catch (Exception o_exc) {
 				/* do not throw exception here, maybe only log this information */
 				System.err.println("Could not count affected rows or could not fetch last insert id; " + o_exc.getMessage());
+
+				/* because of exception, answer row was not added so we must do that again */
+				java.util.LinkedHashMap<String, Object> o_row = new java.util.LinkedHashMap<String, Object>();
+				o_row.put("AffectedRows", (int)d_ok);
+				a_rows.add(o_row);
 			}
 		}
 		
@@ -431,6 +448,11 @@ public class BaseNoSQLMDB extends Base {
 			/* column name */
 			String s_column = o_entry.getKey();
 			
+			/* check if column is null */
+			if (s_column == null) {
+				continue;
+			}
+
 			/* remove aggregation from name, which automatically was set as prefix in transpose class */
 			for (String s_aggregation : java.util.Arrays.asList("AVG_", "COUNT_", "MAX_", "MIN_", "SUM_")) {
 				if (s_column.startsWith(s_aggregation)) {
@@ -476,7 +498,7 @@ public class BaseNoSQLMDB extends Base {
 		
 												if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("command executed");
 		
-		if ( (!o_metadataResult.containsKey("ok")) && ((Double)o_metadataResult.get("ok") != 1.0d) ) {
+		if ((o_metadataResult == null) || ( (!o_metadataResult.containsKey("ok")) && ((Double)o_metadataResult.get("ok") != 1.0d) )) {
 			throw new Exception("Nosqlmdb command has no value for result key 'ok' or result key's value 'ok' is not '1.0'");
 		}
 		
@@ -492,8 +514,8 @@ public class BaseNoSQLMDB extends Base {
 		/* add meta data information about the join columns as well */
 		if (o_joinColumns != null) {
 			for (java.util.Map.Entry<String, Object> o_entry : o_joinColumns.entrySet()) {
-				/* skip '_id' column */
-				if (o_entry.getKey().contentEquals("_id")) {
+				/* skip null or '_id' column */
+				if ((o_entry.getKey() == null) || (o_entry.getKey().contentEquals("_id"))) {
 					continue;
 				}
 				
@@ -518,7 +540,7 @@ public class BaseNoSQLMDB extends Base {
 		/* get all column values on same bson document level */
 		for (java.util.Map.Entry<String, Object> o_entry : p_o_document.entrySet()) {
 			/* handle join fields */
-			if (o_entry.getKey().startsWith("join_")) {
+			if ((o_entry.getKey() != null) && (o_entry.getKey().startsWith("join_"))) {
 				for (java.util.Map.Entry<String, Object> o_joinEntry : ((Document)o_entry.getValue()).entrySet()) {
 					if (o_adjustedDocument == null) {
 						o_adjustedDocument = new Document(o_joinEntry.getKey(), o_joinEntry.getValue());
@@ -551,19 +573,19 @@ public class BaseNoSQLMDB extends Base {
 			
 			/* remove aggregation from name, which automatically was set as prefix in transpose class */
 			for (String s_aggregation : java.util.Arrays.asList("AVG_", "COUNT_", "MAX_", "MIN_", "SUM_")) {
-				if (s_column.startsWith(s_aggregation)) {
+				if ((s_column != null) && (s_column.startsWith(s_aggregation))) {
 					s_column = s_column.substring(s_aggregation.length());
 				}
 			}
 			
-			/* skip '_id' column */
-			if (s_column.contentEquals("_id")) {
+			/* skip null or '_id' column */
+			if ((s_column == null) || (s_column.contentEquals("_id"))) {
 				continue;
 			}
 			
 			String s_type = null;
 			
-			if (!p_o_collectionMetaData.containsKey(s_column + "Type")) {
+			if ((p_o_collectionMetaData == null) || (!p_o_collectionMetaData.containsKey(s_column + "Type"))) {
 				throw new Exception("Could not determine type for field '" + s_column + "'");
 			} else {
 				s_type = p_o_collectionMetaData.get(s_column + "Type").toString();
@@ -606,7 +628,7 @@ public class BaseNoSQLMDB extends Base {
 						java.time.LocalDateTime o_localDateTime = net.forestany.forestj.lib.Helper.fromDateTimeString(s_utcValue);
 						
 						/* check explicit for a time value, starting with '1970-01-01' */
-						if (s_utcValue.startsWith("1970-01-01")) { /* we have a time value */
+						if ((s_utcValue != null) && (s_utcValue.startsWith("1970-01-01"))) { /* we have a time value */
 							/* create java.sql.Time object with local date time's local time value */
 							if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("get column value with java.sql.Time.valueOf + java.util.Date.class.cast + net.forestany.forestj.lib.Helper.utilDateToISO8601UTC + net.forestany.forestj.lib.Helper.fromDateTimeString");
 							o_row.put(s_column, java.sql.Time.valueOf( dtf_time_instance.format(o_localDateTime.toLocalTime()) ));
@@ -677,11 +699,21 @@ public class BaseNoSQLMDB extends Base {
 	private Document getInsertCommandWithAutoIncrement(java.util.List<Document> p_a_insertCommands) throws Exception {
 		Document o_return = null;
 		String s_autoIncrementColumn = null;
-		
+		int i_amountOfValues = 0;
+
 		/* iterate each command and execute it, getting bson document as result */
 		for (Document o_command : p_a_insertCommands) {
-			if (o_command.containsKey("autoincrement_collection")) {
+			if ((o_command != null) && (o_command.containsKey("autoincrement_collection"))) {
 				s_autoIncrementColumn = o_command.get("autoincrement_column").toString();
+				
+				/* we may must set mutliple increment values for many inserts */
+				if ((s_autoIncrementColumn != null) && (s_autoIncrementColumn.contains("___fJ___"))) {
+					String[] a_autoIncrementColumnParts = s_autoIncrementColumn.split("___fJ___");
+					/* get column */
+					s_autoIncrementColumn = a_autoIncrementColumnParts[0];
+					/* get amount */
+					i_amountOfValues = Integer.parseInt(a_autoIncrementColumnParts[1]);
+				}
 				
 				/* create select query with autoincrement column, limit 1 and order by desc; fast query if there is an index on autoincrement column */
 				net.forestany.forestj.lib.sql.Query<net.forestany.forestj.lib.sql.Select> o_querySelectMaxAutoIncrement = new net.forestany.forestj.lib.sql.Query<net.forestany.forestj.lib.sql.Select>(BaseGateway.NOSQLMDB, SqlType.SELECT, o_command.get("autoincrement_collection").toString());
@@ -711,7 +743,7 @@ public class BaseNoSQLMDB extends Base {
 														if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("command executed");
 				
 				/* check if nosqlmdb command returns a valid result */
-				if ( (!o_autoIncrementResult.containsKey("ok")) && ((Double)o_autoIncrementResult.get("ok") != 1.0d) ) {
+				if ((o_autoIncrementResult == null) || ( (!o_autoIncrementResult.containsKey("ok")) && ((Double)o_autoIncrementResult.get("ok") != 1.0d) )) {
 					throw new Exception("Nosqlmdb command has no value for result key 'ok' or result key's value 'ok' is not '1.0'");
 				}
 				
@@ -737,10 +769,21 @@ public class BaseNoSQLMDB extends Base {
 				if ( (s_autoIncrementColumn != null) && (this.i_lastInsertId > 0) ) {
 					@SuppressWarnings("unchecked")
 					java.util.List<Document> a_insertDocuments = (java.util.List<Document>)o_command.get("documents");
+					int i = 0;
 					
 					for (Document o_document : a_insertDocuments) {
-						o_document.replace(s_autoIncrementColumn, "FORESTJ_REPLACE_AUTOINCREMENT_VALUE", this.i_lastInsertId);
+						if (i_amountOfValues <= 0) {
+							/* replace the one value in the document statement */
+							o_document.replace(s_autoIncrementColumn, "FORESTJ_REPLACE_AUTOINCREMENT_VALUE", this.i_lastInsertId++);
+						} else {
+							/* we must replace mutliple increment values for many inserts */
+							o_document.replace(s_autoIncrementColumn, "FORESTJ_REPLACE_AUTOINCREMENT_VALUE_" + (i++), this.i_lastInsertId++);
+
+						}
 					}
+
+					/* undo last increment, for the correct value in return rows */
+					this.i_lastInsertId--;
 					
 															if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass(o_command.toBsonDocument().toJson());
 				}

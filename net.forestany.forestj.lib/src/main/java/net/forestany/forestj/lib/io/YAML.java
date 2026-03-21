@@ -205,7 +205,7 @@ public class YAML {
 												net.forestany.forestj.lib.Global.ilogConfig("yaml schema file lines validated");
 		
 	    /* check if root is null */
-	    if ( (a_fileLines.size() == 0) || ((a_fileLines.size() == 1) && (a_fileLines.get(0).contentEquals("null"))) ) {
+	    if ( (a_fileLines.size() == 0) || ((a_fileLines.size() == 1) && (a_fileLines.get(0) != null) && (a_fileLines.get(0).contentEquals("null"))) ) {
 			throw new NullPointerException("Schema file is null");
 		}
 
@@ -328,7 +328,7 @@ public class YAML {
 												net.forestany.forestj.lib.Global.ilogConfig("yaml schema file validated");
 		
 	    /* check if root is null */
-	    if ( (a_fileLines.size() == 0) || ((a_fileLines.size() == 1) && (a_fileLines.get(0).contentEquals("null"))) ) {
+	    if ( (a_fileLines.size() == 0) || ((a_fileLines.size() == 1) && (a_fileLines.get(0) != null) && (a_fileLines.get(0).contentEquals("null"))) ) {
 			throw new NullPointerException("Schema file is null");
 		}
 
@@ -555,6 +555,10 @@ public class YAML {
 			i_line++;
 		}
 		
+		if (a_yamlLines == null || a_yamlLines.size() < 1 || a_yamlLines.get(0) == null) {
+			throw new NullPointerException("YAML lines content is null");
+		}
+
 		/* check if yaml document starts with '---' */
 		if (!a_yamlLines.get(0).contentEquals("---")) {
 			throw new IllegalArgumentException("YAML document must start with '---'");
@@ -584,6 +588,10 @@ public class YAML {
 		String s_key = "null";
 		String s_value = "null";
 		
+		if (p_a_lines == null || p_a_lines.size() < 1) {
+			throw new IllegalArgumentException("YAML lines parmeter is null or empty");
+		}
+
 		/* iterate each line */
 		for (int i_min = p_i_min; i_min < p_i_max; i_min++) {
 			/* read line into string */
@@ -592,7 +600,7 @@ public class YAML {
 													net.forestany.forestj.lib.Global.ilogFiner(s_line);
 			
 			/* check if line has any content */
-			if ( (s_line.length() == 0) || (s_line.contentEquals("...")) ) {
+			if ( (s_line == null) || (s_line.length() == 0) || (s_line.contentEquals("...")) ) {
 														net.forestany.forestj.lib.Global.ilogFiner("(" + (i_min + 1) + ")|NULL|");
 				
 				/* skip lines with no content */
@@ -630,7 +638,7 @@ public class YAML {
 					String s_lineTemp = p_a_lines.get(i_max);
 					
 					/* check if line has any content */
-					if ( (s_lineTemp.length() == 0) || (s_lineTemp.contentEquals("...")) ) {
+					if ( (s_lineTemp == null) || (s_lineTemp.length() == 0) || (s_lineTemp.contentEquals("...")) ) {
 						/* skip lines with no content */
 						continue;
 					}
@@ -814,7 +822,7 @@ public class YAML {
 						s_lineTemp = p_a_lines.get(i_tempMin);
 						
 						/* check if line has any content */
-					} while ( (s_lineTemp.length() == 0) || (s_lineTemp.contentEquals("...")) );
+					} while ( (s_lineTemp == null) || (s_lineTemp.length() == 0) || (s_lineTemp.contentEquals("...")) );
 					
 					int i = 0;
 					
@@ -955,6 +963,10 @@ public class YAML {
 		boolean b_collectionLevelFlag = false;
 		YAMLElement o_yamlOldCurrentLevelElement = null;
 		
+		if ( (p_a_lines == null) || (p_a_lines.size() == 0) ) {
+			throw new IllegalArgumentException("YAML lines parameter is null or empty");
+		}
+
 		/* store current level yaml element in variable */
 		YAMLElement o_yamlCurrentLevelElement = p_o_yamlElement;
 		
@@ -966,7 +978,7 @@ public class YAML {
 													net.forestany.forestj.lib.Global.ilogFiner(s_line);
 			
 			/* check if line has any content */
-			if ( (s_line.length() == 0) || (s_line.contentEquals("...")) ) {
+			if ( (s_line == null) || (s_line.length() == 0) || (s_line.contentEquals("...")) ) {
 														net.forestany.forestj.lib.Global.ilogFiner("(" + (i_min + 1) + ")|NULL|");
 				
 				/* skip lines with no content */
@@ -1004,7 +1016,7 @@ public class YAML {
 					String s_lineTemp = p_a_lines.get(i_max);
 					
 					/* check if line has any content */
-					if ( (s_lineTemp.length() == 0) || (s_lineTemp.contentEquals("...")) ) {
+					if ( (s_lineTemp == null) || (s_lineTemp.length() == 0) || (s_lineTemp.contentEquals("...")) ) {
 						/* skip lines with no content */
 						continue;
 					}
@@ -1221,7 +1233,7 @@ public class YAML {
 					String s_referenceName = null;
 					
 					for (String s_yamlReference : this.a_references) {
-						if (s_yamlReference.contentEquals(s_referenceValue)) {
+						if ((s_yamlReference != null) && (s_yamlReference.contentEquals(s_referenceValue))) {
 							s_referenceName = s_yamlReference;
 						}
 					}
@@ -1295,7 +1307,7 @@ public class YAML {
 													net.forestany.forestj.lib.Global.ilogFiner(this.printIndentation() + "array object before is finished after iteration");
 		}
 		
-		if (p_o_yamlElement.getName().contentEquals(o_yamlCurrentLevelElement.getName())) {
+		if ((p_o_yamlElement != null) && (p_o_yamlElement.getName() != null) && (p_o_yamlElement.getName().contentEquals(o_yamlCurrentLevelElement.getName()))) {
 													net.forestany.forestj.lib.Global.ilogFiner(this.printIndentation() + "return " + p_o_yamlElement.getName());
 			return p_o_yamlElement;
 		} else {
@@ -1312,6 +1324,10 @@ public class YAML {
 	 * @throws NullPointerException				value within yaml schema missing or min. amount not available
 	 */
 	private void parseYAMLSchemaElements(YAMLElement p_o_yamlSchemaElement) throws IllegalArgumentException, NullPointerException {
+		if (p_o_yamlSchemaElement == null) {
+			throw new NullPointerException("YAML schema element parameter is null");
+		}
+
 		if (p_o_yamlSchemaElement.getChildren().size() > 0) {
 			boolean b_array = false;
 			boolean b_object = false;
@@ -1323,7 +1339,11 @@ public class YAML {
 			 * or if we have "type": "object" and "properties" and no "items"
 			 */
 			for (YAMLElement o_yamlChild : p_o_yamlSchemaElement.getChildren()) {
-				if (o_yamlChild.getName().toLowerCase().contentEquals("type")) {
+				if ((o_yamlChild == null) || (o_yamlChild.getName() == null)) {
+					continue;
+				}
+				
+				if ((o_yamlChild.getValue() != null) && (o_yamlChild.getName().toLowerCase().contentEquals("type"))) {
 					String s_type = o_yamlChild.getValue();
 					
 					/* remove surrounded double quotes from value */
@@ -1347,8 +1367,10 @@ public class YAML {
 			
 			/* control result of check */
 			if ( (!b_array) && (!b_object) ) {
-				if ( (this.i_level == 0) && (!p_o_yamlSchemaElement.getName().toLowerCase().contentEquals("definitions")) && (!p_o_yamlSchemaElement.getName().toLowerCase().contentEquals("properties")) ) {
+				if ( (this.i_level == 0) && (p_o_yamlSchemaElement.getName() != null) && (!p_o_yamlSchemaElement.getName().toLowerCase().contentEquals("definitions")) && (!p_o_yamlSchemaElement.getName().toLowerCase().contentEquals("properties")) ) {
 					throw new IllegalArgumentException("YAML definition of element[definitions] or [properties] necessary on first level for [" + p_o_yamlSchemaElement.getName() + "]");
+				} else if (p_o_yamlSchemaElement.getName() == null) {
+					throw new NullPointerException("YAML schema element name is null");
 				}
 			} else if ( (b_array) && (b_properties) ) {
 				throw new IllegalArgumentException("YAML definition with type[array] cannot have [properties] at the same time");
@@ -1361,6 +1383,10 @@ public class YAML {
 			}
 			
 			for (YAMLElement o_yamlChild : p_o_yamlSchemaElement.getChildren()) {
+				if ((o_yamlChild == null) || (o_yamlChild.getName() == null)) {
+					continue;
+				}
+				
 				YAMLValueType e_yamlValueType;
 				
 				/* determine yaml value type */
@@ -1382,7 +1408,7 @@ public class YAML {
 						
 						/* iterate reference store */
 						for (String s_yamlReference : this.a_references) {
-							if (s_yamlReference.contentEquals(s_referenceValue)) {
+							if ((s_yamlReference != null) && (s_yamlReference.contentEquals(s_referenceValue))) {
 								s_referenceName = s_yamlReference;
 								break;
 							}
@@ -1477,9 +1503,13 @@ public class YAML {
 										java.util.List<YAMLElement> a_children = null;
 										
 										/* check if we are at 'root' level */
-										if ( (this.o_currentElement.getName().contentEquals("Root")) && (this.o_currentElement.getLevel() == 0) ) {
+										if ( (this.o_currentElement.getName() != null) && (this.o_currentElement.getName().contentEquals("Root")) && (this.o_currentElement.getLevel() == 0) ) {
 											/* look for 'properties' child */
 											for (YAMLElement o_yamlCurrentElementChild : this.o_currentElement.getChildren()) {
+												if ((o_yamlCurrentElementChild == null) || (o_yamlCurrentElementChild.getName() == null)) {
+													continue;
+												}
+
 												if (o_yamlCurrentElementChild.getName().toLowerCase().contentEquals("properties")) {
 													/* set 'properties' children as array to search for 'required' element */
 													a_children = o_yamlCurrentElementChild.getChildren();
@@ -1496,6 +1526,10 @@ public class YAML {
 										
 										/* iterate all children of current element to find required 'property' */
 										for (YAMLElement o_yamlCurrentElementChild : a_children) {
+											if ((o_yamlCurrentElementChild == null) || (o_yamlCurrentElementChild.getName() == null)) {
+												continue;
+											}
+
 											/* compare by property name */
 											if (o_yamlCurrentElementChild.getName().toLowerCase().contentEquals(s_requiredValue.toLowerCase())) {
 												b_requiredFound = true;
@@ -1544,7 +1578,7 @@ public class YAML {
 							/* if we have Root node as current element on level 0 with type 'array' and new child 'items', we must not add a new child, because of concurrent modificication of the for loop */
 							boolean b_handleRootItems = false;
 							
-							if ( (this.o_currentElement.getName().contentEquals("Root")) && (this.o_currentElement.getLevel() == 0) && (this.o_currentElement.getType().toLowerCase().contentEquals("array")) && (o_newYAMLElement.getName().toLowerCase().contentEquals("items")) ) {
+							if ( (this.o_currentElement.getName() != null) && (this.o_currentElement.getType() != null) && (this.o_currentElement.getName().contentEquals("Root")) && (this.o_currentElement.getLevel() == 0) && (this.o_currentElement.getType().toLowerCase().contentEquals("array")) && (o_newYAMLElement.getName() != null) && (o_newYAMLElement.getName().toLowerCase().contentEquals("items")) ) {
 								b_handleRootItems = true;
 							} else {
 								/* add new yaml element to current elements children */
@@ -1581,7 +1615,7 @@ public class YAML {
 							this.i_level--;
 							
 							/* between update of schema definitions, for the case that a definition is depending on another definition before */
-							if (this.o_currentElement.getName().toLowerCase().contentEquals("definitions")) {
+							if ((this.o_currentElement.getName() != null) && (this.o_currentElement.getName().toLowerCase().contentEquals("definitions"))) {
 								this.o_definitions = this.o_currentElement;
 							}
 							
@@ -1597,6 +1631,10 @@ public class YAML {
 							boolean b_found = false;
 							
 							for (YAMLElement o_yamlDefinition : this.o_definitions.getChildren()) {
+								if ((o_yamlDefinition == null) || (o_yamlDefinition.getName() == null)) {
+									continue;
+								}
+								
 								if (o_yamlDefinition.getName().contentEquals(s_reference)) {
 									if (o_yamlChild.getName().toLowerCase().contentEquals("items")) {
 										/* add reference to current element */
@@ -1640,7 +1678,7 @@ public class YAML {
 							String s_foo = o_yamlChild.getValue();
 							
 							/* check if type value ends with '[]' */
-							if (s_foo.endsWith("[]")) {
+							if ((s_foo != null) && (s_foo.endsWith("[]"))) {
 								/* delete '[]' from type value */
 								s_foo = s_foo.substring(0, s_foo.length() - 2);
 								
@@ -1672,7 +1710,7 @@ public class YAML {
 						}
 					} else if (o_yamlChild.getName().toLowerCase().contentEquals("mapping")) {
 						if (e_yamlValueType == YAMLValueType.String) {
-							if (o_yamlChild.getValue().contains(":")) { /* set mapping and mappingClass */
+							if ((o_yamlChild.getValue() != null) && (o_yamlChild.getValue().contains(":"))) { /* set mapping and mappingClass */
 								this.o_currentElement.setMapping(o_yamlChild.getValue().substring(0, o_yamlChild.getValue().indexOf(":")));
 								this.o_currentElement.setMappingClass(o_yamlChild.getValue().substring(o_yamlChild.getValue().indexOf(":") + 1, o_yamlChild.getValue().length()));
 							} else { /* set only mappingClass */
@@ -1683,7 +1721,7 @@ public class YAML {
 						}
 					} else if (o_yamlChild.getName().toLowerCase().contentEquals("maxitems")) {
 						if (e_yamlValueType == YAMLValueType.Integer) {
-							if (!this.o_currentElement.getType().toLowerCase().contentEquals("array")) {
+							if ((this.o_currentElement.getType() != null) && (!this.o_currentElement.getType().toLowerCase().contentEquals("array"))) {
 								throw new IllegalArgumentException("Invalid YAML restriction[" + o_yamlChild.getName() + "] for [" + this.o_currentElement.getName() + "] with type[" + o_yamlChild.getType() + "], type must be array");
 							}
 							
@@ -1693,7 +1731,7 @@ public class YAML {
 						}
 					} else if (o_yamlChild.getName().toLowerCase().contentEquals("minitems")) {
 						if (e_yamlValueType == YAMLValueType.Integer) {
-							if (!this.o_currentElement.getType().toLowerCase().contentEquals("array")) {
+							if ((this.o_currentElement.getType() != null) && (!this.o_currentElement.getType().toLowerCase().contentEquals("array"))) {
 								throw new IllegalArgumentException(this.o_currentElement.getName()+" - Invalid YAML restriction[" + o_yamlChild.getName() + "] for [" + this.o_currentElement.getName() + "] with type[" + o_yamlChild.getType() + "], type must be array");
 							}
 							
@@ -1754,7 +1792,7 @@ public class YAML {
 							String s_array = o_yamlChild.getValue();
 							
 							/* check if array is surrounded with '[' and ']' characters */
-							if ( (!s_array.startsWith("[")) || (!s_array.endsWith("]")) ) {
+							if ( (s_array == null) || (!s_array.startsWith("[")) || (!s_array.endsWith("]")) ) {
 								throw new IllegalArgumentException("Invalid format for YAML type[" + e_yamlValueType + "] for property[" + o_yamlChild.getName() + "] with value[" + o_yamlChild.getValue() + "], must start with '[' and end with ']'");
 							}
 							
@@ -1767,7 +1805,7 @@ public class YAML {
 							/* iterate each array value */
 							for (String s_arrayValue : a_arrayValues) {
 								/* check if array value is surrounded with quote characters */
-								if ( (s_arrayValue.startsWith(this.s_stringQuote)) && (s_arrayValue.endsWith(this.s_stringQuote)) ) {
+								if ( (s_arrayValue != null) && (s_arrayValue.startsWith(this.s_stringQuote)) && (s_arrayValue.endsWith(this.s_stringQuote)) ) {
 									/* remove surrounding quote characters */
 									s_arrayValue = s_arrayValue.substring(1, s_arrayValue.length() - 1);
 								}
@@ -1779,9 +1817,13 @@ public class YAML {
 								java.util.List<YAMLElement> a_children = null;
 								
 								/* check if we are at 'root' level */
-								if ( (this.o_currentElement.getName().contentEquals("Root")) && (this.o_currentElement.getLevel() == 0) ) {
+								if ( (this.o_currentElement.getName() != null) && (this.o_currentElement.getName().contentEquals("Root")) && (this.o_currentElement.getLevel() == 0) ) {
 									/* look for 'properties' child */
 									for (YAMLElement o_yamlCurrentElementChild : this.o_currentElement.getChildren()) {
+										if ((o_yamlCurrentElementChild == null) || (o_yamlCurrentElementChild.getName() == null)) {
+											continue;
+										}
+
 										if (o_yamlCurrentElementChild.getName().toLowerCase().contentEquals("properties")) {
 											/* set 'properties' children as array to search for 'required' element */
 											a_children = o_yamlCurrentElementChild.getChildren();
@@ -1798,6 +1840,10 @@ public class YAML {
 								
 								/* iterate all children of current element to find required 'property' */
 								for (YAMLElement o_yamlCurrentElementChild : a_children) {
+									if ((o_yamlCurrentElementChild == null) || (o_yamlCurrentElementChild.getName() == null)) {
+										continue;
+									}
+
 									/* compare by property name */
 									if (o_yamlCurrentElementChild.getName().toLowerCase().contentEquals(s_arrayValue.toLowerCase())) {
 										b_requiredFound = true;
@@ -1932,6 +1978,11 @@ public class YAML {
 		String s_yaml = "";
 		String s_yamlParentName = "";
 		
+		/* check schema element parameter */
+		if (p_o_yamlSchemaElement == null) {
+			throw new NullPointerException("YAML schema element parameter is null");
+		}
+
 		/* if type and mapping class are not set, we need at least a reference to continue */
 		if ( (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_yamlSchemaElement.getType())) && (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_yamlSchemaElement.getMappingClass())) ) {
 			if (p_o_yamlSchemaElement.getReference() == null) {
@@ -1943,6 +1994,11 @@ public class YAML {
 				/* set reference as current schema-element */
 				p_o_yamlSchemaElement = p_o_yamlSchemaElement.getReference();
 			}
+		}
+
+		/* check schema element name */
+		if (p_o_yamlSchemaElement.getName() == null) {
+			throw new NullPointerException("YAML schema element parameter name is null");
 		}
 		
 		/* check if type is set */
@@ -2087,8 +2143,8 @@ public class YAML {
 				s_yaml += this.printIndentation() + s_yamlParentName + ": " + this.s_lineBreak;
 			} else if (
 				(this.i_level > 0) ||
-				( (p_o_yamlSchemaElement.getReference() != null) && (p_o_yamlSchemaElement.getReference().getType().toLowerCase().contentEquals("object")) && (p_o_yamlSchemaElement.getLevel() == p_o_yamlSchemaElement.getReference().getLevel()) && (!p_o_yamlSchemaElement.getName().contentEquals("Root")) ) ||
-				( (p_o_yamlSchemaElement.getReference() == null) && (p_o_yamlSchemaElement.getChildren().size() == 1) && (p_o_yamlSchemaElement.getChildren().get(0).getName().toLowerCase().contentEquals("items")) && (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_yamlSchemaElement.getChildren().get(0).getType())) && (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_yamlSchemaElement.getChildren().get(0).getMappingClass())) )
+				( (p_o_yamlSchemaElement.getReference() != null) && (p_o_yamlSchemaElement.getReference().getType() != null) && (p_o_yamlSchemaElement.getReference().getType().toLowerCase().contentEquals("object")) && (p_o_yamlSchemaElement.getLevel() == p_o_yamlSchemaElement.getReference().getLevel()) && (!p_o_yamlSchemaElement.getName().contentEquals("Root")) ) ||
+				( (p_o_yamlSchemaElement.getReference() == null) && (p_o_yamlSchemaElement.getChildren().size() == 1) && (p_o_yamlSchemaElement.getChildren().get(0).getName() != null) && (p_o_yamlSchemaElement.getChildren().get(0).getName().toLowerCase().contentEquals("items")) && (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_yamlSchemaElement.getChildren().get(0).getType())) && (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_yamlSchemaElement.getChildren().get(0).getMappingClass())) )
 			) {
 				s_yaml += this.printIndentation() + p_o_yamlSchemaElement.getName() + ": " + this.s_lineBreak;
 			} else if (this.i_level <= 1) {
@@ -2107,6 +2163,10 @@ public class YAML {
 					throw new IllegalArgumentException("Schema-element[" + p_o_yamlSchemaElement.getName() + "] with schema-type[" + p_o_yamlSchemaElement.getType() + "] must have just one child");
 				}
 				
+				if (p_o_yamlSchemaElement.getChildren().get(0).getName() == null) {
+					throw new IllegalArgumentException("Schema-element[" + p_o_yamlSchemaElement.getName() + "] with schema-type[" + p_o_yamlSchemaElement.getType() + "] first child name is null");
+				}
+
 				if (!p_o_yamlSchemaElement.getChildren().get(0).getName().toLowerCase().contentEquals("items")) {
 					throw new IllegalArgumentException("Schema-element[" + p_o_yamlSchemaElement.getName() + "] with schema-type[" + p_o_yamlSchemaElement.getName() + "] must have one child with name[items]");
 				}
@@ -2132,6 +2192,10 @@ public class YAML {
 				/* check minItems and maxItems restrictions */
 				if (p_o_yamlSchemaElement.getRestrictions().size() > 0) {
 					for (YAMLRestriction o_yamlRestriction : p_o_yamlSchemaElement.getRestrictions()) {
+						if ((o_yamlRestriction == null) || (o_yamlRestriction.getName() == null)) {
+							continue;
+						}
+
 						if (o_yamlRestriction.getName().toLowerCase().contentEquals("minitems")) {
 							/* check minItems restriction */
 							if (a_objects.size() < o_yamlRestriction.getIntValue()) {
@@ -2226,7 +2290,7 @@ public class YAML {
 			/* check if yaml-element is required */
 			if (p_o_yamlSchemaElement.getRequired()) {
 				/* check if value is empty */
-				if ( (s_foo.contentEquals("")) || (s_foo.contentEquals("null")) || (s_foo.contentEquals(this.s_stringQuote + this.s_stringQuote)) ) {
+				if ( (s_foo == null) || (s_foo.contentEquals("")) || (s_foo.contentEquals("null")) || (s_foo.contentEquals(this.s_stringQuote + this.s_stringQuote)) ) {
 					throw new NullPointerException("'" + p_o_yamlSchemaElement.getName() + "' is required, but value[" + s_foo + "] is empty");
 				}
 			}
@@ -2334,9 +2398,19 @@ public class YAML {
 				/* handle usual arrays */
 				java.util.List<String> a_primtiveArray = new java.util.ArrayList<String>();
 				
+				/* check object type */
+				if (o_object.getClass().getTypeName() == null) {
+					throw new IllegalAccessException("Could not retrieve type of object of yaml element(" + p_o_yamlElement.getName() + ")");
+				}
+
 				/* get array type */
 				String s_arrayType = o_object.getClass().getTypeName().substring(0, o_object.getClass().getTypeName().length() - 2);
 				
+				/* if array type of object could not be retrieved, throw an exception */
+				if (s_arrayType == null) {
+					throw new IllegalAccessException("Could not retrieve array element type of object(" + o_object.getClass().getTypeName() + ")");
+				}
+
 				if ( (s_arrayType.contentEquals("boolean")) || (s_arrayType.contentEquals("java.lang.Boolean")) ) {
 					/* cast current field of parameter object as array */
 					boolean[] a_objects = (boolean[])o_object;
@@ -2409,7 +2483,7 @@ public class YAML {
 							a_primtiveArray.add( this.castStringFromObject(a_objects[i], p_o_yamlElement.getChildren().get(0).getType()) );
 						}
 					}
-				} else if ( (s_arrayType.contentEquals("int")) || (s_arrayType.contentEquals("java.lang.Integer")) ) {
+				} else if ( (s_arrayType.contentEquals("int")) || (s_arrayType.contentEquals("integer")) || (s_arrayType.contentEquals("java.lang.Integer")) ) {
 					/* cast current field of parameter object as array */
 					int[] a_objects = (int[])o_object;
 					
@@ -2530,6 +2604,10 @@ public class YAML {
 	private String castStringFromObject(Object p_o_object, String p_s_type) throws IllegalArgumentException {
 		String s_foo = "";
 		
+		if (p_s_type == null) {
+			p_s_type = "parameter_not_assigned";
+		}
+
 		if (p_o_object != null) {
 			p_s_type = p_s_type.toLowerCase();
 			
@@ -2614,6 +2692,30 @@ public class YAML {
 	 * @throws IllegalArgumentException		unknown restriction name, restriction error or invalid type from yaml element object
 	 */
 	private void checkRestriction(String p_s_value, YAMLRestriction p_o_yamlRestriction, YAMLElement p_o_yamlElement) throws IllegalArgumentException {
+		if (p_s_value == null) {
+			throw new IllegalArgumentException("Restriction error: parameter for value is null");
+		}
+		
+		if (p_o_yamlRestriction == null) {
+			throw new IllegalArgumentException("Restriction error: parameter for restriction is null");
+		}
+
+		if (p_o_yamlRestriction.getName() == null) {
+			throw new IllegalArgumentException("Restriction error: restriction name is null");
+		}
+
+		if (p_o_yamlElement == null) {
+			throw new IllegalArgumentException("Restriction error: parameter for element is null");
+		}
+
+		if (p_o_yamlElement.getName() == null) {
+			throw new IllegalArgumentException("Restriction error: element name is null");
+		}
+
+		if (p_o_yamlElement.getType() == null) {
+			throw new IllegalArgumentException("Restriction error: element type of '" + p_o_yamlElement.getName() + "' is null");
+		}
+		
 		String p_s_type = p_o_yamlElement.getType().toLowerCase();
 		
 		/* remove surrounding string quote characters */
@@ -2788,7 +2890,7 @@ public class YAML {
 												net.forestany.forestj.lib.Global.ilogFinest("validated yaml content lines");
 		
 	    /* check if root is null */
-	    if ( (a_fileLines.size() == 0) || ((a_fileLines.size() == 1) && (a_fileLines.get(0).contentEquals("null"))) ) {
+	    if ( (a_fileLines.size() == 0) || ((a_fileLines.size() == 1) && (a_fileLines.get(0) != null) && (a_fileLines.get(0).contentEquals("null"))) ) {
 			throw new NullPointerException("YAML file is null");
 		}
 
@@ -2839,6 +2941,21 @@ public class YAML {
 	private boolean validateAgainstSchemaRecursive(YAMLElement p_o_yamlDataElement, YAMLElement p_o_yamlSchemaElement) throws NullPointerException, IllegalArgumentException, java.text.ParseException, java.time.DateTimeException {
 		boolean b_return = true;
 		
+		/* check parameter */
+		if (p_o_yamlDataElement == null) {
+			throw new NullPointerException("Data-element is null");
+		}
+
+		/* check parameter */
+		if (p_o_yamlSchemaElement == null) {
+			throw new NullPointerException("Schema-element is null");
+		}
+
+		/* check if schema name is set */
+		if (p_o_yamlSchemaElement.getName() == null) {
+			throw new NullPointerException("Schema-element name is null");
+		}
+
 		/* if type and mapping class are not set, we need at least a reference to continue */
 		if ( (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_yamlSchemaElement.getType())) && (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_yamlSchemaElement.getMappingClass())) ) {
 			if (p_o_yamlSchemaElement.getReference() == null) {
@@ -2867,7 +2984,7 @@ public class YAML {
 				String s_objectType = p_o_yamlSchemaElement.getMappingClass();
 				
 				/* if object has reference, we create new object instance by mapping of reference */
-				if ( (p_o_yamlSchemaElement.getReference() != null) && (p_o_yamlSchemaElement.getReference().getType().toLowerCase().contentEquals("object")) ) {
+				if ( (p_o_yamlSchemaElement.getReference() != null) && (p_o_yamlSchemaElement.getReference().getType() != null) && (p_o_yamlSchemaElement.getReference().getType().toLowerCase().contentEquals("object")) ) {
 					s_objectType = p_o_yamlSchemaElement.getReference().getMappingClass();
 				}
 				
@@ -2933,6 +3050,10 @@ public class YAML {
 						int j = 0;
 						
 						for (int i = 0; i < p_o_yamlSchemaElement.getChildren().size(); i++) {
+							if (p_o_yamlSchemaElement.getChildren().get(i).getName() == null) {
+								continue;
+							}
+
 																	net.forestany.forestj.lib.Global.ilogFinest(this.printIndentation() + "compare schema-child-name(" + p_o_yamlSchemaElement.getChildren().get(i).getName() + ") with data-child-name(" + p_o_yamlDataElement.getChildren().get(j).getName() + ")");
 																	
 							/* check if current element in schema has data element by name, otherwise skip this element */
@@ -2970,6 +3091,10 @@ public class YAML {
 				if (p_o_yamlSchemaElement.getChildren().size() != 1) {
 					throw new IllegalArgumentException("Schema-array[" + p_o_yamlSchemaElement.getName() + "] with mapping[" + p_o_yamlSchemaElement.getMappingClass() + "] must have just one child");
 				}
+
+				if (p_o_yamlSchemaElement.getChildren().get(0).getName() == null) {
+					throw new IllegalArgumentException("Schema-array[" + p_o_yamlSchemaElement.getName() + "] with mapping[" + p_o_yamlSchemaElement.getMappingClass() + "] first child name is null");
+				}
 				
 				if (!p_o_yamlSchemaElement.getChildren().get(0).getName().toLowerCase().contentEquals("items")) {
 					throw new IllegalArgumentException("Schema-array[" + p_o_yamlSchemaElement.getName() + "] with mapping[" + p_o_yamlSchemaElement.getMappingClass() + "] must have one child with name[items]");
@@ -2991,6 +3116,10 @@ public class YAML {
 			/* check minItems and maxItems restrictions and save them for items check afterwards */
 			if (p_o_yamlSchemaElement.getRestrictions().size() > 0) {
 				for (YAMLRestriction o_yamlRestriction : p_o_yamlSchemaElement.getRestrictions()) {
+					if ((o_yamlRestriction == null) || (o_yamlRestriction.getName() == null)) {
+						continue;
+					}
+
 					if ( (o_yamlRestriction.getName().toLowerCase().contentEquals("minitems")) || (o_yamlRestriction.getName().toLowerCase().contentEquals("maxitems"))) {
 						a_restrictions.add(o_yamlRestriction);
 						s_amountProperty = p_o_yamlSchemaElement.getName();
@@ -3025,6 +3154,10 @@ public class YAML {
 					/* check minItems and maxItems restrictions */
 					if (a_restrictions.size() > 0) {
 						for (YAMLRestriction o_yamlRestriction : a_restrictions) {
+							if ((o_yamlRestriction == null) || (o_yamlRestriction.getName() == null)) {
+								continue;
+							}
+
 							if (o_yamlRestriction.getName().toLowerCase().contentEquals("minitems")) {
 								/* check minItems restriction */
 								if (p_o_yamlDataElement.getChildren().size() < o_yamlRestriction.getIntValue()) {
@@ -3071,6 +3204,10 @@ public class YAML {
 					/* check minItems and maxItems restrictions */
 					if (a_restrictions.size() > 0) {
 						for (YAMLRestriction o_yamlRestriction : a_restrictions) {
+							if ((o_yamlRestriction == null) || (o_yamlRestriction.getName() == null)) {
+								continue;
+							}
+
 							if (o_yamlRestriction.getName().toLowerCase().contentEquals("minitems")) {
 								/* check minItems restriction */
 								if (a_values.length < o_yamlRestriction.getIntValue()) {
@@ -3129,7 +3266,7 @@ public class YAML {
 			/* check if yaml-element is required */
 			if (p_o_yamlSchemaElement.getRequired()) {
 				/* check if value is empty */
-				if ( (p_o_yamlDataElement.getValue().contentEquals("")) || (p_o_yamlDataElement.getValue().contentEquals("null")) || (p_o_yamlDataElement.getValue().contentEquals("\"\"")) ) {
+				if ( (p_o_yamlDataElement.getValue() == null) || (p_o_yamlDataElement.getValue().contentEquals("")) || (p_o_yamlDataElement.getValue().contentEquals("null")) || (p_o_yamlDataElement.getValue().contentEquals("\"\"")) ) {
 					throw new NullPointerException("'" + p_o_yamlSchemaElement.getName() + "' is required, but value[" + p_o_yamlDataElement.getValue() + "] is empty");
 				}
 			}
@@ -3244,7 +3381,7 @@ public class YAML {
 												net.forestany.forestj.lib.Global.ilogFinest("validated yaml content lines");
 		
 	    /* check if root is null */
-	    if ( (a_fileLines.size() == 0) || ((a_fileLines.size() == 1) && (a_fileLines.get(0).contentEquals("null"))) ) {
+	    if ( (a_fileLines.size() == 0) || ((a_fileLines.size() == 1) && (a_fileLines.get(0) != null) && (a_fileLines.get(0).contentEquals("null"))) ) {
 			throw new NullPointerException("YAML file is null");
 		}
 
@@ -3302,6 +3439,16 @@ public class YAML {
 	 * @throws ClassNotFoundException		could not retrieve class by string class name
 	 */
 	private Object yamlDecodeRecursive(YAMLElement p_o_yamlDataElement, YAMLElement p_o_yamlSchemaElement, Object p_o_object) throws NullPointerException, IllegalArgumentException, NoSuchFieldException, NoSuchMethodException, java.lang.reflect.InvocationTargetException, IllegalAccessException, java.text.ParseException, java.time.DateTimeException, InstantiationException, ClassNotFoundException {
+		/* check parameter */
+		if (p_o_yamlDataElement == null) {
+			throw new NullPointerException("Data-element is null");
+		}
+
+		/* check parameter */
+		if (p_o_yamlSchemaElement == null) {
+			throw new NullPointerException("Schema-element is null");
+		}
+
 		/* if type and mapping class are not set, we need at least a reference to continue */
 		if ( (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_yamlSchemaElement.getType())) && (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_yamlSchemaElement.getMappingClass())) ) {
 			if (p_o_yamlSchemaElement.getReference() == null) {
@@ -3312,6 +3459,11 @@ public class YAML {
 			}
 		}
 		
+		/* check schema parameter name */
+		if (p_o_yamlSchemaElement.getName() == null) {
+			throw new NullPointerException("Schema-element name is null");
+		}
+
 		/* check if type is set */
 		if (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_yamlSchemaElement.getType())) {
 			throw new NullPointerException("Schema-element[" + p_o_yamlSchemaElement.getName() + "] has no type");
@@ -3333,7 +3485,7 @@ public class YAML {
 				String s_objectType = p_o_yamlSchemaElement.getMappingClass();
 				
 				/* if object has reference, we create new object instance by mapping of reference */
-				if ( (p_o_yamlSchemaElement.getReference() != null) && (p_o_yamlSchemaElement.getReference().getType().toLowerCase().contentEquals("object")) ) {
+				if ( (p_o_yamlSchemaElement.getReference() != null) && (p_o_yamlSchemaElement.getReference().getType() != null) && (p_o_yamlSchemaElement.getReference().getType().toLowerCase().contentEquals("object")) ) {
 					s_objectType = p_o_yamlSchemaElement.getReference().getMappingClass();
 				}
 				
@@ -3343,7 +3495,7 @@ public class YAML {
 				Object o_object = null;
 														
 				/* check if class type of object is a inner class */
-				if (s_objectType.contains("$")) {
+				if ((s_objectType != null) && (s_objectType.contains("$"))) {
 					/* get target class */
 					Class<?> o_targetClass = Class.forName(s_objectType);
 					
@@ -3445,6 +3597,16 @@ public class YAML {
 						int j = 0;
 						
 						for (int i = 0; i < p_o_yamlSchemaElement.getChildren().size(); i++) {
+							/* check schema element child name */
+							if (p_o_yamlSchemaElement.getChildren().get(i).getName() == null) {
+								throw new IllegalArgumentException("Schema-element[" + p_o_yamlSchemaElement.getName() + "] child #" + (i + 1) + " name is null");
+							}
+
+							/* check data element child name */
+							if (p_o_yamlDataElement.getChildren().get(j).getName() == null) {
+								throw new IllegalArgumentException("Data-element for schema-element[" + p_o_yamlSchemaElement.getName() + "] child #" + (j + 1) + " name is null");
+							}
+
 																	net.forestany.forestj.lib.Global.ilogFinest(this.printIndentation() + "compare schema-child-name(" + p_o_yamlSchemaElement.getChildren().get(i).getName() + ") with data-child-name(" + p_o_yamlDataElement.getChildren().get(j).getName() + ")");
 							
 							/* check if current element in schema has data element by name, otherwise skip this element */
@@ -3498,6 +3660,10 @@ public class YAML {
 					throw new IllegalArgumentException("Schema-array[" + p_o_yamlSchemaElement.getName() + "] with p_o_object[" + p_o_object.getClass().getTypeName() + "] must have just one child");
 				}
 				
+				if (p_o_yamlSchemaElement.getChildren().get(0).getName() == null) {
+					throw new IllegalArgumentException("Schema-array[" + p_o_yamlSchemaElement.getName() + "] with p_o_object[" + p_o_object.getClass().getTypeName() + "] first child name is null");
+				}
+
 				if (!p_o_yamlSchemaElement.getChildren().get(0).getName().toLowerCase().contentEquals("items")) {
 					throw new IllegalArgumentException("Schema-array[" + p_o_yamlSchemaElement.getName() + "] with p_o_object[" + p_o_object.getClass().getTypeName() + "] must have one child with name[items]");
 				}
@@ -3554,6 +3720,10 @@ public class YAML {
 			/* check minItems and maxItems restrictions and save them for items check afterwards */
 			if (p_o_yamlSchemaElement.getRestrictions().size() > 0) {
 				for (YAMLRestriction o_yamlRestriction : p_o_yamlSchemaElement.getRestrictions()) {
+					if ((o_yamlRestriction == null) || (o_yamlRestriction.getName() == null)) {
+						continue;
+					}
+					
 					if ( (o_yamlRestriction.getName().toLowerCase().contentEquals("minitems")) || (o_yamlRestriction.getName().toLowerCase().contentEquals("maxitems"))) {
 						a_restrictions.add(o_yamlRestriction);
 						s_amountProperty = p_o_yamlSchemaElement.getName();
@@ -3574,8 +3744,8 @@ public class YAML {
 				}
 				
 				/* important part for parsing collection which are not inline collection values in yaml document */
-				if ( (!p_o_yamlDataElement.getName().contentEquals("__ArrayObject__")) && (p_o_yamlSchemaElement.getName().toLowerCase().contentEquals("items")) ) {
-					if ( (p_o_yamlDataElement.getChildren().size() > 0) && (p_o_yamlDataElement.getChildren().get(0).getName().contentEquals("__ArrayObject__")) ) {
+				if ( (p_o_yamlDataElement.getName() != null) && (!p_o_yamlDataElement.getName().contentEquals("__ArrayObject__")) && (p_o_yamlSchemaElement.getName().toLowerCase().contentEquals("items")) ) {
+					if ( (p_o_yamlDataElement.getChildren().size() > 0) && (p_o_yamlDataElement.getChildren().get(0).getName() != null) && (p_o_yamlDataElement.getChildren().get(0).getName().contentEquals("__ArrayObject__")) ) {
 						p_o_yamlDataElement = p_o_yamlDataElement.getChildren().get(0);
 					}
 				}
@@ -3588,6 +3758,10 @@ public class YAML {
 					/* check minItems and maxItems restrictions */
 					if (a_restrictions.size() > 0) {
 						for (YAMLRestriction o_yamlRestriction : a_restrictions) {
+							if ((o_yamlRestriction == null) || (o_yamlRestriction.getName() == null)) {
+								continue;
+							}
+
 							if (o_yamlRestriction.getName().toLowerCase().contentEquals("minitems")) {
 								/* check minItems restriction */
 								if (p_o_yamlDataElement.getChildren().size() < o_yamlRestriction.getIntValue()) {
@@ -3645,6 +3819,10 @@ public class YAML {
 					/* check minItems and maxItems restrictions */
 					if (a_restrictions.size() > 0) {
 						for (YAMLRestriction o_yamlRestriction : a_restrictions) {
+							if ((o_yamlRestriction == null) || (o_yamlRestriction.getName() == null)) {
+								continue;
+							}
+
 							if (o_yamlRestriction.getName().toLowerCase().contentEquals("minitems")) {
 								/* check minItems restriction */
 								if (a_values.length < o_yamlRestriction.getIntValue()) {
@@ -3670,7 +3848,7 @@ public class YAML {
 						YAMLValueType e_yamlValueType = this.getYAMLValueType(s_value);
 						
 						/* check if YAML value types are matching between schema and data, if it is not 'null' */
-						if ( (e_yamlValueType != stringToYAMLValueType(p_o_yamlSchemaElement.getType())) && (e_yamlValueType != YAMLValueType.Null) && ( (s_value != null) && (!s_value.contentEquals("null")) ) ) {
+						if ( (e_yamlValueType != stringToYAMLValueType(p_o_yamlSchemaElement.getType())) && (e_yamlValueType != YAMLValueType.Null) && (s_value != null) && (!s_value.contentEquals("null")) ) {
 							throw new IllegalArgumentException("YAML schema type[" + stringToYAMLValueType(p_o_yamlSchemaElement.getType()) + "] does not match with data value type[" + e_yamlValueType + "] with value[" + s_value + "]");
 						}
 						
@@ -3729,7 +3907,7 @@ public class YAML {
 			/* check if yaml-element is required */
 			if (p_o_yamlSchemaElement.getRequired()) {
 				/* check if value is empty */
-				if ( (p_o_yamlDataElement.getValue().contentEquals("")) || (p_o_yamlDataElement.getValue().contentEquals("null")) || (p_o_yamlDataElement.getValue().contentEquals("\"\"")) ) {
+				if ( (p_o_yamlDataElement.getValue() == null) || (p_o_yamlDataElement.getValue().contentEquals("")) || (p_o_yamlDataElement.getValue().contentEquals("null")) || (p_o_yamlDataElement.getValue().contentEquals("\"\"")) ) {
 					throw new NullPointerException("'" + p_o_yamlSchemaElement.getName() + "' is required, but value[" + p_o_yamlDataElement.getValue() + "] is empty");
 				}
 			}
@@ -3763,6 +3941,10 @@ public class YAML {
 	private YAMLValueType stringToYAMLValueType(String p_s_yamlValueType) throws IllegalArgumentException {
 		p_s_yamlValueType = p_s_yamlValueType.toLowerCase();
 		
+		if (p_s_yamlValueType == null) {
+			p_s_yamlValueType = "parameter_not_assigned";
+		}
+
 		if (p_s_yamlValueType.contentEquals("string")) {
 			return YAMLValueType.String;
 		} else if (p_s_yamlValueType.contentEquals("number")) {
@@ -3810,7 +3992,7 @@ public class YAML {
 			
 			/* look for get-property-method for list object */
 			for (java.lang.reflect.Method o_methodSearch : p_o_object.getClass().getDeclaredMethods()) {
-				if (o_methodSearch.getName().contentEquals("get" + s_field)) {
+				if ((o_methodSearch.getName() != null) && (o_methodSearch.getName().contentEquals("get" + s_field))) {
 					o_method = o_methodSearch;
 					b_methodFound = true;
 				}
@@ -3879,7 +4061,7 @@ public class YAML {
 			
 			/* look for set-property-method of current parameter object value */
 			for (java.lang.reflect.Method o_methodSearch : p_o_object.getClass().getDeclaredMethods()) {
-				if (o_methodSearch.getName().contentEquals("set" + s_field)) {
+				if ((o_methodSearch.getName() != null) && (o_methodSearch.getName().contentEquals("set" + s_field))) {
 					o_method = o_methodSearch;
 					b_methodFound = true;
 				}
@@ -3929,7 +4111,7 @@ public class YAML {
 			
 			/* look for set-property-method of current parameter object value */
 			for (java.lang.reflect.Method o_methodSearch : p_o_object.getClass().getDeclaredMethods()) {
-				if (o_methodSearch.getName().contentEquals("set" + p_s_mapping)) {
+				if ((o_methodSearch.getName() != null) && (o_methodSearch.getName().contentEquals("set" + p_s_mapping))) {
 					o_method = o_methodSearch;
 					b_methodFound = true;
 				}
@@ -3977,7 +4159,7 @@ public class YAML {
 			
 			/* look for set-property-method of current parameter object value */
 			for (java.lang.reflect.Method o_methodSearch : p_o_object.getClass().getDeclaredMethods()) {
-				if (o_methodSearch.getName().contentEquals("set" + p_s_mapping)) {
+				if ((o_methodSearch.getName() != null) && (o_methodSearch.getName().contentEquals("set" + p_s_mapping))) {
 					o_method = o_methodSearch;
 					b_methodFound = true;
 				}
@@ -3987,9 +4169,19 @@ public class YAML {
 				throw new NoSuchMethodException("Method[" + "set" + p_s_mapping + "] does not exist for object: " + p_o_object.getClass().getTypeName());
 			}
 			
+			/* check object type */
+			if ((o_method.getParameterTypes()[0] == null) || (o_method.getParameterTypes()[0].getTypeName() == null)) {
+				throw new IllegalAccessException("Could not retrieve first parameter type of method(" + "set" + p_s_mapping + ")");
+			}
+
 			/* get primitive array type */
 			String s_primitiveArrayType = o_method.getParameterTypes()[0].getTypeName();
 			
+			/* if primitve array type of method could not be retrieved, throw an exception */
+			if (s_primitiveArrayType == null) {
+				throw new IllegalAccessException("Could not retrieve primitive array type of method(" + "set" + p_s_mapping + ")");
+			}
+
 			/* remove '[]' from type value */
 			if (s_primitiveArrayType.endsWith("[]")) {
 				s_primitiveArrayType = s_primitiveArrayType.substring(0, s_primitiveArrayType.length() - 2);
@@ -4048,7 +4240,7 @@ public class YAML {
 					}
 					
 					o_method.invoke(p_o_object, new Object[] {o_bar});
-				} else if ( (s_primitiveArrayType.contentEquals("int")) || (s_primitiveArrayType.contentEquals("java.lang.Integer")) ) {
+				} else if ( (s_primitiveArrayType.contentEquals("int")) || (s_primitiveArrayType.contentEquals("integer")) || (s_primitiveArrayType.contentEquals("java.lang.Integer")) ) {
 					int[] o_bar = new int[o_foo.size()];
 					
 					for (int i = 0; i < o_foo.size(); i++) {
@@ -4064,6 +4256,14 @@ public class YAML {
 					}
 					
 					o_method.invoke(p_o_object, new Object[] {o_bar});
+				} else if ( (s_primitiveArrayType.toLowerCase().contentEquals("string")) || (s_primitiveArrayType.contentEquals("java.lang.String")) ) {
+					String[] o_bar = new String[o_foo.size()];
+					
+					for (int i = 0; i < o_foo.size(); i++) {
+						o_bar[i] = (String)this.castObjectFromString( (o_foo.get(i) == null ? null : o_foo.get(i).toString()), s_primitiveArrayType );
+					}
+					
+					p_o_object.getClass().getDeclaredField(p_s_mapping).set(p_o_object, o_bar);
 				} else if (s_primitiveArrayType.contentEquals("java.util.Date")) {
 					java.util.Date[] o_bar = new java.util.Date[o_foo.size()];
 					
@@ -4111,9 +4311,19 @@ public class YAML {
 		} else {
 			/* call array field directly to set object array values */
 			try {
+				/* check object type */
+				if ((p_o_object.getClass().getDeclaredField(p_s_mapping) == null) || (p_o_object.getClass().getDeclaredField(p_s_mapping).getType().getTypeName() == null)) {
+					throw new IllegalAccessException("Could not retrieve type of object(" + p_s_mapping + ")");
+				}
+
 				/* get primitive array type */
 				String s_primitiveArrayType = p_o_object.getClass().getDeclaredField(p_s_mapping).getType().getTypeName();
-				
+			
+				/* if primitve array type of method could not be retrieved, throw an exception */
+				if (s_primitiveArrayType == null) {
+					throw new IllegalAccessException("Could not retrieve primitive array type of object(" + p_s_mapping + "|" + p_o_object.getClass().getDeclaredField(p_s_mapping).toString() + ")");
+				}
+
 				/* remove '[]' from type value */
 				if (s_primitiveArrayType.endsWith("[]")) {
 					s_primitiveArrayType = s_primitiveArrayType.substring(0, s_primitiveArrayType.length() - 2);
@@ -4172,7 +4382,7 @@ public class YAML {
 						}
 						
 						p_o_object.getClass().getDeclaredField(p_s_mapping).set(p_o_object, o_bar);
-					} else if ( (s_primitiveArrayType.contentEquals("int")) || (s_primitiveArrayType.contentEquals("java.lang.Integer")) ) {
+					} else if ( (s_primitiveArrayType.contentEquals("int")) || (s_primitiveArrayType.contentEquals("int")) || (s_primitiveArrayType.contentEquals("java.lang.Integer")) ) {
 						int[] o_bar = new int[o_foo.size()];
 						
 						for (int i = 0; i < o_foo.size(); i++) {
@@ -4185,6 +4395,14 @@ public class YAML {
 						
 						for (int i = 0; i < o_foo.size(); i++) {
 							o_bar[i] = (long)this.castObjectFromString( (o_foo.get(i) == null ? null : o_foo.get(i).toString()), s_primitiveArrayType );
+						}
+						
+						p_o_object.getClass().getDeclaredField(p_s_mapping).set(p_o_object, o_bar);
+					} else if ( (s_primitiveArrayType.toLowerCase().contentEquals("string")) || (s_primitiveArrayType.contentEquals("java.lang.String")) ) {
+						String[] o_bar = new String[o_foo.size()];
+						
+						for (int i = 0; i < o_foo.size(); i++) {
+							o_bar[i] = (String)this.castObjectFromString( (o_foo.get(i) == null ? null : o_foo.get(i).toString()), s_primitiveArrayType );
 						}
 						
 						p_o_object.getClass().getDeclaredField(p_s_mapping).set(p_o_object, o_bar);
@@ -4258,13 +4476,17 @@ public class YAML {
 		
 		/* check if value is not empty */
 		if (!p_s_value.contentEquals("")) {
+			if (p_s_type == null) {
+				p_s_type = "parameter_not_assigned";
+			}
+
 			p_s_type = p_s_type.toLowerCase();
 			
 			/* cast string value into object */
-			if (p_s_type.contentEquals("string")) {
+			if ( (p_s_type.contentEquals("string")) || (p_s_type.contentEquals("java.lang.string")) ) {
 				/* recognize date format ISO-8601 */
 				if (net.forestany.forestj.lib.Helper.isDateTime(p_s_value)) {
-					o_foo = net.forestany.forestj.lib.Helper.fromISO8601UTCToUtilDate(p_s_value);
+					o_foo = net.forestany.forestj.lib.Helper.fromISO8601UTC(p_s_value);
 				} else {
 					if (p_s_value.contains("\\" + this.s_stringQuote)) {
 						p_s_value = p_s_value.replaceAll("\\\\" + this.s_stringQuote, this.s_stringQuote);
@@ -4319,7 +4541,7 @@ public class YAML {
 				if (!p_s_value.contentEquals("null")) {
 					o_foo = Long.parseLong(p_s_value);
 				}
-			} else if ( (p_s_type.contentEquals("integer")) || (p_s_type.contentEquals("java.lang.integer")) ) {
+			} else if ( (p_s_type.contentEquals("int")) || (p_s_type.contentEquals("integer")) || (p_s_type.contentEquals("java.lang.integer")) ) {
 				if (!p_s_value.contentEquals("null")) {
 					o_foo = Integer.parseInt(p_s_value);
 				}
@@ -4666,7 +4888,7 @@ public class YAML {
 			String s_foo = this.printTabs() + "YAMLElement: ";
 			
 			for (java.lang.reflect.Field o_field : this.getClass().getDeclaredFields()) {
-				if (o_field.getName().startsWith("this$")) {
+				if ((o_field.getName() == null) || (o_field.getName().startsWith("this$"))) {
 					continue;
 				}
 				
@@ -4881,7 +5103,7 @@ public class YAML {
 			String s_foo = net.forestany.forestj.lib.io.File.NEWLINE + this.printTabs() + "\t" + "YAMLRestriction: ";
 			
 			for (java.lang.reflect.Field o_field : this.getClass().getDeclaredFields()) {
-				if (o_field.getName().startsWith("this$")) {
+				if ((o_field.getName() == null) || (o_field.getName().startsWith("this$"))) {
 					continue;
 				}
 				

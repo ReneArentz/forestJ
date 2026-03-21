@@ -263,7 +263,7 @@ public class TinyHttpsServer<T extends javax.net.ssl.SSLServerSocket> extends ne
 				/* iterate each source address which is allowed */
 				for (String s_allowAddress : this.getSeed().getConfig().getAllowSourceList()) {
 					if (net.forestany.forestj.lib.Helper.isIpv4Address(s_allowAddress)) { /* only one ipv4 address */
-						if (p_o_requestSourceAddress.getHostAddress().contentEquals(s_allowAddress)) {
+						if ((p_o_requestSourceAddress.getHostAddress() != null) && (p_o_requestSourceAddress.getHostAddress().contentEquals(s_allowAddress))) {
 							/* our incoming address matches an allowed address */
 							b_allowed = true;
 							break;
@@ -341,21 +341,21 @@ public class TinyHttpsServer<T extends javax.net.ssl.SSLServerSocket> extends ne
 					String s_cookie = this.getSeed().getRequestHeader().getCookie();
 					
 					/* check if our cookie key for session UUID is available, otherwise there will be an new session cookie and a new session file */
-					if (s_cookie.contains("forestAny-UUID")) {
+					if ((s_cookie != null) && (s_cookie.contains("forestAny-UUID"))) {
 						/* split cookie line with ';' to get our cookie key */
 						String[] a_cookieLine = s_cookie.split(";");
 						
 						/* iterate each cookie key value pair */
 						for (String s_foo : a_cookieLine) {
 							/* store our cookie key value pair */
-							if (s_foo.trim().startsWith("forestAny-UUID")) {
+							if ((s_foo != null) && (s_foo.trim().startsWith("forestAny-UUID"))) {
 								s_cookie = s_foo.trim();
 								break;
 							}
 						}
 						
 						/* check if it is really our cookie key value pair */
-						if (!s_cookie.contains("=")) {
+						if ((net.forestany.forestj.lib.Helper.isStringEmpty(s_cookie)) || (!s_cookie.contains("="))) {
 							net.forestany.forestj.lib.Global.ilogWarning(this.getSeed().getSalt() + " " + "400 Bad Request: cannot detect cookie key value pair with '='-sign in '" + this.getSeed().getRequestHeader().getCookie() + "'");
 							return 400;
 						}
@@ -364,7 +364,7 @@ public class TinyHttpsServer<T extends javax.net.ssl.SSLServerSocket> extends ne
 						String[] a_foo = s_cookie.split("=");
 						
 						/* cookie key name must be 'forestAny-UUID' */
-						if (!a_foo[0].contentEquals("forestAny-UUID")) {
+						if ((a_foo.length > 0) && (a_foo[0] != null) && (!a_foo[0].contentEquals("forestAny-UUID"))) {
 							net.forestany.forestj.lib.Global.ilogWarning(this.getSeed().getSalt() + " " + "400 Bad Request: expected cookie key 'forestAny-UUID' with UUID value, but received '" + s_cookie + "'");
 							return 400;
 						}
@@ -432,6 +432,12 @@ public class TinyHttpsServer<T extends javax.net.ssl.SSLServerSocket> extends ne
 			}
 		}
 		
+		/* check request header method not null */
+		if (this.getSeed().getRequestHeader().getMethod() == null) {
+			net.forestany.forestj.lib.Global.ilogWarning(this.getSeed().getSalt() + " " + "501 Not Implemented: HTTP method 'null'");
+			return 501;
+		}
+
 		/* handle HTTP methods with the predicted modes */
 		if ( (this.getSeed().getRequestHeader().getMethod().contentEquals("GET")) && ( (this.getSeed().getConfig().getMode() == net.forestany.forestj.lib.net.https.Mode.NORMAL) || (this.getSeed().getConfig().getMode() == net.forestany.forestj.lib.net.https.Mode.DYNAMIC) ) ) {
 													net.forestany.forestj.lib.Global.ilog(this.getSeed().getSalt() + " " + "GET '" + this.getSeed().getRequestHeader().getRequestPath() + "' from " + ((java.net.Socket)this.o_socket.getSocket()).getInetAddress().getHostAddress() + ":" + ((java.net.Socket)this.o_socket.getSocket()).getPort());
@@ -551,7 +557,7 @@ public class TinyHttpsServer<T extends javax.net.ssl.SSLServerSocket> extends ne
 			
 			/* check for valid extension of requested file */
 			for (java.util.Map.Entry<String, String> o_allowExtension : this.getSeed().getConfig().getAllowExtensionList().entrySet()) {
-				if (this.getSeed().getRequestHeader().getFile().endsWith(o_allowExtension.getKey())) {
+				if ((this.getSeed().getRequestHeader() != null) && (this.getSeed().getRequestHeader().getFile() != null) && (this.getSeed().getRequestHeader().getFile().endsWith(o_allowExtension.getKey()))) {
 					/* file extension found in allow list */
 					b_hasAllowedExtension = true;
 					s_extension = o_allowExtension.getKey();
@@ -615,12 +621,24 @@ public class TinyHttpsServer<T extends javax.net.ssl.SSLServerSocket> extends ne
 			return 500;
 		}
 		
+		/* check request header method not null */
+		if (this.getSeed().getRequestHeader().getMethod() == null) {
+			net.forestany.forestj.lib.Global.ilogWarning(this.getSeed().getSalt() + " " + "501 Not Implemented: HTTP method 'null'");
+			return 501;
+		}
+
 		if (this.getSeed().getRequestHeader().getMethod().contentEquals("GET")) { /* handling incoming SOAP GET request */
 			/* iterate each service port configuration from wsdl */
 			for (net.forestany.forestj.lib.net.https.soap.WSDL.ServicePort o_servicePort : this.getSeed().getConfig().getWSDL().getService().getServicePorts()) {
 				/* get address location from service port, removing 'https://' prefix and host part */
 				String s_addressLocation = o_servicePort.getAddressLocation().replace("https://", "").replace(this.getSeed().getRequestHeader().getHost(), "");
 				
+				/* check request header path not null */
+				if (this.getSeed().getRequestHeader().getRequestPath() == null) {
+					net.forestany.forestj.lib.Global.ilogWarning(this.getSeed().getSalt() + " " + "400 Bad Request: Invalid path 'null' within request in HTTP header");
+					return 400;
+				}
+
 				/* we only accept GET requests to wsdl or xsd schema file */
 				if ( (this.getSeed().getRequestHeader().getRequestPath().contentEquals(s_addressLocation + "?wsdl")) || (this.getSeed().getRequestHeader().getRequestPath().contentEquals(s_addressLocation + "?WSDL")) ) {
 					/* check if we want to get the wsdl configuration by '?wsdl' or '?WSDL' at the end of request path */
@@ -650,7 +668,7 @@ public class TinyHttpsServer<T extends javax.net.ssl.SSLServerSocket> extends ne
 			java.nio.charset.Charset o_inCharset = null;
 			
 			/* check for incoming charset value in request header */
-			if (this.getSeed().getRequestHeader().getContentType().contains("charset=")) {
+			if ((this.getSeed().getRequestHeader().getContentType() != null) && (this.getSeed().getRequestHeader().getContentType().contains("charset="))) {
 														net.forestany.forestj.lib.Global.ilogFine(this.getSeed().getSalt() + " " + "read charset encoding out of request header");
 				
 				/* read charset encoding out of request header */
@@ -715,7 +733,7 @@ public class TinyHttpsServer<T extends javax.net.ssl.SSLServerSocket> extends ne
 		    }
 		    
 		    /* first element must be 'Envelope' */
-		    if (!a_xmlTags.get(0).startsWith("<Envelope")) {
+		    if ((a_xmlTags.size() > 0) && (!a_xmlTags.get(0).startsWith("<Envelope"))) {
 		    	net.forestany.forestj.lib.Global.ilogWarning(this.getSeed().getSalt() + " " + "400 Bad Request: SOAP request must start with 'Envelope'-tag");
 				return 400;
 		    }
@@ -724,7 +742,7 @@ public class TinyHttpsServer<T extends javax.net.ssl.SSLServerSocket> extends ne
 		    
 		    /* look for next 'Body'-tag within 'Envelope' */
 		    for (int i = 1; i < a_xmlTags.size(); i++) {
-		    	if (a_xmlTags.get(i).contentEquals("<Body>")) {
+		    	if ((a_xmlTags.size() > i) && (a_xmlTags.get(i).contentEquals("<Body>"))) {
 		    		i_bodyTag = i;
 		    		break;
 		    	}
@@ -741,7 +759,7 @@ public class TinyHttpsServer<T extends javax.net.ssl.SSLServerSocket> extends ne
 	    	
 	    	/* look for 'Body'-ending-tag */
 	    	for (int i = i_bodyTag + 1; i < a_xmlTags.size(); i++) {
-				if (a_xmlTags.get(i).contentEquals("</Body>")) {
+				if ((a_xmlTags.size() > i) && (a_xmlTags.get(i).contentEquals("</Body>"))) {
 					i_bodyEnd = i;
 					break;
 				}
@@ -757,11 +775,13 @@ public class TinyHttpsServer<T extends javax.net.ssl.SSLServerSocket> extends ne
 		    	
 	    	/* gather all SOAP xml tags in our list */
 	    	for (int i = i_bodyTag + 1; i < i_bodyEnd; i++) {
-	    		a_soapBodyXmlTags.add(a_xmlTags.get(i));
+	    		if (a_xmlTags.size() > i) {
+					a_soapBodyXmlTags.add(a_xmlTags.get(i));
+				}
 	    	}
 	    	
 	    	/* clean up xml namespace stuff */
-	    	if (a_soapBodyXmlTags.get(0).contains(" xmlns:")) {
+	    	if ((a_xmlTags.size() > 0) && (a_soapBodyXmlTags.get(0).contains(" xmlns:"))) {
 	    		String s_namespaceInitial = a_soapBodyXmlTags.get(0).substring(1 , a_soapBodyXmlTags.get(0).indexOf(":"));
 				String s_namespace = a_soapBodyXmlTags.get(0).substring(a_soapBodyXmlTags.get(0).indexOf(s_namespaceInitial + "=\"") + s_namespaceInitial.length() + 2);
 				s_namespace = s_namespace.substring(0, s_namespace.indexOf("\""));
@@ -770,51 +790,67 @@ public class TinyHttpsServer<T extends javax.net.ssl.SSLServerSocket> extends ne
 				this.s_soapNamespaceInitial = s_namespaceInitial;
 				
 				/* check if target namespace from request matches our target namespace in our wsdl xsd schema */
-				if (!this.getSeed().getConfig().getWSDL().getSchema().getTargetNamespace().contentEquals(this.s_soapTargetNamespace)) {
-					net.forestany.forestj.lib.Global.ilogWarning(this.getSeed().getSalt() + " " + "400 Bad Request: received SOAP target namespace '" + this.s_soapTargetNamespace + "' does not match with wsdl xsd schema target namespace '" + this.getSeed().getConfig().getWSDL().getSchema().getTargetNamespace() + "'");
+				try {
+					if (!this.getSeed().getConfig().getWSDL().getSchema().getTargetNamespace().contentEquals(this.s_soapTargetNamespace)) {
+						net.forestany.forestj.lib.Global.ilogWarning(this.getSeed().getSalt() + " " + "400 Bad Request: received SOAP target namespace '" + this.s_soapTargetNamespace + "' does not match with wsdl xsd schema target namespace '" + this.getSeed().getConfig().getWSDL().getSchema().getTargetNamespace() + "'");
+						return 400;
+					}
+				} catch (Exception o_exc) {
+					net.forestany.forestj.lib.Global.ilogWarning(this.getSeed().getSalt() + " " + "400 Bad Request: received SOAP target namespace '" + this.s_soapTargetNamespace + "' does not match with wsdl xsd schema target namespace; " + o_exc.getMessage());
 					return 400;
 				}
 				
 	    		/* remove xmlns attribute */
-	    		if ( a_soapBodyXmlTags.get(0).substring( a_soapBodyXmlTags.get(0).indexOf(" xmlns:") + 7 ).indexOf(" ") >= 0) {
-	    			String s_one = a_soapBodyXmlTags.get(0).substring(0, a_soapBodyXmlTags.get(0).indexOf(" xmlns:"));
-	    			String s_two = a_soapBodyXmlTags.get(0).substring( a_soapBodyXmlTags.get(0).indexOf(" xmlns:") + 7 );
-	    			
-	    			a_soapBodyXmlTags.set(0, s_one + s_two.substring(s_two.indexOf(" ")));
-	    		} else {
-	    			String s_one = a_soapBodyXmlTags.get(0).substring(0, a_soapBodyXmlTags.get(0).indexOf(" xmlns:"));
-	    			String s_two = a_soapBodyXmlTags.get(0).substring( a_soapBodyXmlTags.get(0).indexOf(" xmlns:") );
-	    			
-	    			a_soapBodyXmlTags.set(0, s_one + s_two.substring(s_two.indexOf(">")));
-	    		}
+				if (a_soapBodyXmlTags.size() > 0) {
+					if (a_soapBodyXmlTags.get(0).substring( a_soapBodyXmlTags.get(0).indexOf(" xmlns:") + 7 ).indexOf(" ") >= 0) {
+						String s_one = a_soapBodyXmlTags.get(0).substring(0, a_soapBodyXmlTags.get(0).indexOf(" xmlns:"));
+						String s_two = a_soapBodyXmlTags.get(0).substring( a_soapBodyXmlTags.get(0).indexOf(" xmlns:") + 7 );
+						
+						a_soapBodyXmlTags.set(0, s_one + s_two.substring(s_two.indexOf(" ")));
+					} else {
+						String s_one = a_soapBodyXmlTags.get(0).substring(0, a_soapBodyXmlTags.get(0).indexOf(" xmlns:"));
+						String s_two = a_soapBodyXmlTags.get(0).substring( a_soapBodyXmlTags.get(0).indexOf(" xmlns:") );
+						
+						a_soapBodyXmlTags.set(0, s_one + s_two.substring(s_two.indexOf(">")));
+					}
+				}
 	    		
 	    		for (int i = 0; i < a_soapBodyXmlTags.size(); i++) {
-	    			a_soapBodyXmlTags.set(i, a_soapBodyXmlTags.get(i).replace("<" + s_namespaceInitial + ":", "<").replace("</" + s_namespaceInitial + ":", "</"));
-	    		}
-	    	} else if (a_soapBodyXmlTags.get(0).contains(" xmlns=")) {
+					if (a_soapBodyXmlTags.size() > i) {
+	    				a_soapBodyXmlTags.set(i, a_soapBodyXmlTags.get(i).replace("<" + s_namespaceInitial + ":", "<").replace("</" + s_namespaceInitial + ":", "</"));
+					}
+				}
+	    	} else if ((a_soapBodyXmlTags.size() > 0) && (a_soapBodyXmlTags.get(0).contains(" xmlns="))) {
 	    		String s_namespace = a_soapBodyXmlTags.get(0).substring(a_soapBodyXmlTags.get(0).indexOf(" xmlns=\"") + 8);
 				s_namespace = s_namespace.substring(0, s_namespace.indexOf("\""));
 				
 				this.s_soapTargetNamespace = s_namespace;
 				
 				/* check if target namespace from request matches our target namespace in our wsdl xsd schema */
-				if (!this.getSeed().getConfig().getWSDL().getSchema().getTargetNamespace().contentEquals(this.s_soapTargetNamespace)) {
-					net.forestany.forestj.lib.Global.ilogWarning(this.getSeed().getSalt() + " " + "400 Bad Request: received SOAP target namespace '" + this.s_soapTargetNamespace + "' does not match with wsdl xsd schema target namespace '" + this.getSeed().getConfig().getWSDL().getSchema().getTargetNamespace() + "'");
+				try {
+					if (!this.getSeed().getConfig().getWSDL().getSchema().getTargetNamespace().contentEquals(this.s_soapTargetNamespace)) {
+						net.forestany.forestj.lib.Global.ilogWarning(this.getSeed().getSalt() + " " + "400 Bad Request: received SOAP target namespace '" + this.s_soapTargetNamespace + "' does not match with wsdl xsd schema target namespace '" + this.getSeed().getConfig().getWSDL().getSchema().getTargetNamespace() + "'");
+						return 400;
+					}
+				} catch (Exception o_exc) {
+					net.forestany.forestj.lib.Global.ilogWarning(this.getSeed().getSalt() + " " + "400 Bad Request: received SOAP target namespace '" + this.s_soapTargetNamespace + "' does not match with wsdl xsd schema target namespace; " + o_exc.getMessage());
 					return 400;
 				}
 				
 	    		/* remove xmlns attribute */
-	    		if ( a_soapBodyXmlTags.get(0).substring( a_soapBodyXmlTags.get(0).indexOf(" xmlns=") + 7 ).indexOf(" ") >= 0) {
-	    			String s_one = a_soapBodyXmlTags.get(0).substring(0, a_soapBodyXmlTags.get(0).indexOf(" xmlns="));
-	    			String s_two = a_soapBodyXmlTags.get(0).substring( a_soapBodyXmlTags.get(0).indexOf(" xmlns=") + 7 );
-	    			
-	    			a_soapBodyXmlTags.set(0, s_one + s_two.substring(s_two.indexOf(" ")));
-	    		} else {
-	    			String s_one = a_soapBodyXmlTags.get(0).substring(0, a_soapBodyXmlTags.get(0).indexOf(" xmlns="));
-	    			String s_two = a_soapBodyXmlTags.get(0).substring( a_soapBodyXmlTags.get(0).indexOf(" xmlns=") );
-	    			
-	    			a_soapBodyXmlTags.set(0, s_one + s_two.substring(s_two.indexOf(">")));
-	    		}
+				if (a_soapBodyXmlTags.size() > 0) {
+					if (a_soapBodyXmlTags.get(0).substring( a_soapBodyXmlTags.get(0).indexOf(" xmlns=") + 7 ).indexOf(" ") >= 0) {
+						String s_one = a_soapBodyXmlTags.get(0).substring(0, a_soapBodyXmlTags.get(0).indexOf(" xmlns="));
+						String s_two = a_soapBodyXmlTags.get(0).substring( a_soapBodyXmlTags.get(0).indexOf(" xmlns=") + 7 );
+						
+						a_soapBodyXmlTags.set(0, s_one + s_two.substring(s_two.indexOf(" ")));
+					} else {
+						String s_one = a_soapBodyXmlTags.get(0).substring(0, a_soapBodyXmlTags.get(0).indexOf(" xmlns="));
+						String s_two = a_soapBodyXmlTags.get(0).substring( a_soapBodyXmlTags.get(0).indexOf(" xmlns=") );
+						
+						a_soapBodyXmlTags.set(0, s_one + s_two.substring(s_two.indexOf(">")));
+					}
+				}
 	    	}
 	    	
 	    	String s_inputMessageName = null;
@@ -822,11 +858,13 @@ public class TinyHttpsServer<T extends javax.net.ssl.SSLServerSocket> extends ne
 	    	String s_elementName = null;
 	    	
 	    	/* get input message name */
-    		if (a_soapBodyXmlTags.get(0).contains(" ")) {
-    			s_inputMessageName = a_soapBodyXmlTags.get(0).substring(1, a_soapBodyXmlTags.get(0).indexOf(" "));
-    		} else {
-    			s_inputMessageName = a_soapBodyXmlTags.get(0).substring(1, a_soapBodyXmlTags.get(0).length() - 1);
-    		}
+			if (a_soapBodyXmlTags.size() > 0) {
+				if (a_soapBodyXmlTags.get(0).contains(" ")) {
+					s_inputMessageName = a_soapBodyXmlTags.get(0).substring(1, a_soapBodyXmlTags.get(0).indexOf(" "));
+				} else {
+					s_inputMessageName = a_soapBodyXmlTags.get(0).substring(1, a_soapBodyXmlTags.get(0).length() - 1);
+				}
+			}
     		
     		/* check if input message name exists as a valid operation in our wsdl configuration */
     		if (!this.getSeed().getConfig().getWSDL().containsOperationByInputMessagePartElementValue(s_inputMessageName)) {
@@ -848,10 +886,12 @@ public class TinyHttpsServer<T extends javax.net.ssl.SSLServerSocket> extends ne
 			
     		/* replace input message value tags with input message element attribute value, because these are used for xml decoding based on xsd schema types in wsdl configuration */
 			for (int i = 0; i < a_soapBodyXmlTags.size(); i++) {
-				if (a_soapBodyXmlTags.get(i).startsWith("<" + s_inputMessageName)) {
-					a_soapBodyXmlTags.set(i, a_soapBodyXmlTags.get(i).replace("<" + s_inputMessageName, "<" + s_elementName));
-				} else if (a_soapBodyXmlTags.get(i).startsWith("</" + s_inputMessageName)) {
-					a_soapBodyXmlTags.set(i, a_soapBodyXmlTags.get(i).replace("</" + s_inputMessageName, "</" + s_elementName));
+				if (a_soapBodyXmlTags.size() > i) {
+					if (a_soapBodyXmlTags.get(i).startsWith("<" + s_inputMessageName)) {
+						a_soapBodyXmlTags.set(i, a_soapBodyXmlTags.get(i).replace("<" + s_inputMessageName, "<" + s_elementName));
+					} else if (a_soapBodyXmlTags.get(i).startsWith("</" + s_inputMessageName)) {
+						a_soapBodyXmlTags.set(i, a_soapBodyXmlTags.get(i).replace("</" + s_inputMessageName, "</" + s_elementName));
+					}
 				}
 			}
 			
@@ -905,25 +945,31 @@ public class TinyHttpsServer<T extends javax.net.ssl.SSLServerSocket> extends ne
 	    	String s_outputMessage = s_soapResponse.substring(0, s_soapResponse.indexOf(">") + 1);
 	    	
 	    	/* filter out any possible attributes */
-	    	if (s_outputMessage.contains(" ")) {
+	    	if ((s_outputMessage != null) && (s_outputMessage.contains(" "))) {
 	    		s_outputMessage = s_outputMessage.substring(1, s_outputMessage.indexOf(" "));
     		} else {
     			s_outputMessage = s_outputMessage.substring(1, s_outputMessage.length() - 1);
     		}
 	    	
 	    	/* get our portType operation object and thus the output message */
-	    	if (!this.getSeed().getConfig().getWSDL().getOperationByInputMessagePartElementValue(s_inputMessageName).getOutputMessage().getPartElement().contentEquals(s_outputMessage)) {
-    			/* output message could not be found */
-	    		this.o_soapResponse = (Object)new net.forestany.forestj.lib.net.https.soap.SoapFault("soap:server", "Invalid soap output message '" + s_outputMessage + "' within soap response body. Please verify server response with wsdl file.", null, null);
+			try {
+				if (!this.getSeed().getConfig().getWSDL().getOperationByInputMessagePartElementValue(s_inputMessageName).getOutputMessage().getPartElement().contentEquals(s_outputMessage)) {
+					/* output message could not be found */
+					this.o_soapResponse = (Object)new net.forestany.forestj.lib.net.https.soap.SoapFault("soap:server", "Invalid soap output message '" + s_outputMessage + "' within soap response body. Please verify server response with wsdl file.", null, null);
+					return 200;
+				} else {
+					/* replace output message value tags with output message part element value, because client expecting this response based on xsd schema types in wsdl configuration */
+					String s_outputMessageElementValue = this.getSeed().getConfig().getWSDL().getOperationByInputMessagePartElementValue(s_inputMessageName).getOutputMessage().getPartElement();
+					s_soapResponse = s_soapResponse.replaceAll("<" + s_outputMessage, "<" + s_outputMessageElementValue);
+					s_soapResponse = s_soapResponse.replaceAll("</" + s_outputMessage, "</" + s_outputMessageElementValue);
+					
+															net.forestany.forestj.lib.Global.ilogFine(this.getSeed().getSalt() + " " + "replaced output message value tags '" + s_outputMessage + "' with output message part element value '" + s_outputMessageElementValue + "'");
+				}
+			} catch (Exception o_exc) {
+				/* output message could not be found */
+	    		this.o_soapResponse = (Object)new net.forestany.forestj.lib.net.https.soap.SoapFault("soap:server", "Invalid soap output message '" + s_outputMessage + "' within soap response body. Please verify server response with wsdl file; " + o_exc.getMessage(), null, null);
     			return 200;
-    		} else {
-    			/* replace output message value tags with output message part element value, because client expecting this response based on xsd schema types in wsdl configuration */
-    			String s_outputMessageElementValue = this.getSeed().getConfig().getWSDL().getOperationByInputMessagePartElementValue(s_inputMessageName).getOutputMessage().getPartElement();
-    			s_soapResponse = s_soapResponse.replaceAll("<" + s_outputMessage, "<" + s_outputMessageElementValue);
-    			s_soapResponse = s_soapResponse.replaceAll("</" + s_outputMessage, "</" + s_outputMessageElementValue);
-    			
-    													net.forestany.forestj.lib.Global.ilogFine(this.getSeed().getSalt() + " " + "replaced output message value tags '" + s_outputMessage + "' with output message part element value '" + s_outputMessageElementValue + "'");
-    		}
+			}
 	    	
 	    	/* store SOAP encoded xml response string as object for later use */
 	    	this.o_soapResponse = (Object)s_soapResponse;
@@ -969,7 +1015,7 @@ public class TinyHttpsServer<T extends javax.net.ssl.SSLServerSocket> extends ne
 					String s_dynamicReturn = this.o_dynamic.renderDynamic();
 					
 					/* return value of rendering dynamic content is not 'OK' */
-					if (!s_dynamicReturn.contentEquals("OK")) {
+					if ((s_dynamicReturn != null) && (!s_dynamicReturn.contentEquals("OK"))) {
 						/* prepare fail response */
 						net.forestany.forestj.lib.Global.ilogSevere(this.getSeed().getSalt() + " " + "500 Internal Server Error - exception within forestAny code; " + s_dynamicReturn);
 						this.getSeed().setReturnCode(500);
@@ -990,7 +1036,7 @@ public class TinyHttpsServer<T extends javax.net.ssl.SSLServerSocket> extends ne
 					String s_dynamicReturn = this.o_dynamic.renderREST();
 					
 					/* return value of rendering REST content is not 'OK' */
-					if (!s_dynamicReturn.contentEquals("OK")) {
+					if ((s_dynamicReturn != null) && (!s_dynamicReturn.contentEquals("OK"))) {
 						if (s_dynamicReturn.startsWith("400;")) { /* bad request returned from REST implementation */
 							net.forestany.forestj.lib.Global.ilogWarning(this.getSeed().getSalt() + " " + "400 Bad Request: " + s_dynamicReturn.substring(4));
 							this.getSeed().setReturnCode(400);
@@ -1054,7 +1100,7 @@ public class TinyHttpsServer<T extends javax.net.ssl.SSLServerSocket> extends ne
 						}
 					}
 				}
-			} else if ( (this.getSeed().getConfig().getMode() == net.forestany.forestj.lib.net.https.Mode.SOAP) && (this.getSeed().getRequestHeader().getMethod().contentEquals("POST")) ) { /* respond with SOAP content if http method is POST */
+			} else if ( (this.getSeed().getConfig().getMode() == net.forestany.forestj.lib.net.https.Mode.SOAP) && (this.getSeed().getRequestHeader().getMethod() != null) && (this.getSeed().getRequestHeader().getMethod().contentEquals("POST")) ) { /* respond with SOAP content if http method is POST */
 				if (this.o_soapResponse != null) { /* SOAP response object is available */
 					String s_soapResponse = "";
 					

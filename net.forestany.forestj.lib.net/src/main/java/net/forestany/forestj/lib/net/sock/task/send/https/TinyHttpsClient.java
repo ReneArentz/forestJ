@@ -22,6 +22,8 @@ public class TinyHttpsClient<T extends javax.net.ssl.SSLSocket> extends net.fore
 	private net.forestany.forestj.lib.net.http.RequestType e_requestType;
 	private java.util.Map<String,Object> m_requestParamters;
 	private java.util.Map<String,String> m_attachments;
+	private String s_rawPostBody;
+	private String s_soapAction;
 	private String s_downloadFilename;
 	private boolean b_downloadFileExtensionNeeded;
 	private boolean b_useLog;
@@ -294,6 +296,24 @@ public class TinyHttpsClient<T extends javax.net.ssl.SSLSocket> extends net.fore
 	}
 	
 	/**
+	 * get soap action
+	 * 
+	 * @return String
+	 */
+	public String getSOAPAction() {
+		return this.s_soapAction;
+	}
+	
+	/**
+	 * set soap action
+	 * 
+	 * @param p_s_value String
+	 */
+	public void setSOAPAction(String p_s_value) {
+		this.s_soapAction = p_s_value;
+	}
+
+	/**
 	 * set soap request
 	 * 
 	 * @param p_o_object Object
@@ -338,6 +358,8 @@ public class TinyHttpsClient<T extends javax.net.ssl.SSLSocket> extends net.fore
 		this.b_requestSet = false;
 		this.m_requestParamters = new java.util.LinkedHashMap<String,Object>();
 		this.m_attachments = new java.util.LinkedHashMap<String,String>();
+		this.s_rawPostBody = null;
+		this.s_soapAction = null;
 		this.b_useLog = false;
 		
 		this.s_downloadFilename = null;
@@ -371,6 +393,8 @@ public class TinyHttpsClient<T extends javax.net.ssl.SSLSocket> extends net.fore
 		this.b_requestSet = false;
 		this.m_requestParamters = new java.util.LinkedHashMap<String,Object>();
 		this.m_attachments = new java.util.LinkedHashMap<String,String>();
+		this.s_rawPostBody = null;
+		this.s_soapAction = null;
 		this.b_useLog = false;
 		
 		this.s_downloadFilename = null;
@@ -465,6 +489,8 @@ public class TinyHttpsClient<T extends javax.net.ssl.SSLSocket> extends net.fore
 		this.o_seed = new net.forestany.forestj.lib.net.https.Seed(this.getSeed().getConfig());
 		this.m_requestParamters = new java.util.LinkedHashMap<String,Object>();
 		this.m_attachments = new java.util.LinkedHashMap<String,String>();
+		this.s_rawPostBody = null;
+		this.s_soapAction = null;
 		this.b_useLog = false;
 		
 		this.s_downloadFilename = null;
@@ -588,6 +614,19 @@ public class TinyHttpsClient<T extends javax.net.ssl.SSLSocket> extends net.fore
 		this.m_attachments.put(p_s_parameterName, p_s_filePath);
 		
 												if (this.b_useLog) net.forestany.forestj.lib.Global.ilogConfig("added attachment to request: '" + p_s_parameterName + "' = '" + p_s_filePath + "'");
+	}
+
+	/**
+	 * Adds raw post body for web request execution
+	 * 
+	 * @param p_s_rawPostBody			raw post body as string
+	 */
+	public void addRawPostBody(String p_s_rawPostBody) {
+		if (!net.forestany.forestj.lib.Helper.isStringEmpty(p_s_rawPostBody)) {
+			this.s_rawPostBody = p_s_rawPostBody;
+
+													if (this.b_useLog) net.forestany.forestj.lib.Global.ilogConfig("added raw post body to request with a length of: '" + this.s_rawPostBody.length() + "'");		
+		}
 	}
 	
 	/**
@@ -773,7 +812,7 @@ public class TinyHttpsClient<T extends javax.net.ssl.SSLSocket> extends net.fore
 			String s_foo = new String(a_responseData).toLowerCase();
 			
 			/* we expect code '200', message 'ok' and the text 'connection established' */
-			if (!( (s_foo.contains("200")) && ( (s_foo.contains("ok")) || (s_foo.contains("connection established")) ) )) {
+			if ( (s_foo == null) || (!( (s_foo.contains("200")) && ( (s_foo.contains("ok")) || (s_foo.contains("connection established")) ) )) ) {
 				net.forestany.forestj.lib.Global.ilogSevere("500 Internal Server Error: Proxy server returns unexpected answer; " + new String(a_responseData).trim());
 				this.getSeed().getResponseHeader().setReturnCode(500);
 				this.getSeed().getResponseHeader().setReturnMessage("Proxy server returns unexpected answer; " + new String(a_responseData).trim());
@@ -861,20 +900,39 @@ public class TinyHttpsClient<T extends javax.net.ssl.SSLSocket> extends net.fore
             	/* set content type with random boundary */
         		this.getSeed().getRequestHeader().setContentType(net.forestany.forestj.lib.net.http.PostType.HTMLATTACHMENTS.getContentType() + "; boundary=" + s_boundary);
             } else {
-            	/* set normal content type */
-            	this.getSeed().getRequestHeader().setContentType(this.e_contentType.getContentType());
+				if (
+					(this.e_contentType == net.forestany.forestj.lib.net.http.PostType.SOAPXMLWITHCHARSET) ||
+					(this.e_contentType == net.forestany.forestj.lib.net.http.PostType.XMLWITHCHARSET) ||
+					(this.e_contentType == net.forestany.forestj.lib.net.http.PostType.XMLTEXTWITHCHARSET)
+				) {
+					/* set content type with charset */
+					this.getSeed().getRequestHeader().setContentType(this.e_contentType.getContentType() + "; charset=" + this.getSeed().getConfig().getOutEncoding().displayName());
+				} else {
+					/* set content type */
+					this.getSeed().getRequestHeader().setContentType(this.e_contentType.getContentType());
+				}
             }
             
             										if (this.b_useLog) net.forestany.forestj.lib.Global.ilogFine("set content type for web request '" + this.e_requestType + "': '" + this.getSeed().getRequestHeader().getContentType() + "'");
             
+			/* set SOAP action header if set */
+			if (!net.forestany.forestj.lib.Helper.isStringEmpty(this.s_soapAction)) {
+				this.getSeed().getRequestHeader().setSOAPAction(this.s_soapAction);
+
+														if (this.b_useLog) net.forestany.forestj.lib.Global.ilogFine("set soap action '" + this.s_soapAction + "'");
+			}
+
             /* ***** */
             /* start - preparing post data for web request 'POST' */
             /* ***** */
             										
             										if (this.b_useLog) net.forestany.forestj.lib.Global.ilogFine("start preparing post data");
             
-            /* attachments available */
-			if (this.m_attachments.size() > 0) {
+			/* check if raw post body is available */
+			if (!net.forestany.forestj.lib.Helper.isStringEmpty(this.s_rawPostBody)) {
+				/* add raw post body with a line break at the end */
+				net.forestany.forestj.lib.Helper.addStaticByteArrayToDynamicByteList(new String(this.s_rawPostBody + net.forestany.forestj.lib.net.https.Config.HTTP_LINEBREAK).getBytes(this.getSeed().getConfig().getOutEncoding()), a_postBytes);
+			} else if (this.m_attachments.size() > 0) { /* attachments available */
 														if (this.b_useLog) net.forestany.forestj.lib.Global.ilogFine("iterate all request parameters with key->value pairs");
         		
         		/* iterate all request parameters with key->value pairs */
@@ -1265,7 +1323,7 @@ public class TinyHttpsClient<T extends javax.net.ssl.SSLSocket> extends net.fore
 			java.nio.charset.Charset o_inCharset = null;
 			
 			/* check for incoming charset value in response header */
-			if (this.getSeed().getResponseHeader().getContentType().contains("charset=")) {
+			if ((this.getSeed().getResponseHeader().getContentType() != null) && (this.getSeed().getResponseHeader().getContentType().contains("charset="))) {
 														if (this.b_useLog) net.forestany.forestj.lib.Global.ilogFine("read charset encoding out of response header");
 				
 				/* read charset encoding out of response header */
@@ -1330,7 +1388,7 @@ public class TinyHttpsClient<T extends javax.net.ssl.SSLSocket> extends net.fore
 		    }
 		    
 		    /* first element must be 'Envelope' */
-		    if (!a_xmlTags.get(0).startsWith("<Envelope")) {
+		    if ((a_xmlTags.size() > 0) && (!a_xmlTags.get(0).startsWith("<Envelope"))) {
 		    	net.forestany.forestj.lib.Global.ilogWarning("400 Bad Request: SOAP response must start with 'Envelope'-tag");
 				return 400;
 		    }
@@ -1339,7 +1397,7 @@ public class TinyHttpsClient<T extends javax.net.ssl.SSLSocket> extends net.fore
 		    
 		    /* look for next 'Body'-tag within 'Envelope' */
 		    for (int i = 1; i < a_xmlTags.size(); i++) {
-		    	if (a_xmlTags.get(i).contentEquals("<Body>")) {
+		    	if ((a_xmlTags.size() > i) && (a_xmlTags.get(i).contentEquals("<Body>"))) {
 		    		i_bodyTag = i;
 		    		break;
 		    	}
@@ -1356,12 +1414,12 @@ public class TinyHttpsClient<T extends javax.net.ssl.SSLSocket> extends net.fore
 		    this.o_soapResponse = null;
 		    
 		    /* found 'Fault'-tag within 'Body' so we do not receive our expected SOAP response, but a SOAP fault response */
-		    if (a_xmlTags.get(i_bodyTag + 1).startsWith("<Fault")) {
+		    if ((a_xmlTags.size() > (i_bodyTag + 1)) && (a_xmlTags.get(i_bodyTag + 1).startsWith("<Fault"))) {
 		    	int i_faultEnd = -1;
 		    	
 		    	/* look for 'Fault'-ending-tag */
 		    	for (int i = i_bodyTag + 1; i < a_xmlTags.size(); i++) {
-					if (a_xmlTags.get(i).contentEquals("</Fault>")) {
+					if ((a_xmlTags.size() > i) && (a_xmlTags.get(i).contentEquals("</Fault>"))) {
 						i_faultEnd = i;
 						break;
 					}
@@ -1380,15 +1438,17 @@ public class TinyHttpsClient<T extends javax.net.ssl.SSLSocket> extends net.fore
 		    	
 		    	/* read 'Fault'-children-tags */
 		    	for (int i = i_bodyTag + 2; i < i_faultEnd; i++) {
-		    		if (a_xmlTags.get(i).startsWith("<faultcode>")) { /* read fault code */
-		    			s_code = a_xmlTags.get(i).substring(11, a_xmlTags.get(i).indexOf("</faultcode>"));
-		    		} else if (a_xmlTags.get(i).startsWith("<faultstring>")) { /* read fault string */
-		    			s_message = a_xmlTags.get(i).substring(13, a_xmlTags.get(i).indexOf("</faultstring>"));
-		    		} else if (a_xmlTags.get(i).startsWith("<detail>")) { /* read fault detail */
-		    			s_detail = a_xmlTags.get(i).substring(8, a_xmlTags.get(i).indexOf("</detail>"));
-		    		} else if (a_xmlTags.get(i).startsWith("<faultactor>")) { /* read fault actor */
-		    			s_actor = a_xmlTags.get(i).substring(12, a_xmlTags.get(i).indexOf("</faultactor>"));
-		    		}
+					if (a_xmlTags.size() > i) {
+						if (a_xmlTags.get(i).startsWith("<faultcode>")) { /* read fault code */
+							s_code = a_xmlTags.get(i).substring(11, a_xmlTags.get(i).indexOf("</faultcode>"));
+						} else if (a_xmlTags.get(i).startsWith("<faultstring>")) { /* read fault string */
+							s_message = a_xmlTags.get(i).substring(13, a_xmlTags.get(i).indexOf("</faultstring>"));
+						} else if (a_xmlTags.get(i).startsWith("<detail>")) { /* read fault detail */
+							s_detail = a_xmlTags.get(i).substring(8, a_xmlTags.get(i).indexOf("</detail>"));
+						} else if (a_xmlTags.get(i).startsWith("<faultactor>")) { /* read fault actor */
+							s_actor = a_xmlTags.get(i).substring(12, a_xmlTags.get(i).indexOf("</faultactor>"));
+						}
+					}
 				}
 		    	
 		    											if (this.b_useLog) net.forestany.forestj.lib.Global.ilogFine("create and store SOAP fault object");
@@ -1400,7 +1460,7 @@ public class TinyHttpsClient<T extends javax.net.ssl.SSLSocket> extends net.fore
 		    	
 		    	/* look for 'Body'-ending-tag */
 		    	for (int i = i_bodyTag + 1; i < a_xmlTags.size(); i++) {
-					if (a_xmlTags.get(i).contentEquals("</Body>")) {
+					if ((a_xmlTags.size() > i) && (a_xmlTags.get(i).contentEquals("</Body>"))) {
 						i_bodyEnd = i;
 						break;
 					}
@@ -1416,11 +1476,13 @@ public class TinyHttpsClient<T extends javax.net.ssl.SSLSocket> extends net.fore
 			    
 		    	/* gather all SOAP xml tags in our list */
 		    	for (int i = i_bodyTag + 1; i < i_bodyEnd; i++) {
-		    		a_soapBodyXmlTags.add(a_xmlTags.get(i));
+					if (a_xmlTags.size() > i) {
+		    			a_soapBodyXmlTags.add(a_xmlTags.get(i));
+					}
 		    	}
 		    	
 		    	/* clean up xml namespace stuff */
-		    	if (a_soapBodyXmlTags.get(0).contains(" xmlns:")) {
+		    	if ((a_soapBodyXmlTags.size() > 0) && (a_soapBodyXmlTags.get(0).contains(" xmlns:"))) {
 		    		String s_namespaceVar = a_soapBodyXmlTags.get(0).substring(1 , a_soapBodyXmlTags.get(0).indexOf(":"));
 					
 		    		/* remove xmlns attribute */
@@ -1439,7 +1501,7 @@ public class TinyHttpsClient<T extends javax.net.ssl.SSLSocket> extends net.fore
 		    		for (int i = 0; i < a_soapBodyXmlTags.size(); i++) {
 		    			a_soapBodyXmlTags.set(i, a_soapBodyXmlTags.get(i).replace("<" + s_namespaceVar + ":", "<").replace("</" + s_namespaceVar + ":", "</"));
 		    		}
-		    	} else if (a_soapBodyXmlTags.get(0).contains(" xmlns=")) {
+		    	} else if ((a_soapBodyXmlTags.size() > 0) && (a_soapBodyXmlTags.get(0).contains(" xmlns="))) {
 		    		/* remove xmlns attribute */
 		    		if ( a_soapBodyXmlTags.get(0).substring( a_soapBodyXmlTags.get(0).indexOf(" xmlns=") + 7 ).indexOf(" ") >= 0) {
 		    			String s_one = a_soapBodyXmlTags.get(0).substring(0, a_soapBodyXmlTags.get(0).indexOf(" xmlns="));

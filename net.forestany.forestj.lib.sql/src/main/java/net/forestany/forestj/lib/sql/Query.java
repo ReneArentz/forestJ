@@ -190,6 +190,11 @@ public class Query<T extends QueryAbstract> implements IQuery<T> {
 	 * @throws IllegalArgumentException	list of prepared statement values is not empty
 	 */
 	public static String convertToPreparedStatementQuery(BaseGateway p_e_base, String p_s_query, java.util.List<java.util.AbstractMap.SimpleEntry<String, Object>> p_a_values, boolean p_b_formatDateTimeValues) throws NullPointerException, IllegalArgumentException {
+		/* check query parameter */
+		if (p_s_query == null) {
+			throw new NullPointerException("Parameter query is null");
+		}
+
 		/* check if parameter object list is initiated */
 		if (p_a_values == null) {
 			throw new NullPointerException("Parameter object list is null");
@@ -251,10 +256,10 @@ public class Query<T extends QueryAbstract> implements IQuery<T> {
 				p_a_values.add( new java.util.AbstractMap.SimpleEntry<String, Object>( "long", (Object)Long.parseLong(o_matcher.group(1)) ) );
 			} else if (net.forestany.forestj.lib.Helper.isDouble(s_value)) {
 				if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("value isDouble" + ( (net.forestany.forestj.lib.Global.get().getLogCompleteSqlQuery()) ? ": " + s_value : "" ) );
-				p_a_values.add( new java.util.AbstractMap.SimpleEntry<String, Object>( "double", (Object)Double.parseDouble(o_matcher.group(1)) ) );
+				p_a_values.add( new java.util.AbstractMap.SimpleEntry<String, Object>( "double", (Object)Double.parseDouble(o_matcher.group(1).replace(',', '.')) ) );
 			} else if (net.forestany.forestj.lib.Helper.isFloat(s_value)) {
 				if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("value isFloat" + ( (net.forestany.forestj.lib.Global.get().getLogCompleteSqlQuery()) ? ": " + s_value : "" ) );
-				p_a_values.add( new java.util.AbstractMap.SimpleEntry<String, Object>( "float", (Object)Float.parseFloat(o_matcher.group(1)) ) );
+				p_a_values.add( new java.util.AbstractMap.SimpleEntry<String, Object>( "float", (Object)Float.parseFloat(o_matcher.group(1).replace(',', '.')) ) );
 			} else if ( (!s_value.startsWith("1970-01-01")) && (net.forestany.forestj.lib.Helper.isDateTime(s_value)) ) {
 				if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("value isDateTime" + ( (net.forestany.forestj.lib.Global.get().getLogCompleteSqlQuery()) ? ": " + s_value : "" ) );
 				
@@ -289,7 +294,7 @@ public class Query<T extends QueryAbstract> implements IQuery<T> {
 				p_a_values.add( new java.util.AbstractMap.SimpleEntry<String, Object>( "bigdecimal", (Object)(new java.math.BigDecimal(s_value)) ) );
 			} else {
 				if (net.forestany.forestj.lib.Global.isILevel(net.forestany.forestj.lib.Global.MASS)) net.forestany.forestj.lib.Global.ilogMass("value isString" + ( (net.forestany.forestj.lib.Global.get().getLogCompleteSqlQuery()) ? ": " + s_value : "" ) );
-				p_a_values.add( new java.util.AbstractMap.SimpleEntry<String, Object>( "string", (Object)o_matcher.group(1) ) );
+				p_a_values.add( new java.util.AbstractMap.SimpleEntry<String, Object>( "string", (Object)o_matcher.group(1).replace("___forestjStringValue___", "") ) );
 			}
 		}
 
@@ -313,34 +318,38 @@ public class Query<T extends QueryAbstract> implements IQuery<T> {
 	    int i_pointer = 0;
 	    int i_counter = 0;
 	    
+		if (p_s_preparedStatement == null) {
+			return null;
+		}
+
 	    while ((i_pointer = p_s_preparedStatement.indexOf("?")) > 0) {
-	      String s_before = p_s_preparedStatement.substring(0, i_pointer);
-	      String s_after = p_s_preparedStatement.substring(i_pointer + 1);
-	      
-	      String s_type = (p_a_values.size() <= i_counter) ? "NO TYPE" : p_a_values.get(i_counter).getKey();
-	      String s_value = (p_a_values.size() <= i_counter) ? "NO VALUE IN LIST" : p_a_values.get(i_counter++).getValue().toString();
-	      String s_quote = "'";
-	      
-	      /* use no quotes for digit, boolean or null values */
-	      if (
-	    	  (s_type.contentEquals("short")) ||
-	    	  (s_type.contentEquals("integer")) ||
-	    	  (s_type.contentEquals("long")) ||
-	    	  (s_type.contentEquals("float")) ||
-	    	  (s_type.contentEquals("double")) ||
-	    	  (s_type.contentEquals("bigdecimal")) ||
-	    	  (s_type.contentEquals("boolean")) ||
-	    	  (s_value.contentEquals("false")) ||
-			  (s_value.contentEquals("NULL"))
-		  ) {
-	    	  s_quote = "";
-	      }
-	      
-	      p_s_preparedStatement = s_before + s_quote + s_value + s_quote + s_after;
+			String s_before = p_s_preparedStatement.substring(0, i_pointer);
+			String s_after = p_s_preparedStatement.substring(i_pointer + 1);
+			
+			String s_type = (p_a_values.size() <= i_counter) ? "NO TYPE" : p_a_values.get(i_counter).getKey();
+			String s_value = (p_a_values.size() <= i_counter) ? "NO VALUE IN LIST" : p_a_values.get(i_counter++).getValue().toString();
+			String s_quote = "'";
+			
+			/* use no quotes for digit, boolean or null values */
+			if (
+				(s_type.contentEquals("short")) ||
+				(s_type.contentEquals("integer")) ||
+				(s_type.contentEquals("long")) ||
+				(s_type.contentEquals("float")) ||
+				(s_type.contentEquals("double")) ||
+				(s_type.contentEquals("bigdecimal")) ||
+				(s_type.contentEquals("boolean")) ||
+				(s_value.contentEquals("false")) ||
+				(s_value.contentEquals("NULL"))
+			) {
+				s_quote = "";
+			}
+			
+			p_s_preparedStatement = s_before + s_quote + s_value + s_quote + s_after;
 	    }
 	    
 	    return p_s_preparedStatement;
-	  }
+	}
 	
 	/**
 	 * Get constraint type matching constraint parameter and database gateway enumeration value

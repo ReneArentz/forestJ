@@ -340,7 +340,7 @@ public abstract class SharedMemory<T> {
 		/* iterate each field of inherited class */
 		for (int i = 0; i < this.a_fields.size(); i++) {
 			/* field name must match parameter value */
-			if (this.a_fields.get(i).contentEquals(p_s_field)) {
+			if ((this.a_fields.size() > i) && (this.a_fields.get(i).contentEquals(p_s_field))) {
 				i_return = i + 1; /* +1, because return value is initialized with -1 */
 				break;
 			}
@@ -427,7 +427,11 @@ public abstract class SharedMemory<T> {
 				}
 				
 				/* if inherited field value object and (bidirectional) mirror field value object are not equal OR both are not of instance NullValue */
-				if (!(o_foo.equals(o_foo2) || ( (o_foo instanceof NullValue) && (o_foo2 instanceof NullValue) ) )) {
+				if (!(
+					( (o_foo != null) && (o_foo.equals(o_foo2)) ) ||
+					( (o_foo == null) && (o_foo2 == null) ) ||
+					( (o_foo instanceof NullValue) && (o_foo2 instanceof NullValue) )
+				)) {
 					/* add field to changed fields list */
 					a_changedFields.add(this.a_fields.get(i));
 				}

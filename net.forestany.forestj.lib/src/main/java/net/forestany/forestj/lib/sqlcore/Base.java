@@ -33,6 +33,14 @@ public abstract class Base {
 	 * skip query for last insert id flag
 	 */
 	protected boolean b_skipQueryLastInsertId = false;
+	/**
+	 * max. chunk amount of records within a insert query
+	 */
+	protected int i_insertManyRecordChunkAmount = -1;
+	/**
+	 * flag to enable insert all query for oracle db
+	 */
+	protected boolean b_oracleInsertManyLegacyMode = false;
 	
 	/* Properties */
 	
@@ -55,6 +63,15 @@ public abstract class Base {
 	}
 	
 	/**
+	 * get flag to skip query for last insert id
+	 * 
+	 * @return boolean
+	 */
+	public boolean getSkipQueryLastInsertId() {
+		return this.b_skipQueryLastInsertId;
+	}
+	
+	/**
 	 * set flag to skip query for last insert id
 	 * 
 	 * @param p_b_value boolean
@@ -62,7 +79,47 @@ public abstract class Base {
 	public void setSkipQueryLastInsertId(boolean p_b_value) {
 		this.b_skipQueryLastInsertId = p_b_value;
 	}
+
+	/**
+	 * get max. chunk amount of records within a insert query
+	 * 
+	 * @return int
+	 */
+	public int getInsertManyRecordChunkAmount() {
+		return this.i_insertManyRecordChunkAmount;
+	}
 	
+	/**
+	 * set max. chunk amount of records within a insert query
+	 * 
+	 * @param p_i_value int
+	 */
+	public void setInsertManyRecordChunkAmount(int p_i_value) {
+		if (p_i_value <= 0) {
+			p_i_value = -1;
+		}
+		
+		this.i_insertManyRecordChunkAmount = p_i_value;
+	}
+
+	/**
+	 * get flag to enable insert all query for oracle db
+	 * 
+	 * @return boolean
+	 */
+	public boolean getOracleInsertManyLegacyMode() {
+		return this.b_oracleInsertManyLegacyMode;
+	}
+	
+	/**
+	 * set flag to enable insert all query for oracle db
+	 * 
+	 * @param p_b_value boolean
+	 */
+	public void setOracleInsertManyLegacyMode(boolean p_b_value) {
+		this.b_oracleInsertManyLegacyMode = p_b_value;
+	}
+
 	/* Methods */
 	
 	/**

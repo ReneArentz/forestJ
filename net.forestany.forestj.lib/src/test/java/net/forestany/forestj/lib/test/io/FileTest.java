@@ -76,9 +76,15 @@ public class FileTest {
 						"file[" + s_file + "] is a directory"
 				);
 				
+				int i_expectedLength = 61;
+
+				if (net.forestany.forestj.lib.io.File.NEWLINE.length() == 1) {
+					i_expectedLength -= 4;
+				}
+
 				assertTrue(
-						net.forestany.forestj.lib.io.File.fileLength(s_file) == 61,
-						"file[" + s_file + "] length != 61"
+						net.forestany.forestj.lib.io.File.fileLength(s_file) == i_expectedLength,
+						"file[" + s_file + "] length != " + i_expectedLength + ", but '" + net.forestany.forestj.lib.io.File.fileLength(s_file) + "'"
 				);
 				
 				o_file.replaceLine("First line replace", 1);
@@ -200,14 +206,20 @@ public class FileTest {
 						o_file.readLine(5).contentEquals("Fifth"),
 						"line #5 is not 'Fifth'"
 				);
-					
+				
+				String s_hash = "85be5ad52ca9a965c1eaf88fd33e1bedc6c54e4a020c6ef4c837a2d711282c9ce05b03e6a57238ae44dc2560b177db68c1179042a0c95d933582dacdba72edb1";
+
+				if (net.forestany.forestj.lib.io.File.NEWLINE.length() == 1) {
+					s_hash = "1f6242afe4634c935703b61c51618ab95ad4d035ae6d55e13fed47a0aa0142b18cbf44bd72bc49697f11d195c8818a6bbc03ccab3eff6a8864b999ec33c9f3fc";
+				}
+
 				assertTrue(
-						o_file.hash("SHA-512").contentEquals("85be5ad52ca9a965c1eaf88fd33e1bedc6c54e4a020c6ef4c837a2d711282c9ce05b03e6a57238ae44dc2560b177db68c1179042a0c95d933582dacdba72edb1"),
-						"SHA-512 value is not '85be5ad52ca9a965c1eaf88fd33e1bedc6c54e4a020c6ef4c837a2d711282c9ce05b03e6a57238ae44dc2560b177db68c1179042a0c95d933582dacdba72edb1'"
+						o_file.hash("SHA-512").contentEquals(s_hash),
+						"SHA-512 value is not '" + s_hash + "', but '" + o_file.hash("SHA-512") + "'"
 				);
 				assertTrue(
-						net.forestany.forestj.lib.io.File.hashFile(s_fileNew, "SHA-512").contentEquals("85be5ad52ca9a965c1eaf88fd33e1bedc6c54e4a020c6ef4c837a2d711282c9ce05b03e6a57238ae44dc2560b177db68c1179042a0c95d933582dacdba72edb1"),
-						"SHA-512 value is not '85be5ad52ca9a965c1eaf88fd33e1bedc6c54e4a020c6ef4c837a2d711282c9ce05b03e6a57238ae44dc2560b177db68c1179042a0c95d933582dacdba72edb1'"
+						net.forestany.forestj.lib.io.File.hashFile(s_fileNew, "SHA-512").contentEquals(s_hash),
+						"SHA-512 value is not '" + s_hash + "', but '" + o_file.hash("SHA-512") + "'"
 				);
 				
 				String s_fileContentFromList = s_testDirectory + "fileContentFromList.txt";
@@ -346,33 +358,65 @@ public class FileTest {
 				o_file = new net.forestany.forestj.lib.io.File(s_testDirectory + "dest" + net.forestany.forestj.lib.io.File.DIR + "fileAlone.txt", true);
 				o_file.appendLine("alone");
 				
+				s_hash = "60344d3375b44f0acee666aaefa9116098ad071ec93978861c498d0e054ad0a5";
+
+				if (net.forestany.forestj.lib.io.File.NEWLINE.length() == 1) {
+					s_hash = "c743096592b5348bf15f6110aba191fe93c56c241d4268263e9255a22d46ba12";
+				}
+
 				assertTrue(
-						net.forestany.forestj.lib.io.File.hashDirectory(s_testDirectory + "dest", "SHA-256").contentEquals("60344d3375b44f0acee666aaefa9116098ad071ec93978861c498d0e054ad0a5"),
-						"SHA-256 value is not '60344d3375b44f0acee666aaefa9116098ad071ec93978861c498d0e054ad0a5'"
+						net.forestany.forestj.lib.io.File.hashDirectory(s_testDirectory + "dest", "SHA-256").contentEquals(s_hash),
+						"SHA-256 value is not '" + s_hash + "', but '" + net.forestany.forestj.lib.io.File.hashDirectory(s_testDirectory + "dest", "SHA-256") + "'"
 				);
+
+				s_hash = "3c87be84cbffcb04c3d7497af0df1435b7060bd537dc5b6b4b1c0eb322631e54";
+
+				if (net.forestany.forestj.lib.io.File.NEWLINE.length() == 1) {
+					s_hash = "da9be8c602a1ea9d85fe9774eb90f241b362933745737ead8bf43e48af804a88";
+				}
+
 				assertTrue(
-						net.forestany.forestj.lib.io.File.hashDirectory(s_testDirectory + "dest", "SHA-256", true).contentEquals("3c87be84cbffcb04c3d7497af0df1435b7060bd537dc5b6b4b1c0eb322631e54"),
-						"SHA-256 value is not '3c87be84cbffcb04c3d7497af0df1435b7060bd537dc5b6b4b1c0eb322631e54'"
+						net.forestany.forestj.lib.io.File.hashDirectory(s_testDirectory + "dest", "SHA-256", true).contentEquals(s_hash),
+						"SHA-256 value is not '" + s_hash + "', but '" + net.forestany.forestj.lib.io.File.hashDirectory(s_testDirectory + "dest", "SHA-256", true) + "'"
 				);
 				
 				int i = 0;
 				
 				for (net.forestany.forestj.lib.io.ListingElement o_listingElement : net.forestany.forestj.lib.io.File.listDirectory(s_testDirectory + "dest" + net.forestany.forestj.lib.io.File.DIR + "copy")) {
-					if (i == 0) {
-						assertTrue(
-								o_listingElement.getName().contentEquals("file1.txt"),
-								"first element in list has not the name 'file1.txt'"
-						);
-					} else if (i == 1) {
-						assertTrue(
-								o_listingElement.getName().contentEquals("file2.txt"),
-								"first element in list has not the name 'file2.txt'"
-						);
-					} else if (i == 3) {
-						assertTrue(
-								o_listingElement.getName().contentEquals("file3.txt"),
-								"first element in list has not the name 'file3.txt'"
-						);
+					if (net.forestany.forestj.lib.io.File.NEWLINE.length() == 1) {
+						if (i == 0) {
+							assertTrue(
+									o_listingElement.getName().contentEquals("file1.txt"),
+									"first element in list has not the name 'file1.txt', but '" + o_listingElement.getName() + "'"
+							);
+						} else if (i == 1) {
+							assertTrue(
+									o_listingElement.getName().contentEquals("file3.txt"),
+									"first element in list has not the name 'file3.txt', but '" + o_listingElement.getName() + "'"
+							);
+						} else if (i == 3) {
+							assertTrue(
+									o_listingElement.getName().contentEquals("file2.txt"),
+									"first element in list has not the name 'file2.txt', but '" + o_listingElement.getName() + "'"
+							);
+						}
+					} else {
+						if (i == 0) {
+							assertTrue(
+									o_listingElement.getName().contentEquals("file1.txt"),
+									"first element in list has not the name 'file1.txt', but '" + o_listingElement.getName() + "'"
+							);
+						} else if (i == 1) {
+							assertTrue(
+									o_listingElement.getName().contentEquals("file2.txt"),
+									"first element in list has not the name 'file2.txt', but '" + o_listingElement.getName() + "'"
+							);
+						} else if (i == 3) {
+							assertTrue(
+									o_listingElement.getName().contentEquals("file3.txt"),
+									"first element in list has not the name 'file3.txt', but '" + o_listingElement.getName() + "'"
+							);
+						}
 					}
 					
 					i++;
@@ -396,9 +440,16 @@ public class FileTest {
 						o_file.getFileLines() == 4,
 						"file lines != 4"
 				);
+
+				i_expectedLength = 21;
+
+				if (net.forestany.forestj.lib.io.File.NEWLINE.length() == 1) {
+					i_expectedLength -= 3;
+				}
+
 				assertTrue(
-						net.forestany.forestj.lib.io.File.fileLength(s_testDirectory + "destRename" + net.forestany.forestj.lib.io.File.DIR + "fileAlone.txt") == 21,
-						"file length != 21"
+						net.forestany.forestj.lib.io.File.fileLength(s_testDirectory + "destRename" + net.forestany.forestj.lib.io.File.DIR + "fileAlone.txt") == i_expectedLength,
+						"file length != " + i_expectedLength + ", but '" + net.forestany.forestj.lib.io.File.fileLength(s_testDirectory + "destRename" + net.forestany.forestj.lib.io.File.DIR + "fileAlone.txt") + "'"
 				);
 				
 				o_file = new net.forestany.forestj.lib.io.File(s_testDirectory + "fileContent.txt", true);

@@ -13,7 +13,7 @@ public class QueryTest {
 	 */
 	/* @org.junit.jupiter.api.Disabled */
 	@Test
-	public void testQueryNOSQMDB() {
+	public void testQueryNOSQLMDB() {
 		try {
 			net.forestany.forestj.lib.test.sql.nosqlmdb.SetBase.setBase();
 			net.forestany.forestj.lib.test.sqltest.QueryTest.testQuery();

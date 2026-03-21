@@ -140,10 +140,11 @@ public class Communication {
 				(this.o_config.getCommunicationType() == Type.TCP_SEND_WITH_ANSWER) ||
 				(this.o_config.isSharedMemoryBidirectionalConfigSet())
 			) {
-				/* check for truststore filepath and truststore password */
-				if ( (net.forestany.forestj.lib.Helper.isStringEmpty(System.getProperty("javax.net.ssl.trustStore"))) || (net.forestany.forestj.lib.Helper.isStringEmpty(System.getProperty("javax.net.ssl.trustStorePassword"))) ) {
-					throw new NullPointerException("Please specify jvm system properties[javax.net.ssl.trustStore] and [javax.net.ssl.trustStorePassword] for communication security[" + this.o_config.getCommunicationSecurity() + "]");
-				}
+				/* not necessary anymore because we use createSSLContextWithKeystoreAndTruststore, but keep it for somewhat in the future */
+					/* check for truststore filepath and truststore password */
+					/*if ( (net.forestany.forestj.lib.Helper.isStringEmpty(System.getProperty("javax.net.ssl.trustStore"))) || (net.forestany.forestj.lib.Helper.isStringEmpty(System.getProperty("javax.net.ssl.trustStorePassword"))) ) {
+						throw new NullPointerException("Please specify jvm system properties[javax.net.ssl.trustStore] and [javax.net.ssl.trustStorePassword] for communication security[" + this.o_config.getCommunicationSecurity() + "]");
+					}*/
 			}
 		}
 		

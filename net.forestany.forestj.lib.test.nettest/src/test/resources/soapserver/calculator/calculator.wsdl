@@ -94,7 +94,7 @@
   <service name="Calculator">
     <documentation>Calculator SOAP web service, implemented with forestJ Tiny Soap Server, provides functions to calculate with numbers.</documentation>
     <port name="CalculatorSoap" binding="CalculatorBinding">
-      <soap:address location="https://localhost/calculator"/>
+      <soap:address location="https://192.168.178.23/calculator"/>
     </port>
   </service>
 </definitions>

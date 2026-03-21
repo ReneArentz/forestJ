@@ -40,7 +40,7 @@ public class Cryptography {
 	 */
 	public Cryptography(String p_s_commonSecretPassphrase, int p_i_keyLengthOption) throws IllegalArgumentException, java.security.NoSuchAlgorithmException, java.security.spec.InvalidKeySpecException {
 		/* check length of common secret passphrase */
-		if (p_s_commonSecretPassphrase.length() < 36) {
+		if ((p_s_commonSecretPassphrase == null) || (p_s_commonSecretPassphrase.length() < 36)) {
 			throw new IllegalArgumentException("Common secret passphrase must have at least '36' characters, but has '" + p_s_commonSecretPassphrase.length() + "' characters");
 		}
 		
@@ -467,7 +467,7 @@ public class Cryptography {
 	        
 	        /* delete all certificate entries which do not match with alias parameter */
 	        for (String s_certificateAlias : java.util.Collections.list(o_keystoreCopy.aliases())) {
-	        	if (!s_certificateAlias.contentEquals(p_s_certificateAlias)) {
+	        	if ((s_certificateAlias != null) && (!s_certificateAlias.contentEquals(p_s_certificateAlias))) {
 	        		o_keystoreCopy.deleteEntry(s_certificateAlias);
 	        	}
 	        }
@@ -488,11 +488,157 @@ public class Cryptography {
 	        /* init key manager factory with default algorithm */
 	        javax.net.ssl.KeyManagerFactory o_keyManagerFactory = javax.net.ssl.KeyManagerFactory.getInstance(javax.net.ssl.KeyManagerFactory.getDefaultAlgorithm());
 	        o_keyManagerFactory.init(o_keystoreCopy, p_s_keystorePassword.toCharArray());
-	        /* init key manager */
-	        javax.net.ssl.KeyManager a_keyManagers[] = o_keyManagerFactory.getKeyManagers();
 	        /* init SSL context instance */
 	        o_sslContext = javax.net.ssl.SSLContext.getInstance("TLSv1.3");
-	        o_sslContext.init(a_keyManagers, null, new java.security.SecureRandom());
+	        o_sslContext.init(o_keyManagerFactory.getKeyManagers(), null, new java.security.SecureRandom());
+		}
+		
+		return o_sslContext;
+	}
+
+	/**
+	 * Creates ssl context instance with truststore.
+	 * 
+	 * @param p_s_truststoreLocation						truststore location full path
+	 * @param p_s_truststorePassword						truststore passphrase
+	 * @return												javax.net.ssl SSL context instance
+	 * @throws java.io.FileNotFoundException				truststore location is invalid
+	 * @throws java.io.IOException							cannot close opened truststore stream
+	 * @throws java.security.KeyStoreException				cannot create truststore default type instances
+	 * @throws java.security.cert.CertificateException		truststore has invalid certificate entries
+	 * @throws java.security.NoSuchAlgorithmException		if the specified algorithm is not available from the specified provider
+	 * @throws java.security.UnrecoverableKeyException 		if the key cannot be recovered(e.g. the given password is wrong)	
+	 * @throws java.security.KeyManagementException 		cannot init SSL context instance
+	 * 			
+	 */
+	public static javax.net.ssl.SSLContext createSSLContextWithTruststoreOnly(String p_s_truststoreLocation, String p_s_truststorePassword) throws java.io.FileNotFoundException, java.io.IOException, java.security.KeyStoreException, java.security.cert.CertificateException, java.security.NoSuchAlgorithmException, java.security.UnrecoverableKeyException, java.security.KeyManagementException {
+		javax.net.ssl.SSLContext o_sslContext = null;
+		
+		/* check keystore location */
+		if (!net.forestany.forestj.lib.io.File.exists(p_s_truststoreLocation)) {
+			throw new java.io.FileNotFoundException("Truststore[" + p_s_truststoreLocation + "] does not exist");
+		}
+		
+		/* open truststore stream */
+		try (
+			java.io.FileInputStream o_fileInputStream = new java.io.FileInputStream(p_s_truststoreLocation);
+		) {
+			/* open and load truststore object */
+			java.security.KeyStore o_truststore = java.security.KeyStore.getInstance(java.security.KeyStore.getDefaultType());
+			o_truststore.load(o_fileInputStream, p_s_truststorePassword.toCharArray());
+			
+													/* log amount of certificates and aliases */
+													net.forestany.forestj.lib.Global.ilogFinest("Amount certificates in truststore: " + o_truststore.size());
+													net.forestany.forestj.lib.Global.ilogFinest("Certificates in truststore ... ");
+	        
+											        for (String s_certificateAlias : java.util.Collections.list(o_truststore.aliases())) {
+											        	net.forestany.forestj.lib.Global.ilogFinest(s_certificateAlias);
+											        }
+	        
+	        /* init trust manager factory with default algorithm */
+	        javax.net.ssl.TrustManagerFactory o_trustManagerFactory = javax.net.ssl.TrustManagerFactory.getInstance(javax.net.ssl.TrustManagerFactory.getDefaultAlgorithm());
+	        o_trustManagerFactory.init(o_truststore);
+	        /* init SSL context instance */
+	        o_sslContext = javax.net.ssl.SSLContext.getInstance("TLSv1.3");
+	        o_sslContext.init(null, o_trustManagerFactory.getTrustManagers(), new java.security.SecureRandom());
+		}
+		
+		return o_sslContext;
+	}
+
+	/**
+	 * Creates ssl context instance with keystore copy and just one certificate.
+	 * 
+	 * @param p_s_keystoreLocation							keystore location full path
+	 * @param p_s_keystorePassword							keystore passphrase
+	 * @param p_s_certificateAlias							certificate alias which should be the last one left in keystore copy
+	 * @param p_s_truststoreLocation						truststore location full path
+	 * @param p_s_truststorePassword						truststore passphrase
+	 * @return												javax.net.ssl SSL context instance
+	 * @throws java.io.FileNotFoundException				keystore location is invalid
+	 * @throws IllegalStateException						more than one certificate is left
+	 * @throws java.io.IOException							cannot close opened keystore streams
+	 * @throws java.security.KeyStoreException				cannot create keystore default type instances
+	 * @throws java.security.cert.CertificateException		keystore has invalid certificate entries
+	 * @throws java.security.NoSuchAlgorithmException		if the specified algorithm is not available from the specified provider
+	 * @throws java.security.UnrecoverableKeyException 		if the key cannot be recovered(e.g. the given password is wrong)	
+	 * @throws java.security.KeyManagementException 		cannot init SSL context instance
+	 * 			
+	 */
+	public static javax.net.ssl.SSLContext createSSLContextWithKeystoreAndTruststore(String p_s_keystoreLocation, String p_s_keystorePassword, String p_s_certificateAlias, String p_s_truststoreLocation, String p_s_truststorePassword) throws java.io.FileNotFoundException, IllegalStateException, java.io.IOException, java.security.KeyStoreException, java.security.cert.CertificateException, java.security.NoSuchAlgorithmException, java.security.UnrecoverableKeyException, java.security.KeyManagementException {
+		javax.net.ssl.SSLContext o_sslContext = null;
+		
+		/* check keystore location */
+		if (!net.forestany.forestj.lib.io.File.exists(p_s_keystoreLocation)) {
+			throw new java.io.FileNotFoundException("Keystore[" + p_s_keystoreLocation + "] does not exist");
+		}
+
+		/* check truststore location */
+		if (!net.forestany.forestj.lib.io.File.exists(p_s_truststoreLocation)) {
+			throw new java.io.FileNotFoundException("Truststore[" + p_s_truststoreLocation + "] does not exist");
+		}
+		
+		/* open store streams of keystore and truststore */
+		try (
+			java.io.FileInputStream o_fileInputStream = new java.io.FileInputStream(p_s_keystoreLocation);
+			java.io.FileInputStream o_fileInputStreamCopy = new java.io.FileInputStream(p_s_keystoreLocation);
+			java.io.FileInputStream o_fileInputStreamTrust = new java.io.FileInputStream(p_s_truststoreLocation);
+		) {
+			/* open and load both keystore and truststore */
+			java.security.KeyStore o_keystore = java.security.KeyStore.getInstance(java.security.KeyStore.getDefaultType());
+			java.security.KeyStore o_keystoreCopy = java.security.KeyStore.getInstance(java.security.KeyStore.getDefaultType());
+			java.security.KeyStore o_truststore = java.security.KeyStore.getInstance(java.security.KeyStore.getDefaultType());
+			o_keystore.load(o_fileInputStream, p_s_keystorePassword.toCharArray());
+			o_keystoreCopy.load(o_fileInputStreamCopy, p_s_keystorePassword.toCharArray());
+			o_truststore.load(o_fileInputStreamTrust, p_s_truststorePassword.toCharArray());
+			
+													/* log amount of certificates and aliases */
+													net.forestany.forestj.lib.Global.ilogFinest("Amount certificates in keystore: " + o_keystore.size());
+													net.forestany.forestj.lib.Global.ilogFinest("Certificates in keystore ... ");
+			
+													for (String s_certificateAlias : java.util.Collections.list(o_keystore.aliases())) {
+														net.forestany.forestj.lib.Global.ilogFinest(s_certificateAlias);
+													}
+
+			if (!Helper.isStringEmpty(p_s_certificateAlias)) {
+				/* delete all certificate entries which do not match with alias parameter */
+				for (String s_certificateAlias : java.util.Collections.list(o_keystoreCopy.aliases())) {
+					if ((s_certificateAlias != null) && (!s_certificateAlias.contentEquals(p_s_certificateAlias))) {
+						o_keystoreCopy.deleteEntry(s_certificateAlias);
+					}
+				}
+		
+				/* just one certificate entry must be left */
+				if (o_keystoreCopy.size() != 1) {
+					throw new IllegalStateException("Certificate[" + p_s_certificateAlias + "] could not be found in keystore[" + p_s_keystoreLocation + "]");
+				}
+				
+														/* log amount of certificates and alias in keystore copy */
+														net.forestany.forestj.lib.Global.ilogFinest("Amount certificates in keystoreCopy: " + o_keystoreCopy.size());
+														net.forestany.forestj.lib.Global.ilogFinest("Certificates in keystoreCopy ... ");
+														
+														for (String s_certificateAlias : java.util.Collections.list(o_keystoreCopy.aliases())) {
+															net.forestany.forestj.lib.Global.ilogFinest(s_certificateAlias);
+														}
+			}
+
+													/* log amount of certificates and aliases of truststore */
+													net.forestany.forestj.lib.Global.ilogFinest("Amount certificates in truststore: " + o_truststore.size());
+													net.forestany.forestj.lib.Global.ilogFinest("Certificates in truststore ... ");
+			
+													for (String s_certificateAlias : java.util.Collections.list(o_truststore.aliases())) {
+														net.forestany.forestj.lib.Global.ilogFinest(s_certificateAlias);
+													}
+
+	        /* init key manager factory with default algorithm */
+	        javax.net.ssl.KeyManagerFactory o_keyManagerFactory = javax.net.ssl.KeyManagerFactory.getInstance(javax.net.ssl.KeyManagerFactory.getDefaultAlgorithm());
+	        o_keyManagerFactory.init(o_keystoreCopy, p_s_keystorePassword.toCharArray());
+			/* init trust manager factory with default algorithm */
+	        javax.net.ssl.TrustManagerFactory o_trustManagerFactory = javax.net.ssl.TrustManagerFactory.getInstance(javax.net.ssl.TrustManagerFactory.getDefaultAlgorithm());
+	        o_trustManagerFactory.init(o_truststore);
+	        /* init SSL context instance */
+	        o_sslContext = javax.net.ssl.SSLContext.getInstance("TLSv1.3");
+	        o_sslContext.init(o_keyManagerFactory.getKeyManagers(), o_trustManagerFactory.getTrustManagers(), new java.security.SecureRandom());
 		}
 		
 		return o_sslContext;
@@ -546,7 +692,7 @@ public class Cryptography {
 //	        
 //	        /* delete all certificate entries which do not match with alias parameter */
 //	        for (String s_certificateAlias : java.util.Collections.list(o_keystoreCopy.aliases())) {
-//	        	if (!s_certificateAlias.contentEquals(p_s_certificateAlias)) {
+//	        	if ((s_certificateAlias != null) && (!s_certificateAlias.contentEquals(p_s_certificateAlias))) {
 //	        		o_keystoreCopy.deleteEntry(s_certificateAlias);
 //	        	}
 //	        }

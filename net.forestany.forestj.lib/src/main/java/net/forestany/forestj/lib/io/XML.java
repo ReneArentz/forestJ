@@ -331,7 +331,7 @@ public class XML {
 		s_xsd = s_xsd.replaceAll("<!--(.*?)-->", "");
 		
 		/* look for targetNamespace in schema-tag */
-		if (s_xsd.startsWith("<xs:schema")) {
+		if ((s_xsd != null) && (s_xsd.startsWith("<xs:schema"))) {
 			String s_foo = s_xsd.substring(0, s_xsd.indexOf(">"));
 			
 			if (s_foo.contains("targetnamespace=\"")) {
@@ -375,7 +375,7 @@ public class XML {
 	    }
 	    
 	    /* check if xsd-schema starts with xs:element */
-	    if ( (!a_xsdTags.get(0).toLowerCase().startsWith("<xs:element")) && (!a_xsdTags.get(0).toLowerCase().startsWith("<xs:complextype")) ) {
+	    if ((a_xsdTags.size() < 1) || ( (!a_xsdTags.get(0).toLowerCase().startsWith("<xs:element")) && (!a_xsdTags.get(0).toLowerCase().startsWith("<xs:complextype")) )) {
     		throw new IllegalArgumentException("xsd-schema must start with <xs:element>-tag or with <xs:complexType>-tag.");
     	}
     	
@@ -441,6 +441,11 @@ public class XML {
 	private XSDType getXSDType(java.util.List<String> p_a_xsdTags, int p_i_line) throws IllegalArgumentException {
 		XSDType e_xsdTagType = null;
     	
+		/* check if we have a valid line pointer */
+    	if (p_a_xsdTags.size() <= p_i_line) {
+    		throw new IllegalArgumentException("Invalid xsd-tag line pointer(" + (p_i_line + 1) + ")");
+    	}
+
     	/* get xsd type */
 		if (p_a_xsdTags.get(p_i_line).contains("<xs:element ")) {
     		e_xsdTagType = XSDType.Element;
@@ -519,8 +524,18 @@ public class XML {
 	    boolean b_parsed = false;
 	    boolean b_oneLinerBefore = false;
     	
+		/* check if xsd tag is not empty */
+		if (p_a_xsdTags.size() < 1) {
+			throw new NullPointerException("XSD-tag-list is empty.");
+		}
+
 	    /* iterate all elements */
 	    for (int i_min = p_i_min; i_min <= i_max; i_min++) {
+			/* check if xsd tag is null */
+			if (p_a_xsdTags.size() <= i_min) {
+				throw new IllegalArgumentException("Invalid xsd-tag-type at(" + (i_min + 1) + ".-element) is \"null\".");
+			}
+
 	    	/* get xsd type */
 	    	XSDType e_xsdTagType = getXSDType(p_a_xsdTags, i_min);
 	    	
@@ -550,10 +565,15 @@ public class XML {
 	    			int i_tempMin = i_min + 1;
 	    			int i_level = 0;
 	    			
+					/* check if xsd tag is null */
+					if (p_a_xsdTags.size() <= i_tempMin) {
+						throw new NullPointerException("Invalid xsd-tag at(" + (i_tempMin + 1) + ".-element) is \"null\".");
+					}
+
 	    			/* look for end of nested xs:element tag */
 	    			while (
-		    				( (e_xsdTagType == XSDType.Element) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().equals("</xs:element>")) ) || 
-		    				( (e_xsdTagType == XSDType.ComplexType) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().equals("</xs:complextype>")) ) || 
+		    				( (e_xsdTagType == XSDType.Element) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().contentEquals("</xs:element>")) ) || 
+		    				( (e_xsdTagType == XSDType.ComplexType) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().contentEquals("</xs:complextype>")) ) || 
 		    				(i_level != 0)
 		    			)
 	    			{
@@ -561,14 +581,14 @@ public class XML {
 	    					/* handle other interlacing in current nested xs:element tag */
 		    				if ( (p_a_xsdTags.get(i_tempMin).toLowerCase().startsWith("<xs:element")) && (!p_a_xsdTags.get(i_tempMin).endsWith("/>")) ) {
 		    					i_level++;
-		    				} else if (p_a_xsdTags.get(i_tempMin).toLowerCase().equals("</xs:element>")) {
+		    				} else if (p_a_xsdTags.get(i_tempMin).toLowerCase().contentEquals("</xs:element>")) {
 		    					i_level--;
 		    				}
 	    				} else if (e_xsdTagType == XSDType.ComplexType) {
 	    					/* handle other interlacing in current nested xs:complexType tag */
 		    				if ( (p_a_xsdTags.get(i_tempMin).toLowerCase().startsWith("<xs:complextype")) && (!p_a_xsdTags.get(i_tempMin).endsWith("/>")) ) {
 		    					i_level++;
-		    				} else if (p_a_xsdTags.get(i_tempMin).toLowerCase().equals("</xs:complextype>")) {
+		    				} else if (p_a_xsdTags.get(i_tempMin).toLowerCase().contentEquals("</xs:complextype>")) {
 		    					i_level--;
 		    				}
 	    				}
@@ -579,6 +599,11 @@ public class XML {
 	    				}
 	    				
 	    				i_tempMin++;
+
+						/* check if xsd tag is null */
+						if (p_a_xsdTags.size() <= i_tempMin) {
+							throw new NullPointerException("Invalid xsd-tag at(" + (i_tempMin + 1) + ".-element) is \"null\".");
+						}
 		    		}
 	    			
 	    			/* save current element to reset it after recursion */
@@ -605,7 +630,7 @@ public class XML {
 	    		
 	    		/* store attributes of complex element type until sequence end tag was found */
 	    		if (e_xsdTagType == XSDType.Sequence) {
-		    		while (!p_a_xsdTags.get(i_max).toLowerCase().contentEquals("</xs:sequence>")) {
+		    		while ((p_a_xsdTags.size() > i_max) && (!p_a_xsdTags.get(i_max).toLowerCase().contentEquals("</xs:sequence>"))) {
 		    			if (p_a_xsdTags.get(i_max).toLowerCase().startsWith("<xs:attribute")) {
 												    				net.forestany.forestj.lib.Global.ilogFinest("\t\tAttribute: " + i_max + " to Current Element: " + this.o_currentElement.getName() + " - - - parent: " + p_e_xsdParentTagType);
 												    				net.forestany.forestj.lib.Global.ilogFinest("\t\tAttribute: " + p_a_xsdTags.get(i_max) + " to Current Element: " + this.o_currentElement.getName() + " - - - parent: " + p_e_xsdParentTagType);
@@ -678,6 +703,11 @@ public class XML {
 	    		if (i_nestedMax > 0) {
 	    			i_endTagPointer = i_nestedMax;
 	    		}
+
+				/* check if end tag pointer is valid */
+				if (p_a_xsdTags.size() <= i_endTagPointer) {
+					throw new IllegalArgumentException("Cannot retrieve xsd-tag with index '" + i_endTagPointer + "'");
+				}
 	    		
 											    		net.forestany.forestj.lib.Global.ilogFiner("endTagPointer");
 											    		net.forestany.forestj.lib.Global.ilogFiner("\t\t" + i_min + " ... " + i_endTagPointer);
@@ -715,7 +745,7 @@ public class XML {
 	    	/* if tag is of type element, complex type or attribute if parent type is complex */
 	    	if ( ( (e_xsdTagType == XSDType.Element) || (( (e_xsdTagTypeBefore != XSDType.Element) || (b_oneLinerBefore) ) && (e_xsdTagType == XSDType.ComplexType)) || ((p_e_xsdParentTagType == XSDType.ComplexType) && (e_xsdTagType == XSDType.Attribute)) ) && (!b_simpleType) && (!b_simpleContent) ) {
 	    		if ( ( (e_xsdTagType == XSDType.Element) || (( (e_xsdTagTypeBefore != XSDType.Element) || (b_oneLinerBefore) ) && (e_xsdTagType == XSDType.ComplexType)) ) ) {
-	    			if (!p_a_xsdTags.get(i_min).endsWith("/>")) {
+	    			if ((p_a_xsdTags.size() > i_min) && (!p_a_xsdTags.get(i_min).endsWith("/>"))) {
 											    				net.forestany.forestj.lib.Global.ilogFiner("\tnew Current Element: " + i_min);
 											    				net.forestany.forestj.lib.Global.ilogFiner("\tnew Current Element: " + p_a_xsdTags.get(i_min));
 	    				/* parse xs:element */
@@ -798,7 +828,7 @@ public class XML {
 	    	XSDType e_xsdTagType = getXSDType(p_a_xsdTags, i_min);
 	    	
 	    	/* first xsd tag must be of type element or complex type and not close itself */
-	    	if (!p_a_xsdTags.get(i_min).endsWith("/>")) {
+	    	if ((p_a_xsdTags.size() > i_min) && (!p_a_xsdTags.get(i_min).endsWith("/>"))) {
 	    		/* first xsd tag is type xs:element or xs:complexType */
 	    		if ( (e_xsdTagType == XSDType.Element) || (e_xsdTagType == XSDType.ComplexType) ) {
 	    			/* parse xs:element */
@@ -814,10 +844,15 @@ public class XML {
 	    			int i_tempMin = i_min + 1;
 	    			int i_level = 0;
 	    			
+					/* check if xsd tag is null */
+					if (p_a_xsdTags.size() <= i_tempMin) {
+						throw new NullPointerException("Invalid xsd-tag at(" + (i_tempMin + 1) + ".-element) is \"null\".");
+					}
+
 	    			/* look for end of nested xs:element tag */
 	    			while (
-	    				( (e_xsdTagType == XSDType.Element) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().equals("</xs:element>")) ) || 
-	    				( (e_xsdTagType == XSDType.ComplexType) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().equals("</xs:complextype>")) ) || 
+	    				( (e_xsdTagType == XSDType.Element) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().contentEquals("</xs:element>")) ) || 
+	    				( (e_xsdTagType == XSDType.ComplexType) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().contentEquals("</xs:complextype>")) ) || 
 	    				(i_level != 0)
 	    			)
 	    			{
@@ -825,14 +860,14 @@ public class XML {
 	    					/* handle other interlacing in current nested xs:element tag */
 		    				if ( (p_a_xsdTags.get(i_tempMin).toLowerCase().startsWith("<xs:element")) && (!p_a_xsdTags.get(i_tempMin).endsWith("/>")) ) {
 		    					i_level++;
-		    				} else if (p_a_xsdTags.get(i_tempMin).toLowerCase().equals("</xs:element>")) {
+		    				} else if (p_a_xsdTags.get(i_tempMin).toLowerCase().contentEquals("</xs:element>")) {
 		    					i_level--;
 		    				}
 	    				} else if (e_xsdTagType == XSDType.ComplexType) {
 	    					/* handle other interlacing in current nested xs:complexType tag */
 		    				if ( (p_a_xsdTags.get(i_tempMin).toLowerCase().startsWith("<xs:complextype")) && (!p_a_xsdTags.get(i_tempMin).endsWith("/>")) ) {
 		    					i_level++;
-		    				} else if (p_a_xsdTags.get(i_tempMin).toLowerCase().equals("</xs:complextype>")) {
+		    				} else if (p_a_xsdTags.get(i_tempMin).toLowerCase().contentEquals("</xs:complextype>")) {
 		    					i_level--;
 		    				}
 	    				}
@@ -843,6 +878,11 @@ public class XML {
 	    				}
 	    				
 	    				i_tempMin++;
+
+						/* check if xsd tag is null */
+						if (p_a_xsdTags.size() <= i_tempMin) {
+							throw new NullPointerException("Invalid xsd-tag at(" + (i_tempMin + 1) + ".-element) is \"null\".");
+						}
 		    		}
 	    			
 											    			net.forestany.forestj.lib.Global.ilogFiner("interlacing");
@@ -859,11 +899,16 @@ public class XML {
 	    		
 	    		/* decrease xml end tag counter until sequence end tag was found */
 	    		if (e_xsdTagType == XSDType.Sequence) {
-		    		while (!p_a_xsdTags.get(i_max).toLowerCase().contentEquals("</xs:sequence>")) {
+		    		while ((p_a_xsdTags.size() > i_max) && (!p_a_xsdTags.get(i_max).toLowerCase().contentEquals("</xs:sequence>"))) {
 	    				i_max--;
 		    		}
 	    		}
 	    		
+				/* check i_max pointer */
+				if (p_a_xsdTags.size() <= i_max) {
+					throw new IllegalArgumentException("Cannot retrieve xsd-tag in xsd-schema at(" + (i_max) + ").");
+				}
+
 	    		/* if we still have no closing tag, then our xsd schema is invalid */
 	    		if (!p_a_xsdTags.get(i_max).startsWith("</")) {
 	    			throw new IllegalArgumentException("Invalid xsd-tag is not closed in xsd-schema at(" + (i_min + 1) + ".-element) \"" + p_a_xsdTags.get(i_min) + "\".");
@@ -905,7 +950,7 @@ public class XML {
 	    	XSDType e_xsdTagType = getXSDType(p_a_xsdTags, i_min);
 	    	
 	    	/* xsd tags must close themselves, otherwise we have no more definitions */
-	    	if (p_a_xsdTags.get(i_min).endsWith("/>")) {
+	    	if ((p_a_xsdTags.size() > i_min) && (p_a_xsdTags.get(i_min).endsWith("/>"))) {
 	    		if ( (e_xsdTagType == XSDType.Element) && (!b_definitionElementsClosed) ) {
 	    													net.forestany.forestj.lib.Global.ilogFiner("add element reference of: " + p_a_xsdTags.get(i_min));
 	    			/* parse xs:element */
@@ -947,7 +992,7 @@ public class XML {
 	    		if ( (e_xsdTagType == XSDType.Attribute) && (!b_definitionElementsClosed) ) {
 	    			b_definitionElementsClosed = true;
 	    		}
-	    	} else if ( (!p_a_xsdTags.get(i_min).endsWith("/>")) && (e_xsdTagType == XSDType.Element) && (getXSDType(p_a_xsdTags, i_min + 1) == XSDType.SimpleType) ) { /* handle element definition with simpleType */
+	    	} else if ( (p_a_xsdTags.size() > i_min) && (!p_a_xsdTags.get(i_min).endsWith("/>")) && (e_xsdTagType == XSDType.Element) && (getXSDType(p_a_xsdTags, i_min + 1) == XSDType.SimpleType) ) { /* handle element definition with simpleType */
 														net.forestany.forestj.lib.Global.ilogFiner("add element reference with simpleType of: " + p_a_xsdTags.get(i_min));
 				/* parse xs:element with simpleType */
 				XSDElement o_xsdElement = this.parseXSDElementWithSimpleType(p_a_xsdTags, i_min);
@@ -969,18 +1014,18 @@ public class XML {
 				int i_tempMax = i_min;
 				
 				/* find end of element interlacing */
-				while (!p_a_xsdTags.get(i_tempMax).toLowerCase().startsWith("</xs:element>")) {
-					if (i_tempMax == p_i_min + 100000) {
-						/* forbidden state - interlacing is not valid in xsd-schema */
-						throw new IllegalArgumentException("Invalid nested xsd-tag xs:restriction at(" + (p_i_min + 1) + ".-element) \"" + p_a_xsdTags.get(p_i_min) + "\".");
-					}
-					
+				while ((p_a_xsdTags.size() > i_tempMax) && (!p_a_xsdTags.get(i_tempMax).toLowerCase().startsWith("</xs:element>"))) {
 					i_tempMax++;
+				}
+
+				if (p_a_xsdTags.size() <= i_tempMax) {
+					/* forbidden state - interlacing is not valid in xsd-schema */
+					throw new IllegalArgumentException("Invalid nested xsd-tag xs:restriction at(" + (p_i_min + 1) + ".-element) \"" + p_a_xsdTags.get(p_i_min) + "\".");
 				}
 				
 				/* set new xsd tag pointer to skip xs:element interlacing */
 				i_min = i_tempMax;
-	    	} else if ( (!p_a_xsdTags.get(i_min).endsWith("/>")) && (e_xsdTagType == XSDType.Attribute) && (getXSDType(p_a_xsdTags, i_min + 1) == XSDType.SimpleType) ) { /* handle attribute definition with simpleType */
+	    	} else if ( (p_a_xsdTags.size() > i_min) && (!p_a_xsdTags.get(i_min).endsWith("/>")) && (e_xsdTagType == XSDType.Attribute) && (getXSDType(p_a_xsdTags, i_min + 1) == XSDType.SimpleType) ) { /* handle attribute definition with simpleType */
 	    												net.forestany.forestj.lib.Global.ilogFiner("add attribute reference with simpleType of: " + p_a_xsdTags.get(i_min));
     			/* parse xs:attribute with simpleType */
     			XSDAttribute o_xsdAttribute = this.parseXSDAttributeWithSimpleType(p_a_xsdTags, i_min);
@@ -997,14 +1042,14 @@ public class XML {
 	    		int i_tempMax = i_min;
 	    		
 	    		/* find end of attribute interlacing */
-	    		while (!p_a_xsdTags.get(i_tempMax).toLowerCase().startsWith("</xs:attribute>")) {
-	    			if (i_tempMax == p_i_min + 100000) {
-	    				/* forbidden state - interlacing is not valid in xsd-schema */
-	    				throw new IllegalArgumentException("Invalid nested xsd-tag xs:restriction at(" + (p_i_min + 1) + ".-element) \"" + p_a_xsdTags.get(p_i_min) + "\".");
-	    			}
-	    			
+	    		while ((p_a_xsdTags.size() > i_tempMax) && (!p_a_xsdTags.get(i_tempMax).toLowerCase().startsWith("</xs:attribute>"))) {
 	    			i_tempMax++;
 	    		}
+
+				if (p_a_xsdTags.size() <= i_tempMax) {
+					/* forbidden state - interlacing is not valid in xsd-schema */
+					throw new IllegalArgumentException("Invalid nested xsd-tag xs:restriction at(" + (p_i_min + 1) + ".-element) \"" + p_a_xsdTags.get(p_i_min) + "\".");
+				}
 	    		
 	    		/* set new xsd tag pointer to skip xs:attribute interlacing */
 	    		i_min = i_tempMax;
@@ -1047,7 +1092,7 @@ public class XML {
     			b_simpleType = true;
     		}
     		
-    		if (!p_a_xsdTags.get(i_min).endsWith("/>")) {
+    		if ((p_a_xsdTags.size() > i_min) && (!p_a_xsdTags.get(i_min).endsWith("/>"))) {
 	    		/* first xsd tag is type xs:element or xs:complexType */
 	    		if ( ( (e_xsdTagType == XSDType.Element) && (!b_simpleContent) && (!b_simpleType) ) || ( (e_xsdTagType == XSDType.ComplexType) && (!b_simpleContent) ) ) {
 	    			i_max--;
@@ -1063,7 +1108,7 @@ public class XML {
 	    		
 	    		/* save attributes in complex type until sequence end tag found */
 	    		if (e_xsdTagType == XSDType.Sequence) {
-	    			while (!p_a_xsdTags.get(i_max).toLowerCase().contentEquals("</xs:sequence>")) {
+	    			while ((p_a_xsdTags.size() > i_max) && (!p_a_xsdTags.get(i_max).toLowerCase().contentEquals("</xs:sequence>"))) {
 	    				if (p_a_xsdTags.get(i_max).toLowerCase().startsWith("<xs:attribute")) {
 		    				java.util.regex.Pattern o_regex = java.util.regex.Pattern.compile("ref=\"([^\"]*)\"");
 			    			java.util.regex.Matcher o_matcherRef = o_regex.matcher(p_a_xsdTags.get(i_max));
@@ -1179,6 +1224,11 @@ public class XML {
 	    		if (i_nestedMax > 0) {
 	    			i_endTagPointer = i_nestedMax;
 	    		}
+
+				/* check if end tag pointer is valid */
+				if (p_a_xsdTags.size() <= i_endTagPointer) {
+					throw new IllegalArgumentException("Cannot retrieve xsd-tag with index '" + i_endTagPointer + "'");
+				}
 	    		
 											    		net.forestany.forestj.lib.Global.ilogFiner("endTagPointer");
 											    		net.forestany.forestj.lib.Global.ilogFiner("\t\t" + i_min + " ... " + i_endTagPointer);
@@ -1265,7 +1315,7 @@ public class XML {
 	    	    		    }
 	    		    		
 	    	    		    /* library does not support multiple occurrences of the same xml element without a list definition */
-	    	    			if ( (!o_xsdElement.getChoice()) && (!this.o_currentElement.getMapping().contains("ArrayList(")) && (o_xsdElement.getMaxOccurs() > 1) ) {
+	    	    			if ( (!o_xsdElement.getChoice()) && ( (this.o_currentElement.getMapping() != null) && (!this.o_currentElement.getMapping().contains("ArrayList(")) ) && (o_xsdElement.getMaxOccurs() > 1) ) {
 	    	    				throw new IllegalArgumentException("Library does not support multiple occurrences of the same xml element without a list definition in xsd-schema at(" + (i_min + 1) + ".-element) \"" + p_a_xsdTags.get(i_min) + "\".");
 	    	    			}
 	    	    		    
@@ -1348,7 +1398,7 @@ public class XML {
 	    	    		    }
 	    		    		
 	    	    		    /* library does not support multiple occurrences of the same xml element without a list definition */
-	    	    			if ( (!o_xsdElement.getChoice()) && (!this.o_currentElement.getMapping().contains("ArrayList(")) && (o_xsdElement.getMaxOccurs() > 1) ) {
+	    	    			if ( (!o_xsdElement.getChoice()) && ( (this.o_currentElement.getMapping() != null) && (!this.o_currentElement.getMapping().contains("ArrayList(")) ) && (o_xsdElement.getMaxOccurs() > 1) ) {
 	    	    				throw new IllegalArgumentException("Library does not support multiple occurrences of the same xml element without a list definition in xsd-schema at(" + (i_min + 1) + ".-element) \"" + p_a_xsdTags.get(i_min) + "\".");
 	    	    			}
 	    	    		    
@@ -1592,7 +1642,7 @@ public class XML {
 		
 		/* check next nested tag within xs:simpleType, if next tag is already a xs:restriction tag(not starting with xs:element), we must decrement temp start and temp max */
 		if (getXSDType(p_a_xsdTags, p_i_min + 1) == XSDType.Restriction) {
-			if (p_a_xsdTags.get(p_i_min + 1).endsWith("/>")) {
+			if ((p_a_xsdTags.size() > (p_i_min + 1)) && (p_a_xsdTags.get(p_i_min + 1).endsWith("/>"))) {
 				/* just a restriction as one line, without any restriction items - can return xsd element here */
 				return o_xsdElement;
 			} else {
@@ -1692,6 +1742,11 @@ public class XML {
 		/* start tag pointer for nested xs:simpleContent */
 		int i_tempMin = p_i_min;
 		
+		/* check valid pointer */
+		if (p_a_xsdTags.size() >= i_tempMin) {
+			throw new IllegalArgumentException("Cannot retrieve xsd-tag with pointer '" + i_tempMin + "'");
+		}
+
 		/* find start of simpleContent complexType interlacing */
 		if (!p_a_xsdTags.get(i_tempMin).toLowerCase().startsWith("<xs:complextype")) {
 			/* forbidden state - interlacing is not valid in xsd-schema */
@@ -1701,6 +1756,11 @@ public class XML {
 		/* end tag pointer for nested xs:simpleContent */
 		int i_tempMax = p_i_min;
 		
+		/* check valid pointer */
+		if (p_a_xsdTags.size() >= i_tempMax) {
+			throw new IllegalArgumentException("Cannot retrieve xsd-tag with pointer '" + i_tempMax + "'");
+		}
+
 		/* find end of simpleType interlacing */
 		while (!p_a_xsdTags.get(i_tempMax).toLowerCase().startsWith("</xs:complextype")) {
 			if (i_tempMax == (p_a_xsdTags.size() - 1)) {
@@ -1777,7 +1837,7 @@ public class XML {
 	    		    		}
 	    		    		
 	    		    		/* library does not support multiple occurrences of the same xml element without a list definition */
-	    	    			if ( (!o_xsdElement.getChoice()) && (!o_xsdElement.getMapping().contains("ArrayList(")) && (o_xsdElement.getMaxOccurs() > 1) ) {
+	    	    			if ( (!o_xsdElement.getChoice()) && ( (o_xsdElement.getMapping() != null) && (!o_xsdElement.getMapping().contains("ArrayList(")) ) && (o_xsdElement.getMaxOccurs() > 1) ) {
 	    	    				throw new IllegalArgumentException("Library does not support multiple occurrences of the same xml element without a list definition in xsd-schema at(" + (p_i_min + 1) + ".-element) \"" + p_a_xsdTags.get(p_i_min) + "\".");
 	    	    			}
 	    	    		} else {
@@ -1794,7 +1854,7 @@ public class XML {
     		    }
     		}
     		
-    		if (!p_a_xsdTags.get(i_tempMin).endsWith("/>")) {
+    		if ((p_a_xsdTags.size() > i_tempMin) && (!p_a_xsdTags.get(i_tempMin).endsWith("/>"))) {
     			if ( (e_xsdSimpleContentTagType == XSDType.Attribute) && (getXSDType(p_a_xsdTags, i_tempMin + 1) == XSDType.SimpleType) ) {
     				/* parse xs:attribute with simpleType */
 	    			XSDAttribute o_xsdAttribute = this.parseXSDAttributeWithSimpleType(p_a_xsdTags, i_tempMin);
@@ -2251,7 +2311,7 @@ public class XML {
 		boolean b_simpleTypeFirst = true;
 		
 		/* find start of simpleType interlacing */
-		while (!p_a_xsdTags.get(i_tempMin).toLowerCase().startsWith("<xs:simpletype")) {
+		while ((p_a_xsdTags.size() > i_tempMin) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().startsWith("<xs:simpletype"))) {
 			if (i_tempMin == p_i_max) {
 				/* forbidden state - interlacing is not valid in xsd-schema */
 				throw new IllegalArgumentException("Invalid nested xsd-tag xs:simpleType at(" + (p_i_min + 1) + ".-element) \"" + p_a_xsdTags.get(p_i_min) + "\".");
@@ -2265,7 +2325,7 @@ public class XML {
 		int i_tempMax = p_i_min;
 		
 		/* find end of simpleType interlacing */
-		while (!p_a_xsdTags.get(i_tempMax).toLowerCase().startsWith("</xs:simpletype")) {
+		while ((p_a_xsdTags.size() > i_tempMax) && (!p_a_xsdTags.get(i_tempMax).toLowerCase().startsWith("</xs:simpletype"))) {
 			if (i_tempMax == p_i_max) {
 				/* forbidden state - interlacing is not valid in xsd-schema */
 				throw new IllegalArgumentException("Invalid nested xsd-tag xs:simpleType at(" + (p_i_min + 1) + ".-element) \"" + p_a_xsdTags.get(p_i_min) + "\".");
@@ -2304,9 +2364,9 @@ public class XML {
     		    }
     		}
     		
-    		if (!p_a_xsdTags.get(i_tempMin).endsWith("/>")) {
+    		if ((p_a_xsdTags.size() > i_tempMin) && (!p_a_xsdTags.get(i_tempMin).endsWith("/>"))) {
     			/* if we still have no closing tag, then our xsd schema is invalid */
-	    		if (!p_a_xsdTags.get(i_tempMax).startsWith("</")) {
+	    		if ((p_a_xsdTags.size() > i_tempMax) && (!p_a_xsdTags.get(i_tempMax).startsWith("</"))) {
 	    			throw new IllegalArgumentException("Invalid xsd-tag is not closed in xsd-schema at(" + (i_tempMin + 1) + ".-element) \"" + p_a_xsdTags.get(i_tempMin) + "\".");
 	    		}
 	    		
@@ -2414,7 +2474,7 @@ public class XML {
 		boolean b_complexTypeFirst = true;
 		
 		/* find start of simpleContent complexType interlacing */
-		while (!p_a_xsdTags.get(i_tempMin).toLowerCase().startsWith("<xs:complextype")) {
+		while ((p_a_xsdTags.size() > i_tempMin) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().startsWith("<xs:complextype"))) {
 			if (i_tempMin == p_i_max) {
 				/* forbidden state - interlacing is not valid in xsd-schema */
 				throw new IllegalArgumentException("Invalid nested xsd-tag xs:simpleType at(" + (p_i_min + 1) + ".-element) \"" + p_a_xsdTags.get(p_i_min) + "\".");
@@ -2428,7 +2488,7 @@ public class XML {
 		int i_tempMax = p_i_min;
 		
 		/* find end of simpleType interlacing */
-		while (!p_a_xsdTags.get(i_tempMax).toLowerCase().startsWith("</xs:complextype")) {
+		while ((p_a_xsdTags.size() > i_tempMax) && (!p_a_xsdTags.get(i_tempMax).toLowerCase().startsWith("</xs:complextype"))) {
 			if (i_tempMax == p_i_max) {
 				/* forbidden state - interlacing is not valid in xsd-schema */
 				throw new IllegalArgumentException("Invalid nested xsd-tag xs:simpleContent at(" + (p_i_min + 1) + ".-element) \"" + p_a_xsdTags.get(p_i_min) + "\".");
@@ -2506,7 +2566,7 @@ public class XML {
 	    		    		}
 	    		    		
 	    		    		/* library does not support multiple occurrences of the same xml element without a list definition */
-	    	    			if ( (!o_xsdElement.getChoice()) && (!this.o_currentElement.getMapping().contains("ArrayList(")) && (o_xsdElement.getMaxOccurs() > 1) ) {
+	    	    			if ( (!o_xsdElement.getChoice()) && ( (this.o_currentElement.getMapping() != null) && (!this.o_currentElement.getMapping().contains("ArrayList(")) ) && (o_xsdElement.getMaxOccurs() > 1) ) {
 	    	    				throw new IllegalArgumentException("Library does not support multiple occurrences of the same xml element without a list definition in xsd-schema at(" + (p_i_min + 1) + ".-element) \"" + p_a_xsdTags.get(p_i_min) + "\".");
 	    	    			}
 	    	    		} else {
@@ -2522,7 +2582,7 @@ public class XML {
     		    }
     		}
     		
-    		if (!p_a_xsdTags.get(i_tempMin).endsWith("/>")) {
+    		if ((p_a_xsdTags.size() > i_tempMin) && (!p_a_xsdTags.get(i_tempMin).endsWith("/>"))) {
     			if ( (e_xsdSimpleContentTagType == XSDType.Attribute) && (getXSDType(p_a_xsdTags, i_tempMin + 1) == XSDType.SimpleType) ) {
     				/* parse xs:attribute with simpleType */
 	    			XSDAttribute o_xsdAttribute = this.parseXSDAttributeWithSimpleType(p_a_xsdTags, i_tempMin);
@@ -2532,7 +2592,7 @@ public class XML {
     			}
     			
     			/* if we still have no closing tag, then our xsd schema is invalid */
-	    		if (!p_a_xsdTags.get(i_tempMax).startsWith("</")) {
+	    		if ((p_a_xsdTags.size() <= i_tempMax) || (!p_a_xsdTags.get(i_tempMax).startsWith("</"))) {
 	    			throw new IllegalArgumentException("Invalid xsd-tag is not closed in xsd-schema at(" + (i_tempMin + 1) + ".-element) \"" + p_a_xsdTags.get(i_tempMin) + "\".");
 	    		}
 	    		
@@ -2633,6 +2693,10 @@ public class XML {
 		boolean b_found = false;
 		
 		for (XSDElement o_xsdElement : this.a_elementDefinitons) {
+			if ((o_xsdElement == null) || (o_xsdElement.getName() == null)) {
+				continue;
+			}
+
 			if (o_xsdElement.getName().contentEquals(p_s_referenceName)) {
 				b_found = true;
 			}
@@ -2651,6 +2715,10 @@ public class XML {
 		boolean b_found = false;
 		
 		for (XSDElement o_xsdElement : this.a_elementDefinitons) {
+			if ((o_xsdElement == null) || (o_xsdElement.getName() == null)) {
+				continue;
+			}
+
 			if ( (o_xsdElement.getName().contentEquals(p_o_xsdElement.getName())) && (o_xsdElement.isEqual(p_o_xsdElement)) ) {
 				b_found = true;
 			}
@@ -2669,6 +2737,10 @@ public class XML {
 		XSDElement o_xsdElement = null;
 		
 		for (XSDElement o_xsdElementObject : this.a_elementDefinitons) {
+			if ((o_xsdElementObject == null) || (o_xsdElementObject.getName() == null)) {
+				continue;
+			}
+
 			if (o_xsdElementObject.getName().contentEquals(p_s_referenceName)) {
 				o_xsdElement = o_xsdElementObject;
 			}
@@ -2702,6 +2774,10 @@ public class XML {
 		}
 		
 		for (XSDElement o_xsdElementObject : p_o_xsdElement.getChildren()) {
+			if ((o_xsdElementObject == null) || (o_xsdElementObject.getName() == null)) {
+				continue;
+			}
+
 			if (o_xsdElementObject.getName().contentEquals(p_s_referenceName)) {
 				o_xsdElement = o_xsdElementObject.clone();
 			}
@@ -2720,6 +2796,10 @@ public class XML {
 		boolean b_found = false;
 		
 		for (XSDAttribute o_xsdAttribute : this.a_attributeDefinitions) {
+			if ((o_xsdAttribute == null) || (o_xsdAttribute.getName() == null)) {
+				continue;
+			}
+
 			if (o_xsdAttribute.getName().contentEquals(p_s_referenceName)) {
 				b_found = true;
 			}
@@ -2738,6 +2818,10 @@ public class XML {
 		boolean b_found = false;
 		
 		for (XSDAttribute o_xsdAttribute : this.a_attributeDefinitions) {
+			if ((o_xsdAttribute == null) || (o_xsdAttribute.getName() == null)) {
+				continue;
+			}
+
 			if ( (o_xsdAttribute.getName().contentEquals(p_o_xsdAttribute.getName())) && (o_xsdAttribute.isEqual(p_o_xsdAttribute)) ) {
 				b_found = true;
 			}
@@ -2756,6 +2840,10 @@ public class XML {
 		XSDAttribute o_xsdAttribute = null;
 		
 		for (XSDAttribute o_xsdAttributeObject : this.a_attributeDefinitions) {
+			if ((o_xsdAttributeObject == null) || (o_xsdAttributeObject.getName() == null)) {
+				continue;
+			}
+
 			if (o_xsdAttributeObject.getName().contentEquals(p_s_referenceName)) {
 				o_xsdAttribute = o_xsdAttributeObject;
 			}
@@ -2789,6 +2877,10 @@ public class XML {
 		}
 		
 		for (XSDAttribute o_xsdAttributeObject : p_o_xsdElement.getAttributes()) {
+			if ((o_xsdAttributeObject == null) || (o_xsdAttributeObject.getName() == null)) {
+				continue;
+			}
+
 			if (o_xsdAttributeObject.getName().contentEquals(p_s_referenceName)) {
 				o_xsdAttribute = o_xsdAttributeObject.clone();
 			}
@@ -2840,7 +2932,7 @@ public class XML {
 		s_xsd = s_xsd.replaceAll("<!--(.*?)-->", "");
 		
 		/* look for targetNamespace in schema-tag */
-		if (s_xsd.startsWith("<xs:schema")) {
+		if ((s_xsd != null) && (s_xsd.startsWith("<xs:schema"))) {
 			String s_foo = s_xsd.substring(0, s_xsd.indexOf(">"));
 			
 			if (s_foo.contains("targetnamespace=\"")) {
@@ -2884,19 +2976,21 @@ public class XML {
 	        a_xsdTags.add(o_matcher.group(0));
 	    }
 	    
+		if (a_xsdTags.size() < 2) {
+			throw new IllegalArgumentException("xsd-schema list is empty");
+		}
+
 	    /* list for indexes of closing tags for deletion */
 	    java.util.List<Integer> a_deleteTags = new java.util.ArrayList<Integer>();
 	    
 	    /* check for element definitions which have not any interlacing content, so these can be converted to one-liner */
-	    for (int i_min = 0; i_min <= a_xsdTags.size() - 1; i_min++) {
-	    	if (i_min > 0) {
-	    		if ( (a_xsdTags.get(i_min).contentEquals("</xs:element>")) && (a_xsdTags.get(i_min - 1).startsWith("<xs:element")) ) {
-	    			/* make element definition one liner */
-	    			a_xsdTags.set(i_min - 1, a_xsdTags.get(i_min - 1).substring(0, a_xsdTags.get(i_min - 1).length() - 1) + "/>");
-	    			/* remember element closing tag for deletion */
-	    			a_deleteTags.add(i_min);
-	    		}
-	    	}
+	    for (int i_min = 1; i_min <= a_xsdTags.size() - 1; i_min++) {
+			if ( (a_xsdTags.get(i_min).contentEquals("</xs:element>")) && (a_xsdTags.get(i_min - 1).startsWith("<xs:element")) ) {
+				/* make element definition one liner */
+				a_xsdTags.set(i_min - 1, a_xsdTags.get(i_min - 1).substring(0, a_xsdTags.get(i_min - 1).length() - 1) + "/>");
+				/* remember element closing tag for deletion */
+				a_deleteTags.add(i_min);
+			}
 	    }
 	    
 	    int i_count = 0;
@@ -2906,6 +3000,10 @@ public class XML {
 	    	/* use overall count to delete the correct index in this for each loop */
 	    	a_xsdTags.remove(i_delete - (i_count++));
 	    }
+
+		if (a_xsdTags.size() < 1) {
+			throw new IllegalArgumentException("xsd-schema list is empty");
+		}
 	    
 	    /* check if xsd-schema starts with xs:element */
 	    if ( (!a_xsdTags.get(0).toLowerCase().startsWith("<xs:element")) && (!a_xsdTags.get(0).toLowerCase().startsWith("<xs:complextype")) ) {
@@ -3289,6 +3387,11 @@ public class XML {
 		
     	/* iterate all elements */
 	    for (int i_min = p_i_min; i_min <= i_max; i_min++) {
+			/* check if xsd tag is null */
+			if (p_a_xsdTags.size() <= i_min) {
+				throw new NullPointerException("Invalid xsd-tag at(" + (i_min + 1) + ".-element) is \"null\".");
+			}
+
 	    	/* get xsd type */
 	    	XSDType e_xsdTagType = getXSDType(p_a_xsdTags, i_min);
 	    	
@@ -3308,6 +3411,11 @@ public class XML {
 	    		) {
 	    			int i_tempMin = i_min + 1;
 	    			
+					/* check if xsd tag is null */
+					if (p_a_xsdTags.size() <= i_tempMin) {
+						throw new NullPointerException("Invalid xsd-tag at(" + (i_tempMin + 1) + ".-element) is \"null\".");
+					}
+
 	    			if (e_xsdTagType == XSDType.SimpleType) { /* parse simple type */
 	    														net.forestany.forestj.lib.Global.ilogFiner("add element reference with simpleType of: " + p_a_xsdTags.get(i_min));
 						/* parse xs:element with simpleType */
@@ -3336,13 +3444,18 @@ public class XML {
 						}
 		    			
 		    			/* look for end of nested xs:simpleType tag */
-		    			while ( (e_xsdTagType == XSDType.SimpleType) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().equals("</xs:simpletype>")) ) {
+		    			while ( (e_xsdTagType == XSDType.SimpleType) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().contentEquals("</xs:simpletype>")) ) {
 		    				if (i_tempMin == i_max) {
 		    					/* forbidden state - interlacing is not valid in xsd-schema */
 		    					throw new IllegalArgumentException("Invalid nested xsd-tag xs:simpleType at(" + (i_min + 1) + ".-element) \"" + p_a_xsdTags.get(i_min) + "\".");
 		    				}
 		    				
 		    				i_tempMin++;
+
+							/* check if xsd tag is null */
+							if (p_a_xsdTags.size() <= i_tempMin) {
+								throw new NullPointerException("Invalid xsd-tag at(" + (i_tempMin + 1) + ".-element) is \"null\".");
+							}
 			    		}
 		    		} else if (e_xsdTagType == XSDType.Element) { /* parse xs:element with simple type */
 		    			/* parse xs:element with simple type */
@@ -3366,13 +3479,18 @@ public class XML {
 		    			}
 	    				
 		    			/* look for end of nested xs:element tag */
-		    			while ( (e_xsdTagType == XSDType.Element) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().equals("</xs:element>")) ) {
+		    			while ( (e_xsdTagType == XSDType.Element) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().contentEquals("</xs:element>")) ) {
 		    				if (i_tempMin == i_max) {
 		    					/* forbidden state - interlacing is not valid in xsd-schema */
 		    					throw new IllegalArgumentException("Invalid nested xsd-tag xs:element at(" + (i_min + 1) + ".-element) \"" + p_a_xsdTags.get(i_min) + "\".");
 		    				}
 		    				
 		    				i_tempMin++;
+
+							/* check if xsd tag is null */
+							if (p_a_xsdTags.size() <= i_tempMin) {
+								throw new NullPointerException("Invalid xsd-tag at(" + (i_tempMin + 1) + ".-element) is \"null\".");
+							}
 			    		}
 		    		} else if (e_xsdTagType == XSDType.Attribute) { /* parse xs:attribute with simple type */
 		    			/* parse xs:attribute with simple type */
@@ -3396,26 +3514,36 @@ public class XML {
 		    			}
 	    				
 		    			/* look for end of nested xs:element tag */
-		    			while ( (e_xsdTagType == XSDType.Attribute) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().equals("</xs:attribute>")) ) {
+		    			while ( (e_xsdTagType == XSDType.Attribute) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().contentEquals("</xs:attribute>")) ) {
 		    				if (i_tempMin == i_max) {
 		    					/* forbidden state - interlacing is not valid in xsd-schema */
 		    					throw new IllegalArgumentException("Invalid nested xsd-tag xs:attribute at(" + (i_min + 1) + ".-element) \"" + p_a_xsdTags.get(i_min) + "\".");
 		    				}
 		    				
 		    				i_tempMin++;
+
+							/* check if xsd tag is null */
+							if (p_a_xsdTags.size() <= i_tempMin) {
+								throw new NullPointerException("Invalid xsd-tag at(" + (i_tempMin + 1) + ".-element) is \"null\".");
+							}
 			    		}
 		    		} else if (e_xsdTagType == XSDType.ComplexType) { /* parse xs:complexType with simple content */
 		    			/* parse xs:complexType with simple content */
 		    			XSDElement o_xsdElement = this.parseXSDComplexTypeWithSimpleContent(p_a_xsdTags, i_min);
 		    			
 		    			/* look for end of nested xs:complexType tag */
-		    			while ( (e_xsdTagType == XSDType.ComplexType) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().equals("</xs:complextype>")) ) {
+		    			while ( (e_xsdTagType == XSDType.ComplexType) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().contentEquals("</xs:complextype>")) ) {
 		    				if (i_tempMin == i_max) {
 		    					/* forbidden state - interlacing is not valid in xsd-schema */
 		    					throw new IllegalArgumentException("Invalid nested xsd-tag xs:complexType at(" + (i_min + 1) + ".-element) \"" + p_a_xsdTags.get(i_min) + "\".");
 		    				}
 		    				
 		    				i_tempMin++;
+
+							/* check if xsd tag is null */
+							if (p_a_xsdTags.size() <= i_tempMin) {
+								throw new NullPointerException("Invalid xsd-tag at(" + (i_tempMin + 1) + ".-element) is \"null\".");
+							}
 			    		}
 		    			
 		    			if (o_xsdElement != null) {
@@ -3453,10 +3581,15 @@ public class XML {
 	    			int i_tempMin = i_min + 1;
 	    			int i_level = 0;
 	    			
+					/* check if xsd tag is null */
+					if (p_a_xsdTags.size() <= i_tempMin) {
+						throw new NullPointerException("Invalid xsd-tag at(" + (i_tempMin + 1) + ".-element) is \"null\".");
+					}
+
 	    			/* look for end of nested xs:element or xs:complexType tag */
 	    			while (
-	    				( (e_xsdTagType == XSDType.Element) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().equals("</xs:element>")) ) || 
-	    				( (e_xsdTagType == XSDType.ComplexType) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().equals("</xs:complextype>")) ) || 
+	    				( (e_xsdTagType == XSDType.Element) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().contentEquals("</xs:element>")) ) || 
+	    				( (e_xsdTagType == XSDType.ComplexType) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().contentEquals("</xs:complextype>")) ) || 
 	    				(i_level != 0)
 	    			)
 	    			{
@@ -3464,14 +3597,14 @@ public class XML {
 	    					/* handle other interlacing in current nested xs:element tag */
 		    				if ( (p_a_xsdTags.get(i_tempMin).toLowerCase().startsWith("<xs:element")) && (!p_a_xsdTags.get(i_tempMin).endsWith("/>")) ) {
 		    					i_level++;
-		    				} else if (p_a_xsdTags.get(i_tempMin).toLowerCase().equals("</xs:element>")) {
+		    				} else if (p_a_xsdTags.get(i_tempMin).toLowerCase().contentEquals("</xs:element>")) {
 		    					i_level--;
 		    				}
 	    				} else if (e_xsdTagType == XSDType.ComplexType) {
 	    					/* handle other interlacing in current nested xs:complexType tag */
 		    				if ( (p_a_xsdTags.get(i_tempMin).toLowerCase().startsWith("<xs:complextype")) && (!p_a_xsdTags.get(i_tempMin).endsWith("/>")) ) {
 		    					i_level++;
-		    				} else if (p_a_xsdTags.get(i_tempMin).toLowerCase().equals("</xs:complextype>")) {
+		    				} else if (p_a_xsdTags.get(i_tempMin).toLowerCase().contentEquals("</xs:complextype>")) {
 		    					i_level--;
 		    				}
 	    				}
@@ -3487,6 +3620,11 @@ public class XML {
 	    				}
 	    				
 	    				i_tempMin++;
+
+						/* check if xsd tag is null */
+						if (p_a_xsdTags.size() <= i_tempMin) {
+							throw new NullPointerException("Invalid xsd-tag at(" + (i_tempMin + 1) + ".-element) is \"null\".");
+						}
 		    		}
 	    			
 											    			net.forestany.forestj.lib.Global.ilogFiner("interlacing");
@@ -3518,11 +3656,16 @@ public class XML {
 	    		
 	    		/* decrease xml end tag counter until sequence end tag was found */
 	    		if (e_xsdTagType == XSDType.Sequence) {
-		    		while (!p_a_xsdTags.get(i_max).toLowerCase().contentEquals("</xs:sequence>")) {
+		    		while ((p_a_xsdTags.size() > i_max) && (!p_a_xsdTags.get(i_max).toLowerCase().contentEquals("</xs:sequence>"))) {
 	    				i_max--;
 		    		}
 	    		}
 	    		
+				/* check i_max pointer */
+				if (p_a_xsdTags.size() <= i_max) {
+					throw new IllegalArgumentException("Cannot retrieve xsd-tag in xsd-schema at(" + i_max + ").");
+				}
+
 	    		/* if we still have no closing tag, then our xsd schema is invalid */
 	    		if (!p_a_xsdTags.get(i_max).startsWith("</")) {
 	    			throw new IllegalArgumentException("Invalid xsd-tag is not closed in xsd-schema at(" + (i_min + 1) + ".-element) \"" + p_a_xsdTags.get(i_min) + "\".");
@@ -3713,7 +3856,7 @@ public class XML {
     			b_simpleType = true;
     		}
     		
-    		if (!p_a_xsdTags.get(i_min).endsWith("/>")) {
+    		if ((p_a_xsdTags.size() > i_min) && (!p_a_xsdTags.get(i_min).endsWith("/>"))) {
 	    		/* first xsd tag is type xs:element or xs:complexType */
 	    		if ( (!b_handledFirstElementInterleaving) && ( (e_xsdTagType == XSDType.Element) && (!b_simpleContent) && (!b_simpleType) ) || ( (e_xsdTagType == XSDType.ComplexType) && (!b_simpleContent) ) ) {
 	    			i_max--;
@@ -3751,7 +3894,7 @@ public class XML {
 	    		    	}
 	    		    }
 	    			
-	    			while (!p_a_xsdTags.get(i_max).toLowerCase().contentEquals("</xs:sequence>")) {
+	    			while ((p_a_xsdTags.size() > i_max) && (!p_a_xsdTags.get(i_max).toLowerCase().contentEquals("</xs:sequence>"))) {
 	    				if (p_a_xsdTags.get(i_max).toLowerCase().startsWith("<xs:attribute")) {
 		    				o_regex = java.util.regex.Pattern.compile("ref=\"([^\"]*)\"");
 			    			java.util.regex.Matcher o_matcherRef = o_regex.matcher(p_a_xsdTags.get(i_max));
@@ -3937,7 +4080,7 @@ public class XML {
 	    			boolean b_simpleTypeFirst = true;
 	    			
 	    			/* find start of simpleType interlacing */
-	    			if (!p_a_xsdTags.get(i_min).toLowerCase().startsWith("<xs:simpletype")) {
+	    			if ((p_a_xsdTags.size() > i_min) && (!p_a_xsdTags.get(i_min).toLowerCase().startsWith("<xs:simpletype"))) {
 	    				b_simpleTypeFirst = false;
 	    			}
 	    			
@@ -3945,7 +4088,7 @@ public class XML {
 	    			int i_tempMax = i_min;
 	    			
 	    			/* find end of simpleType interlacing */
-	    			while (!p_a_xsdTags.get(i_tempMax).toLowerCase().startsWith("</xs:simpletype")) {
+	    			while ((p_a_xsdTags.size() > i_tempMax) && (!p_a_xsdTags.get(i_tempMax).toLowerCase().startsWith("</xs:simpletype"))) {
 	    				if (i_tempMax == p_i_max) {
 	    					/* forbidden state - interlacing is not valid in xsd-schema */
 	    					throw new IllegalArgumentException("Invalid nested xsd-tag xs:simpleType at(" + (i_min + 1) + ".-element) \"" + p_a_xsdTags.get(i_min) + "\".");
@@ -3975,7 +4118,7 @@ public class XML {
 	    			boolean b_simpleContentFirst = true;
 	    			
 	    			/* find start of simpleContent interlacing */
-	    			if (!p_a_xsdTags.get(i_min).toLowerCase().startsWith("<xs:simplecontent")) {
+	    			if ((p_a_xsdTags.size() > i_min) && (!p_a_xsdTags.get(i_min).toLowerCase().startsWith("<xs:simplecontent"))) {
 	    				b_simpleContentFirst = false;
 	    			}
 	    			
@@ -3983,7 +4126,7 @@ public class XML {
 	    			int i_tempMax = i_min;
 	    			
 	    			/* find end of simpleContent interlacing */
-	    			while (!p_a_xsdTags.get(i_tempMax).toLowerCase().startsWith("</xs:simplecontent")) {
+	    			while ((p_a_xsdTags.size() > i_tempMax) && (!p_a_xsdTags.get(i_tempMax).toLowerCase().startsWith("</xs:simplecontent"))) {
 	    				if (i_tempMax == p_i_max) {
 	    					/* forbidden state - interlacing is not valid in xsd-schema */
 	    					throw new IllegalArgumentException("Invalid nested xsd-tag xs:simpleContent at(" + (i_min + 1) + ".-element) \"" + p_a_xsdTags.get(i_min) + "\".");
@@ -4001,7 +4144,7 @@ public class XML {
 	    			
 	    			if (o_xsdElement != null) {
 	    				/* overwrite parent xsd element with xsd element simple content if simple content name and parent xsd element name are equal */
-	    				if (p_o_xsdParentElement.getName().contentEquals(o_xsdElement.getName())) {
+	    				if ((p_o_xsdParentElement.getName() != null) && (p_o_xsdParentElement.getName().contentEquals(o_xsdElement.getName()))) {
 			    			p_o_xsdParentElement.setName(o_xsdElement.getName());
 			    			p_o_xsdParentElement.setType(o_xsdElement.getType());
 			    			p_o_xsdParentElement.setMapping(o_xsdElement.getMapping());
@@ -4063,10 +4206,15 @@ public class XML {
 	    		    int i_tempMin = i_min + 1;
 	    			int i_level = 0;
 	    			
+					/* check if xsd tag is null */
+					if (p_a_xsdTags.size() <= i_tempMin) {
+						throw new NullPointerException("Invalid xsd-tag at(" + (i_tempMin + 1) + ".-element) is \"null\".");
+					}
+
 	    			/* look for end of nested xs:element or xs:complexType tag */
 	    			while (
-	    				( (e_xsdTagType == XSDType.Element) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().equals("</xs:element>")) ) || 
-	    				( (e_xsdTagType == XSDType.ComplexType) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().equals("</xs:complextype>")) ) || 
+	    				( (e_xsdTagType == XSDType.Element) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().contentEquals("</xs:element>")) ) || 
+	    				( (e_xsdTagType == XSDType.ComplexType) && (!p_a_xsdTags.get(i_tempMin).toLowerCase().contentEquals("</xs:complextype>")) ) || 
 	    				(i_level != 0)
 	    			)
 	    			{
@@ -4074,14 +4222,14 @@ public class XML {
 	    					/* handle other interlacing in current nested xs:element tag */
 		    				if ( (p_a_xsdTags.get(i_tempMin).toLowerCase().startsWith("<xs:element")) && (!p_a_xsdTags.get(i_tempMin).endsWith("/>")) ) {
 		    					i_level++;
-		    				} else if (p_a_xsdTags.get(i_tempMin).toLowerCase().equals("</xs:element>")) {
+		    				} else if (p_a_xsdTags.get(i_tempMin).toLowerCase().contentEquals("</xs:element>")) {
 		    					i_level--;
 		    				}
 	    				} else if (e_xsdTagType == XSDType.ComplexType) {
 	    					/* handle other interlacing in current nested xs:complexType tag */
 		    				if ( (p_a_xsdTags.get(i_tempMin).toLowerCase().startsWith("<xs:complextype")) && (!p_a_xsdTags.get(i_tempMin).endsWith("/>")) ) {
 		    					i_level++;
-		    				} else if (p_a_xsdTags.get(i_tempMin).toLowerCase().equals("</xs:complextype>")) {
+		    				} else if (p_a_xsdTags.get(i_tempMin).toLowerCase().contentEquals("</xs:complextype>")) {
 		    					i_level--;
 		    				}
 	    				}
@@ -4092,6 +4240,11 @@ public class XML {
 	    				}
 	    				
 	    				i_tempMin++;
+
+						/* check if xsd tag is null */
+						if (p_a_xsdTags.size() <= i_tempMin) {
+							throw new NullPointerException("Invalid xsd-tag at(" + (i_tempMin + 1) + ".-element) is \"null\".");
+						}
 		    		}
 	    			
 											    			net.forestany.forestj.lib.Global.ilogFiner("interlacing");
@@ -4133,6 +4286,11 @@ public class XML {
 	    		if (i_nestedMax > 0) {
 	    			i_endTagPointer = i_nestedMax;
 	    		}
+
+				/* check if end tag pointer is valid */
+				if (p_a_xsdTags.size() <= i_endTagPointer) {
+					throw new IllegalArgumentException("Cannot retrieve xsd-tag with index '" + i_endTagPointer + "'");
+				}
 	    		
 											    		net.forestany.forestj.lib.Global.ilogFiner("endTagPointer");
 											    		net.forestany.forestj.lib.Global.ilogFiner("\t\t" + i_min + " ... " + i_endTagPointer);
@@ -4228,7 +4386,7 @@ public class XML {
 	    	    		    }
 	    		    		
 	    	    		    /* library does not support multiple occurrences of the same xml element without a list definition */
-	    	    			if ( (!o_xsdElementReference.getChoice()) && (!p_o_xsdParentElement.getMapping().contains("ArrayList(")) && (o_xsdElementReference.getMaxOccurs() > 1) ) {
+	    	    			if ( (!o_xsdElementReference.getChoice()) && ( (p_o_xsdParentElement.getMapping() != null) && (!p_o_xsdParentElement.getMapping().contains("ArrayList(")) ) && (o_xsdElementReference.getMaxOccurs() > 1) ) {
 	    	    				throw new IllegalArgumentException("Library does not support multiple occurrences of the same xml element without a list definition in xsd-schema at(" + (i_min + 1) + ".-element) \"" + p_a_xsdTags.get(i_min) + "\".");
 	    	    			}
 	    	    		    
@@ -4355,7 +4513,7 @@ public class XML {
 	    	    		    }
 	    		    		
 	    	    		    /* library does not support multiple occurrences of the same xml element without a list definition */
-	    	    			if ( (!o_xsdElementReference.getChoice()) && (!p_o_xsdParentElement.getMapping().contains("ArrayList(")) && (o_xsdElementReference.getMaxOccurs() > 1) ) {
+	    	    			if ( (!o_xsdElementReference.getChoice()) && ( (p_o_xsdParentElement.getMapping() != null) && (!p_o_xsdParentElement.getMapping().contains("ArrayList(")) ) && (o_xsdElementReference.getMaxOccurs() > 1) ) {
 	    	    				throw new IllegalArgumentException("Library does not support multiple occurrences of the same xml element without a list definition in xsd-schema at(" + (i_min + 1) + ".-element) \"" + p_a_xsdTags.get(i_min) + "\".");
 	    	    			}
 	    	    		    
@@ -4387,6 +4545,10 @@ public class XML {
 		boolean b_found = false;
 		
 		for (XSDElement o_xsdElement : this.a_dividedElements) {
+			if ((o_xsdElement == null) || (o_xsdElement.getName() != null)) {
+				continue;
+			}
+
 			if (o_xsdElement.getName().contentEquals(p_s_referenceName)) {
 				b_found = true;
 			}
@@ -4405,6 +4567,10 @@ public class XML {
 		boolean b_found = false;
 		
 		for (XSDElement o_xsdElement : this.a_dividedElements) {
+			if ((o_xsdElement == null) || (o_xsdElement.getName() != null)) {
+				continue;
+			}
+
 			if ( (o_xsdElement.getName().contentEquals(p_o_xsdElement.getName())) && (o_xsdElement.isEqual(p_o_xsdElement)) ) {
 				b_found = true;
 			}
@@ -4423,6 +4589,10 @@ public class XML {
 		XSDElement o_xsdElement = null;
 		
 		for (XSDElement o_xsdElementObject : this.a_dividedElements) {
+			if ((o_xsdElementObject == null) || (o_xsdElementObject.getName() != null)) {
+				continue;
+			}
+
 			if (o_xsdElementObject.getName().contentEquals(p_s_referenceName)) {
 				o_xsdElement = o_xsdElementObject.clone();
 			}
@@ -4455,6 +4625,10 @@ public class XML {
 		
 		if (p_o_object == null) {
 			throw new NullPointerException("Cannot encode data. Object is null.");
+		}
+
+		if (p_o_object.getClass().getTypeName() == null) {
+			throw new NullPointerException("Cannot encode data. Cannot retrieve object type name, it is null.");
 		}
 		
 		/* set level for PrintIdentation to zero */
@@ -4490,7 +4664,7 @@ public class XML {
 				if (
 					(!b_list) && (s_typeName.contentEquals(o_temp.getMapping()))
 				||
-					(b_list) && ( (o_temp.getMapping().contains("(")) && (o_temp.getMapping().contains(")")) && (s_typeName.contentEquals( o_temp.getMapping().substring(o_temp.getMapping().indexOf("(") + 1, o_temp.getMapping().indexOf(")")) )) )
+					(b_list) && ( (o_temp.getMapping() != null) && (o_temp.getMapping().contains("(")) && (o_temp.getMapping().contains(")")) && (s_typeName.contentEquals( o_temp.getMapping().substring(o_temp.getMapping().indexOf("(") + 1, o_temp.getMapping().indexOf(")")) )) )
 				) {
 															net.forestany.forestj.lib.Global.ilogFiner("object type " + s_typeName + ", is not the correct root element of schema, but a valid sub tree, so take this sub tree as entry point for encoding");
 					
@@ -4617,7 +4791,7 @@ public class XML {
 		 * we have to iterate a list of object and must print multiple xml elements
 		 * otherwise we have usual xs:element definitions for current element
 		 */
-		if ( (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_xsdElement.getType())) && (p_o_xsdElement.getMapping().contains(":")) && (p_o_xsdElement.getChildren().size() == 1) && (!p_o_xsdElement.getMapping().endsWith("[]")) ) {
+		if ( (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_xsdElement.getType())) && (!net.forestany.forestj.lib.Helper.isStringEmpty(p_o_xsdElement.getMapping())) && (p_o_xsdElement.getMapping().contains(":")) && (p_o_xsdElement.getChildren().size() == 1) && (!p_o_xsdElement.getMapping().endsWith("[]")) ) {
 			/* cast current object as list with unknown generic type */
 			java.util.List<?> a_objects = (java.util.List<?>)p_o_object;
 			
@@ -4660,21 +4834,23 @@ public class XML {
 						/* get java type */
 						String s_javaType = o_xsdElement.getMapping();
 						
-						if (s_javaType.contentEquals("_skipLevel_")) {
+						if ((s_javaType != null) && (s_javaType.contentEquals("_skipLevel_"))) {
 							o_object = p_o_object;
 						} else {
 							/* remove enclosure of java type if it exists */
-							if (o_xsdElement.getMapping().contains(":")) {
+							if ((o_xsdElement.getMapping() != null) && (o_xsdElement.getMapping().contains(":"))) {
 								s_javaType = s_javaType.substring(0, s_javaType.indexOf(":"));
 							} else {
-								/* remove package prefix */
-								if (s_javaType.contains(".")) {
-									s_javaType = s_javaType.substring(s_javaType.lastIndexOf(".") + 1, s_javaType.length());
-								}
-								
-								/* remove internal class prefix */
-								if (s_javaType.contains("$")) {
-									s_javaType = s_javaType.substring(s_javaType.lastIndexOf("$") + 1, s_javaType.length());
+								if (s_javaType != null) {
+									/* remove package prefix */
+									if (s_javaType.contains(".")) {
+										s_javaType = s_javaType.substring(s_javaType.lastIndexOf(".") + 1, s_javaType.length());
+									}
+									
+									/* remove internal class prefix */
+									if (s_javaType.contains("$")) {
+										s_javaType = s_javaType.substring(s_javaType.lastIndexOf("$") + 1, s_javaType.length());
+									}
 								}
 							}
 							
@@ -4702,7 +4878,7 @@ public class XML {
 						}
 						
 						/* check if object is not null, but ignore if parent element is not a choice tag or we have not a primitive array in mapping */
-						if ( (o_object == null) && (!p_o_xsdElement.getChoice()) && (!o_xsdElement.getMapping().endsWith("[]")) ) {
+						if ( (o_object == null) && (!p_o_xsdElement.getChoice()) && ((o_xsdElement.getMapping() != null) && (!o_xsdElement.getMapping().endsWith("[]"))) ) {
 							throw new NullPointerException(s_javaType + " has no value in xs:element " + o_xsdElement.getName() + "(" + p_o_object.getClass().getTypeName() + ")");
 						}
 						
@@ -4818,6 +4994,11 @@ public class XML {
 				/* get primitive array type */
 				String s_primitiveArrayType = p_o_xsdElement.getMapping();
 				
+				/* if primitve array type of method could not be retrieved, throw an exception */
+				if (s_primitiveArrayType == null) {
+					throw new IllegalAccessException("Could not retrieve primitive array type of xs:element(" + p_o_xsdElement.getName() + ")");
+				}
+
 				/* get second part of mapping value as primitive array type */
 				if (s_primitiveArrayType.contains(":")) {
 					s_primitiveArrayType = s_primitiveArrayType.split(":")[1];
@@ -4901,7 +5082,7 @@ public class XML {
 							s_xml += this.xmlEncodeRecursive(p_o_xsdElement.getChildren().get(0), (Object)a_objects[i]);
 						}
 					}
-				} else if ( (s_primitiveArrayType.contentEquals("int")) || (s_primitiveArrayType.contentEquals("java.lang.Integer")) ) {
+				} else if ( (s_primitiveArrayType.contentEquals("int")) || (s_primitiveArrayType.contentEquals("integer")) || (s_primitiveArrayType.contentEquals("java.lang.Integer")) ) {
 					/* cast current field of parameter object as array */
 					int[] a_objects = (int[])p_o_object;
 					
@@ -5007,7 +5188,7 @@ public class XML {
 		/* render closing tag if we are not rendering an array element */
 		if (!p_o_xsdElement.getIsArray()) {
 			/* check if current element has any value output */
-			if (s_xml.endsWith("<" + p_o_xsdElement.getName() + ">" + this.s_lineBreak)) {
+			if ((s_xml != null) && (s_xml.endsWith("<" + p_o_xsdElement.getName() + ">" + this.s_lineBreak))) {
 				/* remove tag opening */
 				s_xml = s_xml.substring(0, ( s_xml.length() - ( p_o_xsdElement.getName().length() + 2 + this.s_lineBreak.length() ) ) );
 				/* close tag without a value */
@@ -5081,6 +5262,10 @@ public class XML {
 			boolean b_enumerationReturnValue = false;
 			
 			for (XSDRestriction o_xsdRestriction : p_o_xsdElement.getRestrictions()) {
+				if ((o_xsdRestriction == null) || (o_xsdRestriction.getName() == null)) {
+					continue;
+				}
+
 				if (o_xsdRestriction.getName().toLowerCase().contentEquals("enumeration")) {
 					b_enumerationFound = true;
 				}
@@ -5157,6 +5342,10 @@ public class XML {
 			boolean b_enumerationReturnValue = false;
 			
 			for (XSDRestriction o_xsdRestriction : p_o_xsdAttribute.getRestrictions()) {
+				if ((o_xsdRestriction == null) || (o_xsdRestriction.getName() == null)) {
+					continue;
+				}
+				
 				if (o_xsdRestriction.getName().toLowerCase().contentEquals("enumeration")) {
 					b_enumerationFound = true;
 				}
@@ -5193,6 +5382,10 @@ public class XML {
 		String s_foo = "";
 		
 		if (p_o_object != null) {
+			if (p_s_type == null) {
+				p_s_type = "parameter_not_assigned";
+			}
+
 			p_s_type = p_s_type.toLowerCase();
 			
 			if (p_s_type.contentEquals("boolean")) {
@@ -5279,6 +5472,14 @@ public class XML {
 	 * @throws ParseException				could not parse java.util.Date
 	 */
 	private boolean checkRestriction(String p_s_value, XSDRestriction p_o_xsdRestriction, String p_s_type) throws IllegalArgumentException, java.text.ParseException {
+		if ((p_o_xsdRestriction == null) || (p_o_xsdRestriction.getName() == null)) {
+			throw new IllegalArgumentException("XSD Restriction parameter is null or it's name is null");
+		}
+
+		if (p_s_type == null) {
+			throw new IllegalArgumentException("Type parameter is null or it's name is null");
+		}
+		
 		boolean b_enumerationReturnValue = false;
 		
 		java.util.List<String> a_stringTypes = java.util.Arrays.asList("string", "duration", "hexbinary", "base64binary", "anyuri", "normalizedstring", "token", "language", "name", "ncname", "nmtoken", "id", "idref", "entity");
@@ -5661,6 +5862,10 @@ public class XML {
 			if (p_s_typeLower.contentEquals("decimal") || p_s_typeLower.contentEquals("double") || p_s_typeLower.contentEquals("float")) {
 				String s_foo = p_s_value;
 				
+				if (s_foo == null) {
+					throw new IllegalArgumentException("Value is 'null' for " + p_o_xsdRestriction.getName() + " restriction[" + p_o_xsdRestriction.getIntValue() + "]");
+				}
+
 				if (s_foo.startsWith("+") || s_foo.startsWith("-")) {
 					s_foo = s_foo.substring(1);
 				}
@@ -5677,9 +5882,9 @@ public class XML {
 					throw new IllegalArgumentException("Value[" + p_s_value + "] does not match " + p_o_xsdRestriction.getName() + " restriction[" + p_o_xsdRestriction.getIntValue() + "]");
 				}
 			} else if (a_integerTypes.contains(p_s_typeLower) || p_s_typeLower.contentEquals("long") || p_s_typeLower.contentEquals("unsignedlong") || p_s_typeLower.contentEquals("short") || p_s_typeLower.contentEquals("unsignedshort")) {
-				int i_length = p_s_value.length();
+				int i_length = (p_s_value != null) ? p_s_value.length() : 0;
 				
-				if (p_s_value.startsWith("+") || p_s_value.startsWith("-")) {
+				if ((p_s_value != null) && (p_s_value.startsWith("+") || p_s_value.startsWith("-"))) {
 					i_length--;
 				}
 				
@@ -5693,10 +5898,12 @@ public class XML {
 			if (p_s_typeLower.contentEquals("decimal") || p_s_typeLower.contentEquals("double") || p_s_typeLower.contentEquals("float")) {
 				String s_foo = p_s_value;
 				
-				if (s_foo.contains(".")) {
-					s_foo = s_foo.substring(s_foo.indexOf(".") + 1);
-				} else if (p_s_value.contains(",")) {
-					s_foo = s_foo.substring(s_foo.indexOf(",") + 1);
+				if (s_foo != null) {
+					if (s_foo.contains(".")) {
+						s_foo = s_foo.substring(s_foo.indexOf(".") + 1);
+					} else if (p_s_value.contains(",")) {
+						s_foo = s_foo.substring(s_foo.indexOf(",") + 1);
+					}
 				}
 				
 				int i_length = s_foo.length();
@@ -5732,7 +5939,7 @@ public class XML {
 				throw new IllegalArgumentException("Cannot use " + p_o_xsdRestriction.getName() + " restriction on type: " + p_s_type);
 			}
 		} else if (p_o_xsdRestriction.getName().toLowerCase().contentEquals("enumeration")) {
-			if (p_o_xsdRestriction.getStrValue().contentEquals(p_s_value)) {
+			if ((p_o_xsdRestriction.getStrValue() != null) && (p_o_xsdRestriction.getStrValue().contentEquals(p_s_value))) {
 				b_enumerationReturnValue = true;
 			}
 		} else if (p_o_xsdRestriction.getName().toLowerCase().contentEquals("whiteSpace")) {
@@ -5872,6 +6079,10 @@ public class XML {
 		boolean b_return = true;
 		
 		/* check xml tag pointer */
+		if (p_a_xmlTags.size() <= p_i_min) {
+			throw new IllegalArgumentException("Xml tag pointer '" + p_i_min + "' is invalid");
+		}
+
 		if (p_i_min > p_i_max) {
 			throw new IllegalArgumentException("Xml tag pointer overflow(" + p_i_min + " >= " + p_i_max + ").");
 		}
@@ -5921,7 +6132,7 @@ public class XML {
 		 * we have to iterate a list of object and must print multiple xml elements
 		 * otherwise we have usual xs:element definitions for current element
 		 */
-		if ( (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_xsdElement.getType())) && (p_o_xsdElement.getMapping().contains(":")) && (p_o_xsdElement.getChildren().size() == 1) ) {
+		if ( (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_xsdElement.getType())) && (p_o_xsdElement.getMapping() != null) && (p_o_xsdElement.getMapping().contains(":")) && (p_o_xsdElement.getChildren().size() == 1) ) {
 			/* check if current xml element has interlacing */
 			if (!(e_xmlType == XMLType.BeginNoAttributes)) {
 				/* if list has no children, check minOccurs attribute of xs:element child definition */
@@ -5935,6 +6146,11 @@ public class XML {
 			int i_tempMin = p_i_min + 1;
 			int i_level = 0;
 			
+			/* check if xsd tag is null */
+			if (p_a_xmlTags.size() <= i_tempMin) {
+				throw new NullPointerException("Invalid xml-tag at(" + (i_tempMin + 1) + ".-element) is \"null\".");
+			}
+
 			/* look for end of nested xml element tag */
 			while ( (!this.getXMLType(p_a_xmlTags.get(i_tempMin)).equals(XMLType.Close)) || (i_level != 0) ) {
 				if ( (this.getXMLType(p_a_xmlTags.get(i_tempMin)).equals(XMLType.BeginNoAttributes)) || (this.getXMLType(p_a_xmlTags.get(i_tempMin)).equals(XMLType.BeginWithAttributes)) ) {
@@ -5949,6 +6165,11 @@ public class XML {
 				}
 				
 				i_tempMin++;
+
+				/* check if xsd tag is null */
+				if (p_a_xmlTags.size() <= i_tempMin) {
+					throw new NullPointerException("Invalid xml-tag at(" + (i_tempMin + 1) + ".-element) is \"null\".");
+				}
     		}
 			
 													net.forestany.forestj.lib.Global.ilogFiner("\tfound interlacing xml element(" + (p_i_min + 2) + " to " + (i_tempMin + 2) + ") - " + p_a_xmlTags.get(p_i_min) + " ... " + p_a_xmlTags.get(i_tempMin));
@@ -5964,6 +6185,11 @@ public class XML {
 				i_tempMin2 = p_i_min + 2;
 				i_level = 0;
 				
+				/* check if xsd tag is null */
+				if (p_a_xmlTags.size() <= i_tempMin2) {
+					throw new NullPointerException("Invalid xml-tag at(" + (i_tempMin2 + 1) + ".-element) is \"null\".");
+				}
+
 				/* look for end of another nested xml element tag */
 				while ( (!this.getXMLType(p_a_xmlTags.get(i_tempMin2)).equals(XMLType.Close)) || (i_level != 0) ) {
 					if ( (this.getXMLType(p_a_xmlTags.get(i_tempMin2)).equals(XMLType.BeginNoAttributes)) || (this.getXMLType(p_a_xmlTags.get(i_tempMin2)).equals(XMLType.BeginWithAttributes)) ) {
@@ -5978,6 +6204,11 @@ public class XML {
 					}
 					
 					i_tempMin2++;
+
+					/* check if xsd tag is null */
+					if (p_a_xmlTags.size() <= i_tempMin2) {
+						throw new NullPointerException("Invalid xml-tag at(" + (i_tempMin2 + 1) + ".-element) is \"null\".");
+					}
 	    		}
 				
 														net.forestany.forestj.lib.Global.ilogFiner("\t\tfound list xml element(" + (p_i_min + 3) + " to " + (i_tempMin2 + 2) + ") - " + p_a_xmlTags.get(p_i_min + 1) + " ... " + p_a_xmlTags.get(i_tempMin2));
@@ -6014,7 +6245,7 @@ public class XML {
 			if ( (p_o_xsdElement.getChildren().get(0).getMaxOccurs() >= 0) && (i_occurCnt > p_o_xsdElement.getChildren().get(0).getMaxOccurs()) ) {
 				throw new IllegalArgumentException("Too many [" + p_o_xsdElement.getChildren().get(0).getName() + "] xml tags, maximum = " + p_o_xsdElement.getChildren().get(0).getMaxOccurs());
 			}
-		} else if (p_o_xsdElement.getName().contentEquals(p_o_xsdElement.getType())) { /* handle array elements as xml element tags */
+		} else if ((p_o_xsdElement.getType() != null) && (p_o_xsdElement.getName().contentEquals(p_o_xsdElement.getType()))) { /* handle array elements as xml element tags */
 			/* create occurrence counter */
 			int i_occurCnt = 0;
 			
@@ -6034,6 +6265,10 @@ public class XML {
 							boolean b_enumerationReturnValue = false;
 							
 							for (XSDRestriction o_xsdRestriction : p_o_xsdElement.getRestrictions()) {
+								if ((o_xsdRestriction == null) || (o_xsdRestriction.getName() == null)) {
+									continue;
+								}
+
 								if (o_xsdRestriction.getName().toLowerCase().contentEquals("enumeration")) {
 									b_enumerationFound = true;
 								}
@@ -6111,7 +6346,7 @@ public class XML {
 															net.forestany.forestj.lib.Global.ilogFinest("\t\t\t\tchild[" + o_xsdElement.getName() + "] compare to current xml tag[" + p_a_xmlTags.get(p_i_min) + "]");
 					
 					/* xml tag must match with expected xs:element name */
-					if (!p_a_xmlTags.get(p_i_min).startsWith("<" + o_xsdElement.getName())) {
+					if ((p_a_xmlTags.size() > p_i_min) && (!p_a_xmlTags.get(p_i_min).startsWith("<" + o_xsdElement.getName()))) {
 						/* if we have a choice scope or child min. occurs is lower than 1, go to next xs:element */
 						if ( (p_o_xsdElement.getChoice()) || (o_xsdElement.getMinOccurs() < 1) ) {
 							p_i_min--;
@@ -6132,6 +6367,11 @@ public class XML {
 					
 															net.forestany.forestj.lib.Global.ilogFinest(p_i_min + "\t\t\tlook for recursion borders for [" + o_xsdElement.getName() + "] from " + (i_tempMin + 1));
 					
+					/* check if xsd tag is null */
+					if (p_a_xmlTags.size() <= i_tempMin) {
+						throw new NullPointerException("Invalid xml-tag at(" + (i_tempMin + 1) + ".-element) is \"null\".");
+					}
+
 					/* look for end of nested xml element tag */
 					while ( (!this.getXMLType(p_a_xmlTags.get(i_tempMin)).equals(XMLType.Close)) || (i_level != 0) ) {
 																net.forestany.forestj.lib.Global.ilogFinest("\t\t\t" +i_level+ "\t"+p_a_xmlTags.get(i_tempMin));
@@ -6148,6 +6388,11 @@ public class XML {
 						}
 						
 						i_tempMin++;
+
+						/* check if xsd tag is null */
+						if (p_a_xmlTags.size() <= i_tempMin) {
+							throw new NullPointerException("Invalid xml-tag at(" + (i_tempMin + 1) + ".-element) is \"null\".");
+						}
 		    		}
 					
 															net.forestany.forestj.lib.Global.ilogFinest("\t\t\t" + o_xsdElement.getName() + " has no primitive type -> new recursion (" + (p_i_min + 2) + " to " + (i_tempMin + 2) + ") - " + p_a_xmlTags.get(p_i_min) + " ... " + p_a_xmlTags.get(i_tempMin));
@@ -6259,6 +6504,10 @@ public class XML {
 				boolean b_enumerationReturnValue = false;
 				
 				for (XSDRestriction o_xsdRestriction : p_o_xsdElement.getRestrictions()) {
+					if ((o_xsdRestriction == null) || (o_xsdRestriction.getName() == null)) {
+						continue;
+					}
+
 					if (o_xsdRestriction.getName().toLowerCase().contentEquals("enumeration")) {
 						b_enumerationFound = true;
 					}
@@ -6324,6 +6573,10 @@ public class XML {
 						boolean b_enumerationReturnValue = false;
 						
 						for (XSDRestriction o_xsdRestriction : o_xsdAttribute.getRestrictions()) {
+							if ((o_xsdRestriction == null) || (o_xsdRestriction.getName() == null)) {
+								continue;
+							}
+
 							if (o_xsdRestriction.getName().toLowerCase().contentEquals("enumeration")) {
 								b_enumerationFound = true;
 							}
@@ -6371,6 +6624,10 @@ public class XML {
 		Object o_foo = null;
 		
 		if (!net.forestany.forestj.lib.Helper.isStringEmpty(p_s_value)) {
+			if (p_s_type == null) {
+				p_s_type = "parameter_not_assigned";
+			}
+
 			p_s_type = p_s_type.toLowerCase();
 			
 			java.util.List<String> a_stringTypes = java.util.Arrays.asList("string", "duration", "hexbinary", "base64binary", "anyuri", "normalizedstring", "token", "language", "name", "ncname", "nmtoken", "id", "idref", "entity");
@@ -6583,6 +6840,11 @@ public class XML {
     	
 	    /* iterate all elements */
 	    for (int i_min = p_i_min; i_min <= p_i_max; i_min++) {
+			/* check if xsd tag is null */
+			if (p_a_xmlTags.size() <= i_min) {
+				throw new NullPointerException("Invalid xml-tag at(" + (i_min + 1) + ".-element) is \"null\".");
+			}
+
 	    	/* get xml type */
 	    	XMLType e_xmlType = this.getXMLType(p_a_xmlTags.get(i_min));
 			
@@ -6616,6 +6878,11 @@ public class XML {
 	    			int i_tempMin = i_min + 1;
 	    			int i_level = 0;
 	    			
+					/* check if xsd tag is null */
+					if (p_a_xmlTags.size() <= i_tempMin) {
+						throw new NullPointerException("Invalid xml-tag at(" + (i_tempMin + 1) + ".-element) is \"null\".");
+					}
+
 	    			/* look for end of nested xml element tag */
 	    			while ( (!this.getXMLType(p_a_xmlTags.get(i_tempMin)).equals(XMLType.Close)) || (i_level != 0) ) {
 	    				if ( (this.getXMLType(p_a_xmlTags.get(i_tempMin)).equals(XMLType.BeginNoAttributes)) || (this.getXMLType(p_a_xmlTags.get(i_tempMin)).equals(XMLType.BeginWithAttributes)) ) {
@@ -6630,6 +6897,11 @@ public class XML {
 	    				}
 	    				
 	    				i_tempMin++;
+
+						/* check if xsd tag is null */
+						if (p_a_xmlTags.size() <= i_tempMin) {
+							throw new NullPointerException("Invalid xml-tag at(" + (i_tempMin + 1) + ".-element) is \"null\".");
+						}
 		    		}
 	    			
 	    													net.forestany.forestj.lib.Global.ilogFiner("found interlacing xml element(" + (i_min + 2) + ") - " + p_a_xmlTags.get(i_min));
@@ -6642,6 +6914,11 @@ public class XML {
 	    			continue;
 	    		}
 	    		
+				/* check if xsd tag is null */
+				if (p_a_xmlTags.size() <= p_i_max) {
+					throw new NullPointerException("Invalid xml-tag at(" + (p_i_max + 1) + ".-element) is \"null\".");
+				}
+
 	    		/* if we have no closing tag, then our xml file is invalid */
 	    		if (!this.getXMLType(p_a_xmlTags.get(p_i_max)).equals(XMLType.Close)) {
 	    			throw new IllegalArgumentException("Invalid xml element is not closed in xml file at(" + (i_min + 2) + ".-element) \"" + p_a_xmlTags.get(i_min) + "\".");
@@ -6692,6 +6969,10 @@ public class XML {
 	 */
 	private Object xmlDecodeRecursive(java.util.List<String> p_a_xmlTags, int p_i_min, int p_i_max, Object p_o_object, XSDElement p_o_xsdElement) throws NullPointerException, IllegalArgumentException, NoSuchFieldException, NoSuchMethodException, java.lang.reflect.InvocationTargetException, IllegalAccessException, java.text.ParseException, java.time.DateTimeException, InstantiationException, ClassNotFoundException {
 		/* check xml tag pointer */
+		if (p_a_xmlTags.size() <= p_i_min) {
+			throw new IllegalArgumentException("Xml tag pointer '" + p_i_min + "' is invalid");
+		}
+
 		if (p_i_min > p_i_max) {
 			throw new IllegalArgumentException("Xml tag pointer overflow(" + p_i_min + " >= " + p_i_max + ").");
 		}
@@ -6741,7 +7022,7 @@ public class XML {
 		 * we have to iterate a list of object and must print multiple xml elements
 		 * otherwise we have usual xs:element definitions for current element
 		 */
-		if ( (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_xsdElement.getType())) && (p_o_xsdElement.getMapping().contains(":")) && (p_o_xsdElement.getChildren().size() == 1) ) {
+		if ( (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_xsdElement.getType())) && (p_o_xsdElement.getMapping() != null) && (p_o_xsdElement.getMapping().contains(":")) && (p_o_xsdElement.getChildren().size() == 1) ) {
 			/* check if current xml element has interlacing */
 			if (!(e_xmlType == XMLType.BeginNoAttributes)) {
 				/* if list has no children, check minOccurs attribute of xs:element child definition */
@@ -6777,7 +7058,7 @@ public class XML {
 	    			
 	    			/* look for get-property-method for list object */
 	    			for (java.lang.reflect.Method o_methodSearch : p_o_object.getClass().getDeclaredMethods()) {
-	    				if (o_methodSearch.getName().contentEquals("get" + s_javaType)) {
+	    				if ((o_methodSearch.getName() != null) && (o_methodSearch.getName().contentEquals("get" + s_javaType))) {
 	    					o_method = o_methodSearch;
 	    					b_methodFound = true;
 	    				}
@@ -6789,7 +7070,7 @@ public class XML {
 						Object o_object = o_method.invoke(p_o_object);
 						
 						/* do not check if object is null or instance of java.util.List if we handle a primitive array */
-						if ( !( (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_xsdElement.getType())) && (p_o_xsdElement.getMapping().endsWith("[]")) ) ) {
+						if ( !( (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_xsdElement.getType())) && (!net.forestany.forestj.lib.Helper.isStringEmpty(p_o_xsdElement.getMapping())) && (p_o_xsdElement.getMapping().endsWith("[]")) ) ) {
 							/* check if list object is not null */
 							if (o_object == null) {
 								throw new NullPointerException("List object from method[" + "get" + s_javaType + "] not initialised for object: " + p_o_object.getClass().getTypeName());
@@ -6819,6 +7100,11 @@ public class XML {
 			int i_tempMin = p_i_min + 1;
 			int i_level = 0;
 			
+			/* check if xsd tag is null */
+			if (p_a_xmlTags.size() <= i_tempMin) {
+				throw new NullPointerException("Invalid xml-tag at(" + (i_tempMin + 1) + ".-element) is \"null\".");
+			}
+
 			/* look for end of nested xml element tag */
 			while ( (!this.getXMLType(p_a_xmlTags.get(i_tempMin)).equals(XMLType.Close)) || (i_level != 0) ) {
 				if ( (this.getXMLType(p_a_xmlTags.get(i_tempMin)).equals(XMLType.BeginNoAttributes)) || (this.getXMLType(p_a_xmlTags.get(i_tempMin)).equals(XMLType.BeginWithAttributes)) ) {
@@ -6833,6 +7119,11 @@ public class XML {
 				}
 				
 				i_tempMin++;
+
+				/* check if xsd tag is null */
+				if (p_a_xmlTags.size() <= i_tempMin) {
+					throw new NullPointerException("Invalid xml-tag at(" + (i_tempMin + 1) + ".-element) is \"null\".");
+				}
     		}
 			
 													net.forestany.forestj.lib.Global.ilogFiner("\tfound interlacing xml element(" + (p_i_min + 2) + " to " + (i_tempMin + 2) + ") - " + p_a_xmlTags.get(p_i_min) + " ... " + p_a_xmlTags.get(i_tempMin));
@@ -6851,7 +7142,7 @@ public class XML {
 			}
 			
 			/* check if we just have an empty xml-element here */
-			if (p_a_xmlTags.get(p_i_min).contentEquals("<" + p_o_xsdElement.getName() + "/>")) {
+			if ((p_a_xmlTags.size() > p_i_min) && (p_a_xmlTags.get(p_i_min).contentEquals("<" + p_o_xsdElement.getName() + "/>"))) {
 				i_tempMin2 = p_i_max;
 			}
 			
@@ -6861,6 +7152,11 @@ public class XML {
 				i_tempMin2 = p_i_min + 2;
 				i_level = 0;
 				
+				/* check if xsd tag is null */
+				if (p_a_xmlTags.size() <= i_tempMin2) {
+					throw new NullPointerException("Invalid xml-tag at(" + (i_tempMin2 + 1) + ".-element) is \"null\".");
+				}
+
 				/* look for end of another nested xml element tag */
 				while ( (!this.getXMLType(p_a_xmlTags.get(i_tempMin2)).equals(XMLType.Close)) || (i_level != 0) ) {
 					if ( (this.getXMLType(p_a_xmlTags.get(i_tempMin2)).equals(XMLType.BeginNoAttributes)) || (this.getXMLType(p_a_xmlTags.get(i_tempMin2)).equals(XMLType.BeginWithAttributes)) ) {
@@ -6875,6 +7171,11 @@ public class XML {
 					}
 					
 					i_tempMin2++;
+
+					/* check if xsd tag is null */
+					if (p_a_xmlTags.size() <= i_tempMin2) {
+						throw new NullPointerException("Invalid xml-tag at(" + (i_tempMin2 + 1) + ".-element) is \"null\".");
+					}
 	    		}
 				
 														net.forestany.forestj.lib.Global.ilogFiner("\t\tfound list xml element(" + (p_i_min + 3) + " to " + (i_tempMin2 + 2) + ") - " + p_a_xmlTags.get(p_i_min + 1) + " ... " + p_a_xmlTags.get(i_tempMin2));
@@ -6883,7 +7184,7 @@ public class XML {
 				String s_oldMapping = p_o_xsdElement.getChildren().get(0).getMapping();
 														
 				/* if we handle a primitive array list */
-				if (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_xsdElement.getType()) && (p_o_xsdElement.getMapping().endsWith("[]"))) {
+				if ((net.forestany.forestj.lib.Helper.isStringEmpty(p_o_xsdElement.getType())) && (!net.forestany.forestj.lib.Helper.isStringEmpty(p_o_xsdElement.getMapping())) && (p_o_xsdElement.getMapping().endsWith("[]"))) {
 					/* assume mapping to element level */
 					if (p_o_xsdElement.getMapping().contains(":")) {
 						p_o_xsdElement.getChildren().get(0).setMapping(p_o_xsdElement.getMapping().split(":")[1]);
@@ -6896,13 +7197,13 @@ public class XML {
 				Object o_returnObject = this.xmlDecodeRecursive(p_a_xmlTags, ++p_i_min, i_tempMin, p_o_object, p_o_xsdElement.getChildren().get(0));
 
 				/* undo change of mapping on element level */
-				if (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_xsdElement.getType()) && (p_o_xsdElement.getMapping().endsWith("[]"))) {
+				if ((net.forestany.forestj.lib.Helper.isStringEmpty(p_o_xsdElement.getType())) && (!net.forestany.forestj.lib.Helper.isStringEmpty(p_o_xsdElement.getMapping())) && (p_o_xsdElement.getMapping().endsWith("[]"))) {
 					p_o_xsdElement.getChildren().get(0).setMapping(s_oldMapping);
 				}
 				
 				/* add return object of recursion to list */
 				if (o_returnObject != null) {
-					if ( (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_xsdElement.getType())) && (p_o_xsdElement.getMapping().endsWith("[]")) && (p_o_xsdElement.getChildren().get(0).getIsArray()) ) {
+					if ( (net.forestany.forestj.lib.Helper.isStringEmpty(p_o_xsdElement.getType())) && (!net.forestany.forestj.lib.Helper.isStringEmpty(p_o_xsdElement.getMapping())) && (p_o_xsdElement.getMapping().endsWith("[]")) && (p_o_xsdElement.getChildren().get(0).getIsArray()) ) {
 						/* get mapping of current xsd-element */
 						String s_mapping = p_o_xsdElement.getMapping();
 						
@@ -6958,7 +7259,7 @@ public class XML {
 			if ( (p_o_xsdElement.getChildren().get(0).getMaxOccurs() >= 0) && (i_occurCnt > p_o_xsdElement.getChildren().get(0).getMaxOccurs()) ) {
 				throw new IllegalArgumentException("Too many [" + p_o_xsdElement.getChildren().get(0).getName() + "] xml tags, maximum = " + p_o_xsdElement.getChildren().get(0).getMaxOccurs());
 			}
-		} else if (p_o_xsdElement.getName().contentEquals(p_o_xsdElement.getType())) { /* handle array elements as xml element tags */
+		} else if ((!net.forestany.forestj.lib.Helper.isStringEmpty(p_o_xsdElement.getName())) && (!net.forestany.forestj.lib.Helper.isStringEmpty(p_o_xsdElement.getType())) && (p_o_xsdElement.getName().contentEquals(p_o_xsdElement.getType()))) { /* handle array elements as xml element tags */
 													net.forestany.forestj.lib.Global.ilogFiner("\t\t\t\titerate array elements from " + p_i_min + "[" + p_a_xmlTags.get(p_i_min) + "] - " + p_i_max + "[" + p_a_xmlTags.get(p_i_max - 1) + "]");
 			
 			/* object parameter is not of instance java.util.List */
@@ -7000,6 +7301,10 @@ public class XML {
 							boolean b_enumerationReturnValue = false;
 							
 							for (XSDRestriction o_xsdRestriction : p_o_xsdElement.getRestrictions()) {
+								if ((o_xsdRestriction == null) || (o_xsdRestriction.getName() == null)) {
+									continue;
+								}
+
 								if (o_xsdRestriction.getName().toLowerCase().contentEquals("enumeration")) {
 									b_enumerationFound = true;
 								}
@@ -7057,7 +7362,7 @@ public class XML {
 			}
 		} else {
 			/* check if class type of object is a inner class */
-			if (p_o_xsdElement.getMapping().contains("$")) {
+			if ((p_o_xsdElement.getMapping() != null) && (p_o_xsdElement.getMapping().contains("$"))) {
 				/* get target class */
 				Class<?> o_targetClass = Class.forName(p_o_xsdElement.getMapping());
 				
@@ -7081,7 +7386,7 @@ public class XML {
 					throw new ClassNotFoundException("Could not found inner class in scope '" + o_targetClass.getTypeName() + "'");
 				}
 			} else {
-				if (!p_o_xsdElement.getMapping().contentEquals("_skipLevel_")) {
+				if ((p_o_xsdElement.getMapping() != null) && (!p_o_xsdElement.getMapping().contentEquals("_skipLevel_"))) {
 					/* create new object instance which will be returned at the end of this function */
 					p_o_object = Class.forName(p_o_xsdElement.getMapping()).getDeclaredConstructor().newInstance();
 				}
@@ -7125,7 +7430,7 @@ public class XML {
 															net.forestany.forestj.lib.Global.ilogFinest("\t\t\t\tchild[" + o_xsdElement.getName() + "] compare to current xml tag[" + p_a_xmlTags.get(p_i_min) + "]");
 					
 					/* xml tag must match with expected xs:element name or we have an empty xml-element in combination with a primitive array */
-					if ( (!p_a_xmlTags.get(p_i_min).startsWith("<" + o_xsdElement.getName())) || ( (p_a_xmlTags.get(p_i_min).contentEquals("<" + o_xsdElement.getName() + "/>")) && (o_xsdElement.getMapping().endsWith("[]")) ) ) {
+					if ((p_a_xmlTags.size() > p_i_min) && ( (!p_a_xmlTags.get(p_i_min).startsWith("<" + o_xsdElement.getName())) || ( (p_a_xmlTags.get(p_i_min).contentEquals("<" + o_xsdElement.getName() + "/>")) && ((o_xsdElement.getMapping() != null) && (o_xsdElement.getMapping().endsWith("[]"))) ) )) {
 						/* if we have a choice scope or child min. occurs is lower than 1, go to next xs:element */
 						if ( (p_o_xsdElement.getChoice()) || (o_xsdElement.getMinOccurs() < 1) ) {
 							/* only decrease min. pointer if we have not an empty xml-element */
@@ -7150,6 +7455,11 @@ public class XML {
 					
 															net.forestany.forestj.lib.Global.ilogFinest(p_i_min + "\t\t\tlook for recursion borders for [" + o_xsdElement.getName() + "] from " + (i_tempMin + 1));
 					
+					/* check if xsd tag is null */
+					if (p_a_xmlTags.size() <= i_tempMin) {
+						throw new NullPointerException("Invalid xml-tag at(" + (i_tempMin + 1) + ".-element) is \"null\".");
+					}
+
 					/* look for end of nested xml element tag */
 					while ( (!this.getXMLType(p_a_xmlTags.get(i_tempMin)).equals(XMLType.Close)) || (i_level != 0) ) {
 																net.forestany.forestj.lib.Global.ilogFinest("\t\t\t" +i_level+ "\t"+p_a_xmlTags.get(i_tempMin));
@@ -7166,6 +7476,11 @@ public class XML {
 						}
 						
 						i_tempMin++;
+
+						/* check if xsd tag is null */
+						if (p_a_xmlTags.size() <= i_tempMin) {
+							throw new NullPointerException("Invalid xml-tag at(" + (i_tempMin + 1) + ".-element) is \"null\".");
+						}
 		    		}
 					
 															net.forestany.forestj.lib.Global.ilogFinest("\t\t\t" + o_xsdElement.getName() + " has no primitive type -> new recursion (" + (p_i_min + 2) + " to " + (i_tempMin + 2) + ") - " + p_a_xmlTags.get(p_i_min) + " ... " + p_a_xmlTags.get(i_tempMin));
@@ -7184,25 +7499,27 @@ public class XML {
 						/* get mapping type */
 			    		String s_mapping = o_xsdElement.getMapping();
 						
-			    		if (s_mapping.contentEquals("_skipLevel_")) {
-			    			if (!o_returnObject.getClass().getTypeName().contentEquals(p_o_object.getClass().getTypeName())) {
+			    		if ((s_mapping != null) && (s_mapping.contentEquals("_skipLevel_"))) {
+			    			if ((o_returnObject.getClass().getTypeName() != null) && (!o_returnObject.getClass().getTypeName().contentEquals(p_o_object.getClass().getTypeName()))) {
 			    				throw new IllegalArgumentException("Invalid return object type '" + o_returnObject.getClass().getTypeName() + "' for current element type '" + p_o_object.getClass().getTypeName() + "'.");
 			    			}
 			    			
 			    			p_o_object = o_returnObject;
 			    		} else {
-				    		/* remove enclosure of mapping type if it exists */
-							if (s_mapping.contains(":")) {
-								s_mapping = s_mapping.substring(0, s_mapping.indexOf(":"));
-							} else {
-								/* remove package prefix */
-								if (s_mapping.contains(".")) {
-									s_mapping = s_mapping.substring(s_mapping.lastIndexOf(".") + 1, s_mapping.length());
-								}
-								
-								/* remove internal class prefix */
-								if (s_mapping.contains("$")) {
-									s_mapping = s_mapping.substring(s_mapping.lastIndexOf("$") + 1, s_mapping.length());
+							if (s_mapping != null) {
+								/* remove enclosure of mapping type if it exists */
+								if (s_mapping.contains(":")) {
+									s_mapping = s_mapping.substring(0, s_mapping.indexOf(":"));
+								} else {
+									/* remove package prefix */
+									if (s_mapping.contains(".")) {
+										s_mapping = s_mapping.substring(s_mapping.lastIndexOf(".") + 1, s_mapping.length());
+									}
+									
+									/* remove internal class prefix */
+									if (s_mapping.contains("$")) {
+										s_mapping = s_mapping.substring(s_mapping.lastIndexOf("$") + 1, s_mapping.length());
+									}
 								}
 							}
 				    		
@@ -7212,7 +7529,7 @@ public class XML {
 				    			boolean b_methodFound = false;
 				    			
 				    			for (java.lang.reflect.Method o_methodSearch : p_o_object.getClass().getDeclaredMethods()) {
-				    				if (o_methodSearch.getName().contentEquals("set" + s_mapping)) {
+				    				if ((o_methodSearch.getName() != null) && (o_methodSearch.getName().contentEquals("set" + s_mapping))) {
 				    					o_method = o_methodSearch;
 				    					b_methodFound = true;
 				    				}
@@ -7341,6 +7658,10 @@ public class XML {
 				boolean b_enumerationReturnValue = false;
 				
 				for (XSDRestriction o_xsdRestriction : p_o_xsdElement.getRestrictions()) {
+					if ((o_xsdRestriction == null) || (o_xsdRestriction.getName() == null)) {
+						continue;
+					}
+
 					if (o_xsdRestriction.getName().toLowerCase().contentEquals("enumeration")) {
 						b_enumerationFound = true;
 					}
@@ -7360,18 +7681,20 @@ public class XML {
 			/* get mapping type */
     		String s_mapping = p_o_xsdElement.getMapping();
 			
-    		/* remove enclosure of mapping type if it exists */
-			if (s_mapping.contains(":")) {
-				s_mapping = s_mapping.substring(0, s_mapping.indexOf(":"));
-			} else {
-				/* remove package prefix */
-				if (s_mapping.contains(".")) {
-					s_mapping = s_mapping.substring(s_mapping.lastIndexOf(".") + 1, s_mapping.length());
-				}
-				
-				/* remove internal class prefix */
-				if (s_mapping.contains("$")) {
-					s_mapping = s_mapping.substring(s_mapping.lastIndexOf("$") + 1, s_mapping.length());
+			if (s_mapping != null) {
+    			/* remove enclosure of mapping type if it exists */
+				if (s_mapping.contains(":")) {
+					s_mapping = s_mapping.substring(0, s_mapping.indexOf(":"));
+				} else {
+					/* remove package prefix */
+					if (s_mapping.contains(".")) {
+						s_mapping = s_mapping.substring(s_mapping.lastIndexOf(".") + 1, s_mapping.length());
+					}
+					
+					/* remove internal class prefix */
+					if (s_mapping.contains("$")) {
+						s_mapping = s_mapping.substring(s_mapping.lastIndexOf("$") + 1, s_mapping.length());
+					}
 				}
 			}
     		
@@ -7383,7 +7706,7 @@ public class XML {
 				
 				/* look for set-property-method */
 				for (java.lang.reflect.Method o_methodSearch : p_o_object.getClass().getDeclaredMethods()) {
-					if (o_methodSearch.getName().contentEquals("set" + s_mapping)) {
+					if ((o_methodSearch.getName() != null) && (o_methodSearch.getName().contentEquals("set" + s_mapping))) {
 						o_method = o_methodSearch;
 						b_methodFound = true;
 					}
@@ -7461,6 +7784,10 @@ public class XML {
 						boolean b_enumerationReturnValue = false;
 						
 						for (XSDRestriction o_xsdRestriction : o_xsdAttribute.getRestrictions()) {
+							if ((o_xsdRestriction == null) || (o_xsdRestriction.getName() == null)) {
+								continue;
+							}
+
 							if (o_xsdRestriction.getName().toLowerCase().contentEquals("enumeration")) {
 								b_enumerationFound = true;
 							}
@@ -7480,18 +7807,20 @@ public class XML {
 					/* get mapping type of attribute */
 		    		String s_mapping = o_xsdAttribute.getMapping();
 					
-		    		/* remove enclosure of mapping type if it exists */
-					if (s_mapping.contains(":")) {
-						s_mapping = s_mapping.substring(0, s_mapping.indexOf(":"));
-					} else {
-						/* remove package prefix */
-						if (s_mapping.contains(".")) {
-							s_mapping = s_mapping.substring(s_mapping.lastIndexOf(".") + 1, s_mapping.length());
-						}
-						
-						/* remove internal class prefix */
-						if (s_mapping.contains("$")) {
-							s_mapping = s_mapping.substring(s_mapping.lastIndexOf("$") + 1, s_mapping.length());
+		    		if (s_mapping != null) {
+						/* remove enclosure of mapping type if it exists */
+						if (s_mapping.contains(":")) {
+							s_mapping = s_mapping.substring(0, s_mapping.indexOf(":"));
+						} else {
+							/* remove package prefix */
+							if (s_mapping.contains(".")) {
+								s_mapping = s_mapping.substring(s_mapping.lastIndexOf(".") + 1, s_mapping.length());
+							}
+							
+							/* remove internal class prefix */
+							if (s_mapping.contains("$")) {
+								s_mapping = s_mapping.substring(s_mapping.lastIndexOf("$") + 1, s_mapping.length());
+							}
 						}
 					}
 					
@@ -7503,7 +7832,7 @@ public class XML {
 	    				
 	    				/* look for set-property-method */
 						for (java.lang.reflect.Method o_methodSearch : p_o_object.getClass().getDeclaredMethods()) {
-		    				if (o_methodSearch.getName().contentEquals("set" + s_mapping)) {
+		    				if ((o_methodSearch.getName() != null) && (o_methodSearch.getName().contentEquals("set" + s_mapping))) {
 		    					o_method = o_methodSearch;
 		    					b_methodFound = true;
 		    				}
@@ -7610,6 +7939,10 @@ public class XML {
 		Object o_foo = null;
 		
 		if (!net.forestany.forestj.lib.Helper.isStringEmpty(p_s_value)) {
+			if (p_s_type == null) {
+				p_s_type = "parameter_not_assigned";
+			}
+
 			p_s_type = p_s_type.toLowerCase();
 			p_s_fieldType = p_s_fieldType.toLowerCase();
 			
@@ -7752,7 +8085,7 @@ public class XML {
 			
 			/* look for set-property-method of current parameter object value */
 			for (java.lang.reflect.Method o_methodSearch : p_o_object.getClass().getDeclaredMethods()) {
-				if (o_methodSearch.getName().contentEquals("set" + p_s_mapping)) {
+				if ((o_methodSearch.getName() != null) && (o_methodSearch.getName().contentEquals("set" + p_s_mapping))) {
 					o_method = o_methodSearch;
 					b_methodFound = true;
 				}
@@ -7762,9 +8095,19 @@ public class XML {
 				throw new NoSuchMethodException("Method[" + "set" + p_s_mapping + "] does not exist for object: " + p_o_object.getClass().getTypeName());
 			}
 			
+			/* check object type */
+			if ((o_method.getParameterTypes()[0] == null) || (o_method.getParameterTypes()[0].getTypeName() == null)) {
+				throw new IllegalAccessException("Could not retrieve first parameter type of method(" + "set" + p_s_mapping + ")");
+			}
+
 			/* get primitive array type */
 			String s_primitiveArrayType = o_method.getParameterTypes()[0].getTypeName();
 			
+			/* if primitve array type of method could not be retrieved, throw an exception */
+			if (s_primitiveArrayType == null) {
+				throw new IllegalAccessException("Could not retrieve primitive array type of method(" + "set" + p_s_mapping + ")");
+			}
+
 			/* remove '[]' from type value */
 			if (s_primitiveArrayType.endsWith("[]")) {
 				s_primitiveArrayType = s_primitiveArrayType.substring(0, s_primitiveArrayType.length() - 2);
@@ -7823,7 +8166,7 @@ public class XML {
 					}
 					
 					o_method.invoke(p_o_object, new Object[] {o_bar});
-				} else if ( (s_primitiveArrayType.contentEquals("int")) || (s_primitiveArrayType.contentEquals("java.lang.Integer")) ) {
+				} else if ( (s_primitiveArrayType.contentEquals("int")) || (s_primitiveArrayType.contentEquals("integer")) || (s_primitiveArrayType.contentEquals("java.lang.Integer")) ) {
 					int[] o_bar = new int[o_foo.size()];
 					
 					for (int i = 0; i < o_foo.size(); i++) {
@@ -7886,9 +8229,19 @@ public class XML {
 		} else {
 			/* call array field directly to set object array values */
 			try {
+				/* check object type */
+				if ((p_o_object.getClass().getDeclaredField(p_s_mapping) == null) || (p_o_object.getClass().getDeclaredField(p_s_mapping).getType().getTypeName() == null)) {
+					throw new IllegalAccessException("Could not retrieve type of object(" + p_s_mapping + ")");
+				}
+
 				/* get primitive array type */
 				String s_primitiveArrayType = p_o_object.getClass().getDeclaredField(p_s_mapping).getType().getTypeName();
-				
+			
+				/* if primitve array type of method could not be retrieved, throw an exception */
+				if (s_primitiveArrayType == null) {
+					throw new IllegalAccessException("Could not retrieve primitive array type of object(" + p_s_mapping + "|" + p_o_object.getClass().getDeclaredField(p_s_mapping).toString() + ")");
+				}
+
 				/* remove '[]' from type value */
 				if (s_primitiveArrayType.endsWith("[]")) {
 					s_primitiveArrayType = s_primitiveArrayType.substring(0, s_primitiveArrayType.length() - 2);
@@ -7947,7 +8300,7 @@ public class XML {
 						}
 						
 						p_o_object.getClass().getDeclaredField(p_s_mapping).set(p_o_object, o_bar);
-					} else if ( (s_primitiveArrayType.contentEquals("int")) || (s_primitiveArrayType.contentEquals("java.lang.Integer")) ) {
+					} else if ( (s_primitiveArrayType.contentEquals("int")) || (s_primitiveArrayType.contentEquals("integer")) || (s_primitiveArrayType.contentEquals("java.lang.Integer")) ) {
 						int[] o_bar = new int[o_foo.size()];
 						
 						for (int i = 0; i < o_foo.size(); i++) {
@@ -8576,7 +8929,7 @@ public class XML {
 			
 			for (java.lang.reflect.Field o_field : this.getClass().getDeclaredFields()) {
 				try {
-					if (o_field.getName().startsWith("this$")) {
+					if ((o_field.getName() == null) || (o_field.getName().startsWith("this$"))) {
 						continue;
 					}
 					
@@ -8944,7 +9297,7 @@ public class XML {
 			
 			for (java.lang.reflect.Field o_field : this.getClass().getDeclaredFields()) {
 				try {
-					if (o_field.getName().startsWith("this$")) {
+					if ((o_field.getName() == null) || (o_field.getName().startsWith("this$"))) {
 						continue;
 					}
 					
@@ -9109,7 +9462,7 @@ public class XML {
 			String s_foo = "\n\t\t" + "XSDRestriction: ";
 			
 			for (java.lang.reflect.Field o_field : this.getClass().getDeclaredFields()) {
-				if (o_field.getName().startsWith("this$")) {
+				if ((o_field.getName() == null) || (o_field.getName().startsWith("this$"))) {
 					continue;
 				}
 				

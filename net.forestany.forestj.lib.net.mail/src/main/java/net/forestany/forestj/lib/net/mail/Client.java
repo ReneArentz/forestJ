@@ -822,6 +822,12 @@ public class Client {
 	 * @return String					part of net.forestany.forestj.lib.net.mail.Message.FLAGS
 	 */
 	private static String flagToString(jakarta.mail.Flags.Flag p_o_flag) {
+		if (p_o_flag == null) {
+													net.forestany.forestj.lib.Global.ilogWarning("Parameter of javax mail flag 'null' - flag is unkown");
+			
+			return "UNKNOWN_FLAG";
+		}
+
 		if (p_o_flag.equals(jakarta.mail.Flags.Flag.ANSWERED)) {
 			return Message.FLAGS[0];
 		} else if (p_o_flag.equals(jakarta.mail.Flags.Flag.DELETED)) {
@@ -850,7 +856,9 @@ public class Client {
 	 * @throws IllegalArgumentException		parameter flag value is an unknown flag
 	 */
 	private static jakarta.mail.Flags.Flag stringToFlag(String p_s_flag) throws IllegalArgumentException {
-		if (p_s_flag.contentEquals(Message.FLAGS[0])) {
+		if (p_s_flag == null) {
+			throw new IllegalArgumentException("FLAG_PARAMETER_NULL");
+		} else if (p_s_flag.contentEquals(Message.FLAGS[0])) {
 			return jakarta.mail.Flags.Flag.ANSWERED;
 		} else if (p_s_flag.contentEquals(Message.FLAGS[1])) {
 			return jakarta.mail.Flags.Flag.DELETED;
@@ -2247,6 +2255,11 @@ public class Client {
 		
 												net.forestany.forestj.lib.Global.ilogFine("check if target folder parameter does not contain a '/' character");
 		
+		/* check parameter */
+		if (p_s_folderName == null) {
+			throw new IllegalArgumentException("Folder name parameter is null");
+		}
+
 		/* check if target folder parameter does not contain a '/' character */
 		if (p_s_folderName.contains("/")) {
 			throw new IllegalArgumentException("Invalid character '/' in parameter '" + p_s_folderName + "'");
@@ -2344,6 +2357,11 @@ public class Client {
 		
 												net.forestany.forestj.lib.Global.ilogFine("check if target folder parameter does not contain a '/' character");
 		
+		/* check parameter */
+		if (p_s_folderName == null) {
+			throw new IllegalArgumentException("Folder name parameter is null");
+		}
+
 		/* check if target folder parameter does not contain a '/' character */
 		if (p_s_folderName.contains("/")) {
 			throw new IllegalArgumentException("Invalid character '/' in parameter '" + p_s_folderName + "'");
@@ -2534,6 +2552,11 @@ public class Client {
 		
 												net.forestany.forestj.lib.Global.ilogFine("check if target folder parameter does not contain a '/' character");
 		
+		/* check parameter */
+		if (p_s_folder == null) {
+			throw new IllegalArgumentException("Folder parameter is null");
+		}
+
 		/* check if target folder parameter does not contain a '/' character */
 		if (p_s_folder.contains("/")) {
 			throw new IllegalArgumentException("Invalid character '/' in folder parameter '" + p_s_folder + "'");

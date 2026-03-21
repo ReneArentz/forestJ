@@ -983,6 +983,11 @@ public class Client {
 	 * @return							true - exists, false - does not exist
 	 */
 	public boolean fileExists(String p_s_filePath) {
+		/* check parameter */
+		if (p_s_filePath == null) {
+			return false;
+		}
+
 		/* if path parameter ends with '/' we assume it is a directory */
 		if (p_s_filePath.endsWith("/")) {
 			/* check if directory exists */ 
@@ -1988,6 +1993,10 @@ public class Client {
 		
 		/* iterate each directory element */
 		for (net.forestany.forestj.lib.io.ListingElement o_listingElement : a_list) {
+			if ((o_listingElement == null) || (o_listingElement.getFullName() == null)) {
+				continue;
+			}
+
 			/* just get directory or file name as temporary variable */
 			String s_foo = o_listingElement.getFullName().substring(p_s_sourceDirectoryLocal.length());
 			

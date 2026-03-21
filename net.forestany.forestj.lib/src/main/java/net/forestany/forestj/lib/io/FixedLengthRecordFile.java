@@ -183,8 +183,10 @@ public class FixedLengthRecordFile {
 	public void addFLRType(FLRType p_o_flrType) throws IllegalArgumentException {
 		/* iterate all existing flr types */
 		for (FLRType o_flrType : this.a_flrTypes) {
+			String s_foo = (o_flrType.s_regexFLR == null) ? "" : o_flrType.s_regexFLR;
+
 			/* check if we already have a flr type with matching regex and known length parameter */
-			if ( ( (!net.forestany.forestj.lib.Helper.isStringEmpty(p_o_flrType.s_regexFLR)) && (o_flrType.s_regexFLR.contentEquals(p_o_flrType.s_regexFLR)) ) && (o_flrType.i_knownLengthFLR == p_o_flrType.i_knownLengthFLR) ) {
+			if ( ( (!net.forestany.forestj.lib.Helper.isStringEmpty(p_o_flrType.s_regexFLR)) && (s_foo.contentEquals(p_o_flrType.s_regexFLR)) ) && (o_flrType.i_knownLengthFLR == p_o_flrType.i_knownLengthFLR) ) {
 				throw new IllegalArgumentException("Fixed length record type with regex '" + p_o_flrType.s_regexFLR + "' and known length '" + p_o_flrType.i_knownLengthFLR + "' already exists in configuration");
 			}
 		}
@@ -289,7 +291,8 @@ public class FixedLengthRecordFile {
 		ReadState e_readState = ReadState.FLR;
 		
 		/* iterate each line in flr file */
-		for (String s_line : a_flrLines) {
+		for (int i = 0; i < a_flrLines.size(); i++) {
+			String s_line = a_flrLines.get(i);
 			FLRType o_foundFLRType = null;
 			
 			/* check if we have a line for group header */
@@ -301,7 +304,7 @@ public class FixedLengthRecordFile {
 				) {
 				e_readState = ReadState.GROUPHEADER;
 			} else if ( (this.o_groupFooter != null) && 
-				(
+					(
 						(!net.forestany.forestj.lib.Helper.isStringEmpty(this.o_groupFooter.s_regexFLR)) && (java.util.regex.Pattern.matches(this.o_groupFooter.s_regexFLR, s_line)) ||
 						(this.o_groupFooter.i_knownLengthFLR >= 0) && (s_line.length() == this.o_groupFooter.i_knownLengthFLR)
 					)
@@ -309,7 +312,8 @@ public class FixedLengthRecordFile {
 				e_readState = ReadState.GROUPFOOTER;
 			} else { /* check for other flr types */
 				boolean b_foundFLR = false;
-				
+				e_readState = ReadState.FLR;
+
 				/* iterate all existing flr types */
 				for (FLRType o_flrType : this.a_flrTypes) {
 					/* regex recognition is not successful -> skip */
@@ -327,17 +331,62 @@ public class FixedLengthRecordFile {
 					b_foundFLR = true;
 				}
 				
-				/* have we found a flr type */
+				/* have we found a flr type? */
 				if (!b_foundFLR) {
-					throw new IllegalArgumentException("could not parse fixed length record #" + (i_flrNumber + 1) + " within stack #" + (i_stackNumber + 1) + ": line does not match any regex or known length values(" + s_line.length() + ")");
+					/* maybe all lines are filled with blanks at the end, so we try once more after a trim */
+					s_line = s_line.trim();
+
+					/* check if we have a line for group header */
+					if ( (this.o_groupHeader != null) && 
+							(
+								(!net.forestany.forestj.lib.Helper.isStringEmpty(this.o_groupHeader.s_regexFLR)) && (java.util.regex.Pattern.matches(this.o_groupHeader.s_regexFLR, s_line)) ||
+								(this.o_groupHeader.i_knownLengthFLR >= 0) && (s_line.length() == this.o_groupHeader.i_knownLengthFLR)
+							)
+						) {
+						e_readState = ReadState.GROUPHEADER;
+					} else if ( (this.o_groupFooter != null) && 
+							(
+								(!net.forestany.forestj.lib.Helper.isStringEmpty(this.o_groupFooter.s_regexFLR)) && (java.util.regex.Pattern.matches(this.o_groupFooter.s_regexFLR, s_line)) ||
+								(this.o_groupFooter.i_knownLengthFLR >= 0) && (s_line.length() == this.o_groupFooter.i_knownLengthFLR)
+							)
+						) { /* check if we have a line for group footer */
+						e_readState = ReadState.GROUPFOOTER;
+					} else { /* check for other flr types */
+						b_foundFLR = false;
+						
+						/* iterate all existing flr types */
+						for (FLRType o_flrType : this.a_flrTypes) {
+							/* regex recognition is not successful -> skip */
+							if ( (!net.forestany.forestj.lib.Helper.isStringEmpty(o_flrType.s_regexFLR)) && (!java.util.regex.Pattern.matches(o_flrType.s_regexFLR, s_line)) ) {
+								continue;
+							}
+							
+							/* overall line length is not successful -> skip */
+							if ( (o_flrType.i_knownLengthFLR >= 0) && (s_line.length() != o_flrType.i_knownLengthFLR) ) {
+								continue;
+							}
+
+							/* memorize found flr type */
+							o_foundFLRType = o_flrType;
+							b_foundFLR = true;
+						}
+						
+						/* have we found a flr type? */
+						if (!b_foundFLR) {
+							throw new IllegalArgumentException("could not parse fixed length record #" + (i_flrNumber + 1) + " within stack #" + (i_stackNumber + 1) + ": line does not match any regex or known length values(" + s_line.length() + ")");
+						}
+					}
 				}
-				
-				e_readState = ReadState.FLR;
 			}
 			
 			if (e_readState == ReadState.GROUPHEADER) { /* read group header */
 				/* if we have no group footer configured and this is not the first group header(flr number != 0), then we can increase our stack number */
 				if ( (this.o_groupFooter == null) && (i_flrNumber != 0) ) {
+					/* check if first stack has a group header */
+					if (this.a_stacks.get(0).getGroupHeader() == null) {
+						throw new IllegalArgumentException("could not parse fixed length record #" + (i_flrNumber + 1) + " within stack #" + (i_stackNumber + 1) + ": missing first group header");
+					}
+
 					/* increase stack number */
 					i_stackNumber++;
 					/* create a new stack */
@@ -349,6 +398,19 @@ public class FixedLengthRecordFile {
 					for (FLRType o_flrType : this.a_flrTypes) {
 						o_flrType.o_flrObject.clearUniqueTemp();
 					}
+				} else if (
+					(this.o_groupFooter != null) && (i_flrNumber != 0) && 
+					(this.a_stacks.get(i_stackNumber).getGroupHeader() != null) && 
+					(this.a_stacks.get(i_stackNumber).getGroupFooter() == null)
+				) {
+					/* 
+					 * we have group footer configured and 
+					 * this is not the first group header(flr number != 0) and 
+					 * current stack has a group header(so no new stack was created) and
+					 * current stack has no group footer(although it is defined to have one)
+					 * then we have a structural issue within the file
+					 */
+					throw new IllegalArgumentException("could not parse fixed length record #" + (i_flrNumber + 1) + " within stack #" + (i_stackNumber + 1) + ": reading group header although no group footer was found before");
 				}
 				
 				/* read all fields from group header */
@@ -363,6 +425,16 @@ public class FixedLengthRecordFile {
 				/* add fixed length record to current stack */
 				this.a_stacks.get(i_stackNumber).addFixedLengthRecord(i_flrNumber, o_temp);
 			} else if (e_readState == ReadState.GROUPFOOTER) { /* read group footer */
+				if ( (this.o_groupHeader != null) && (i_flrNumber != 0) && (this.a_stacks.get(i_stackNumber).getGroupHeader() == null) ) {
+					/* 
+					 * we have group header configured and 
+					 * this is not the first group header(flr number != 0) and 
+					 * current stack has no group header(although it is defined to have one)
+					 * then we have a structural issue within the file
+					 */
+					throw new IllegalArgumentException("could not parse fixed length record #" + (i_flrNumber + 1) + " within stack #" + (i_stackNumber + 1) + ": reading group footer although no group header was found before");
+				}
+				
 				/* read all fields from group footer */
 				FixedLengthRecord<?> o_temp = readFileLineRecursive(s_line, e_readState, this.o_groupFooter.o_flrObject, i_stackNumber, i_flrNumber, p_b_ignroeUniqueConstraint);
 				
@@ -390,6 +462,12 @@ public class FixedLengthRecordFile {
 		if ( (this.a_stacks.get(i_stackNumber).getGroupHeader() == null) && (this.a_stacks.get(i_stackNumber).getGroupFooter() == null) && (this.a_stacks.get(i_stackNumber).getFixedLengthRecords().size() < 1) ) {
 			/* remove last stack */
 			this.a_stacks.remove(i_stackNumber);
+			i_stackNumber--;
+		}
+
+		/* check if last stack has a group footer if it is defined */
+		if ((this.o_groupFooter != null) && (this.a_stacks.get(i_stackNumber).getGroupFooter() == null)) {
+			throw new IllegalArgumentException("could not parse fixed length record #" + (i_flrNumber + 1) + " within stack #" + (i_stackNumber + 1) + ": missing last group footer");
 		}
 	}
 	
@@ -515,7 +593,7 @@ public class FixedLengthRecordFile {
 		}
 		
 		/* create flr file */
-		File o_file = new File(p_s_file, true, this.s_lineBreak);
+		File o_file = new File(p_s_file, true, p_o_charset, this.s_lineBreak);
 		
 		/* list of lines */
 		java.util.List<String> a_lines = new java.util.ArrayList<String>();
@@ -560,6 +638,11 @@ public class FixedLengthRecordFile {
 	 * @throws IllegalArgumentException				parameter stack number must be at least '1'
 	 */
 	private void writeCheckUniqueConstraints(FixedLengthRecord<?> p_o_flr, int p_i_stackNumber, boolean p_b_checkHeader) throws NoSuchFieldException, IllegalAccessException, IllegalStateException, IllegalArgumentException {
+		/* check fixed length record of group header or group footer */
+		if (p_o_flr == null) {
+			throw new IllegalArgumentException("Parameter fixed length record of group header or group footer is null");
+		}
+
 		/* check parameter stack number */
 		if (p_i_stackNumber < 1) {
 			throw new IllegalArgumentException("Parameter stack number must be at least '1', not lower");
@@ -568,7 +651,7 @@ public class FixedLengthRecordFile {
 		/* iterate each unique key */
 		for (String s_unique : p_o_flr.Unique) {
 			/* it is possible that a unique constraint exists of multiple columns, separated by semicolon */
-			if (s_unique.contains(";")) {
+			if ((s_unique != null) && (s_unique.contains(";"))) {
 				String[] a_uniques = s_unique.split(";");
 				
 				int i_stackNumber = 1;
@@ -751,6 +834,11 @@ public class FixedLengthRecordFile {
 			} else {
 				p_s_regexFLR = null;
 			}
+
+			/* check for regex recognition with optional sub-types */
+			if ((p_o_flrObject.getOptionalSubTypes()) && ((p_i_knownLengthFLR >= 0) || (net.forestany.forestj.lib.Helper.isStringEmpty(p_s_regexFLR)))) {
+				throw new IllegalArgumentException("Fixed length record class '" + p_o_flrObject.getClass().getTypeName() + "' has optional sub-types. Recognition with known length is not allowed. Only regex recognition allowed.");
+			}
 			
 			this.o_flrObject = p_o_flrObject;
 			this.s_regexFLR = p_s_regexFLR;
@@ -843,13 +931,18 @@ public class FixedLengthRecordFile {
 			if (p_i_key < 0) {
 				throw new IllegalArgumentException("Parameter flr key number must be at least '0', positive number");
 			}
+
+			/* check fixed length record object */
+			if (p_o_flr == null) {
+				throw new IllegalArgumentException("Parameter fixed length record object is null");
+			}
 			
 			/* we must check that we do not violate a unique constraint within flr list */
 			
 			/* iterate each unique key */
 			for (String s_unique : p_o_flr.Unique) {
 				/* it is possible that a unique constraint exists of multiple columns, separated by semicolon */
-				if (s_unique.contains(";")) {
+				if ((s_unique != null) && (s_unique.contains(";"))) {
 					String[] a_uniques = s_unique.split(";");
 					
 					int i_recordNumber = 1;

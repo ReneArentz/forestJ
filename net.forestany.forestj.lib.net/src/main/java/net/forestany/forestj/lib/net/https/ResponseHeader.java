@@ -253,7 +253,7 @@ public class ResponseHeader {
 		}
 		
 		/* check if http protocol is 1.0 or 1.1 */
-		if (!( (a_firstLine[0].contentEquals("HTTP/1.1")) || (a_firstLine[0].contentEquals("HTTP/1.0")) )) {
+		if ((a_firstLine[0] == null) || (!( (a_firstLine[0].contentEquals("HTTP/1.1")) || (a_firstLine[0].contentEquals("HTTP/1.0")) ))) {
 			net.forestany.forestj.lib.Global.ilogWarning("505 HTTP Version Not Supported: Unsupported HTTP-Protocol in response '" + a_firstLine[0] + "', must be [HTTP/1.0|HTTP/1.1]'");
 			return 505;
 		}
@@ -273,7 +273,7 @@ public class ResponseHeader {
 		/* iterate all other response header lines */
 		for (String s_responseHeaderLine : p_a_responseHeaderLines) {
 			/* header name and value are separated by a ':' */
-			if (s_responseHeaderLine.contains(":")) {
+			if ((s_responseHeaderLine != null) && (s_responseHeaderLine.contains(":"))) {
 				/* get header name */
 				String s_headerName = s_responseHeaderLine.substring(0, s_responseHeaderLine.indexOf(":")).trim().toLowerCase();
 				/* get header value */
@@ -298,11 +298,13 @@ public class ResponseHeader {
 						break;
 					case "content-type":
 						/* recognize boundary value for POST requests */
-						if (s_headerValue.contains("boundary")) {
-							this.s_contentType = s_headerValue.substring(0, s_headerValue.indexOf(";")).trim();
-							this.s_boundary = s_headerValue.substring(s_headerValue.indexOf("boundary=") + new String("boundary=").length()).trim();
-						} else {
-							this.s_contentType = s_headerValue;
+						if (s_headerValue != null) {
+							if (s_headerValue.contains("boundary")) {
+								this.s_contentType = s_headerValue.substring(0, s_headerValue.indexOf(";")).trim();
+								this.s_boundary = s_headerValue.substring(s_headerValue.indexOf("boundary=") + new String("boundary=").length()).trim();
+							} else {
+								this.s_contentType = s_headerValue;
+							}
 						}
 						break;
 					case "set-cookie":
@@ -342,12 +344,14 @@ public class ResponseHeader {
 									case "samesite":
 										net.forestany.forestj.lib.net.https.dynm.CookieSameSite e_sameSite = net.forestany.forestj.lib.net.https.dynm.CookieSameSite.NONE;
 										
-										if (a_foo2[1].trim().toLowerCase().contentEquals("none")) {
-											e_sameSite = net.forestany.forestj.lib.net.https.dynm.CookieSameSite.NONE;
-										} else if (a_foo2[1].trim().toLowerCase().contentEquals("lax")) {
-											e_sameSite = net.forestany.forestj.lib.net.https.dynm.CookieSameSite.LAX;
-										} else if (a_foo2[1].trim().toLowerCase().contentEquals("strict")) {
-											e_sameSite = net.forestany.forestj.lib.net.https.dynm.CookieSameSite.STRICT;
+										if (a_foo[1] != null) {
+											if (a_foo2[1].trim().toLowerCase().contentEquals("none")) {
+												e_sameSite = net.forestany.forestj.lib.net.https.dynm.CookieSameSite.NONE;
+											} else if (a_foo2[1].trim().toLowerCase().contentEquals("lax")) {
+												e_sameSite = net.forestany.forestj.lib.net.https.dynm.CookieSameSite.LAX;
+											} else if (a_foo2[1].trim().toLowerCase().contentEquals("strict")) {
+												e_sameSite = net.forestany.forestj.lib.net.https.dynm.CookieSameSite.STRICT;
+											}
 										}
 										
 										o_cookie.setSameSite(e_sameSite);

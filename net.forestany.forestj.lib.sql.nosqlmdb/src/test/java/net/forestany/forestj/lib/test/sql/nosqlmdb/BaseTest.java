@@ -13,7 +13,7 @@ public class BaseTest {
 	 */
 	/* @org.junit.jupiter.api.Disabled */
 	@Test
-	public void testBaseNOSQMDB() {
+	public void testBaseNOSQLMDB() {
 		try {
 			net.forestany.forestj.lib.test.sql.nosqlmdb.SetBase.setBase();
 			beforeBaseSQLiteTest();

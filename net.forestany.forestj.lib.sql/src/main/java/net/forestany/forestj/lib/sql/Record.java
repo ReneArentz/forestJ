@@ -68,6 +68,10 @@ public abstract class Record<T> {
 	 * auto transaction flag
 	 */
 	public boolean AutoTransaction = true;
+	/**
+	 * mark string values flag
+	 */
+	public boolean MarkStringValues = false;
 
 	/**
 	 * list of columns
@@ -140,15 +144,10 @@ public abstract class Record<T> {
 			}
 		}
 		
-		/* check unique values are available */
-		if (this.Unique.size() < 1) {
-			throw new NullPointerException("You must specify at least one unique constraint within the Init-method.");
-		}
-		
 		/* check if each field in unique list really exists in current class */
 		for (String s_unique : this.Unique) {
 			/* it is possible that a unique constraint exists of multiple columns, separated by semicolon */
-			if (s_unique.contains(";")) {
+			if ((s_unique != null) && (s_unique.contains(";"))) {
 				String[] a_uniques = s_unique.split(";");
 				
 				/* iterate each unique field */
@@ -363,7 +362,7 @@ public abstract class Record<T> {
 			java.lang.reflect.Field o_field =  this.getClass().getDeclaredFields()[i];
 			
 			/* check if field starts with 'Column', but is not equal to 'Columns' */
-			if ( (o_field.getName().startsWith("Column")) && (o_field.getName().compareTo("Columns") != 0) ) {
+			if ( (o_field.getName() != null) && (o_field.getName().startsWith("Column")) && (o_field.getName().compareTo("Columns") != 0) ) {
 				try {
 					/* get column value */
 					Object o_foo = o_field.get(this);
@@ -503,7 +502,7 @@ public abstract class Record<T> {
 			java.lang.reflect.Field o_field =  this.getClass().getDeclaredFields()[i];
 			
 			/* check if field starts with 'Column', but is not equal to 'Columns' */
-			if ( (o_field.getName().startsWith("Column")) && (o_field.getName().compareTo("Columns") != 0) ) {
+			if ( (o_field.getName() != null) && (o_field.getName().startsWith("Column")) && (o_field.getName().compareTo("Columns") != 0) ) {
 				/* field name without 'Column' prefix must match parameter value */
 				if (o_field.getName().substring(6).compareTo(p_s_field) == 0) {
 					/* set return value to true */
@@ -572,7 +571,7 @@ public abstract class Record<T> {
 													net.forestany.forestj.lib.Global.ilogFinest("create where clause object with '" + this.Primary.get(i) + "'");
 			
 			/* create where clause for each primary field, get value from parameter list or from inherited class */
-			Where o_where = new Where(o_querySelect, new Column(o_querySelect, this.Primary.get(i)), ( (p_a_primaryValues != null) ? p_a_primaryValues.get(i) : this.getColumnValue(this.Primary.get(i)) ), "=");
+			Where o_where = new Where(o_querySelect, new Column(o_querySelect, this.Primary.get(i)), ( (p_a_primaryValues != null) ? p_a_primaryValues.get(i) : this.getColumnValue(this.Primary.get(i)) ), "=", this.MarkStringValues);
 			
 													net.forestany.forestj.lib.Global.ilogFinest("created where clause object");
 			
@@ -738,7 +737,7 @@ public abstract class Record<T> {
 														net.forestany.forestj.lib.Global.ilogFinest("add column to new where clause object");
 				
 				/* create where clause object */
-				Where o_where = new Where(o_querySelect, new Column(o_querySelect, o_filter.s_column), o_filter.o_value, o_filter.s_operator);
+				Where o_where = new Where(o_querySelect, new Column(o_querySelect, o_filter.s_column), o_filter.o_value, o_filter.s_operator, this.MarkStringValues);
 				
 														net.forestany.forestj.lib.Global.ilogFinest("added column to new where clause object");
 				
@@ -919,7 +918,7 @@ public abstract class Record<T> {
 														net.forestany.forestj.lib.Global.ilogFinest("added new instance to result list");
 			} catch (Exception o_exc) {
 				 /* skip record if we cannot assume result in a new instance */
-														net.forestany.forestj.lib.Global.ilogFinest("skipped record if we cannot adopt result in a new instance");
+														net.forestany.forestj.lib.Global.ilogFinest("skipped record if we cannot adopt result in a new instance; " + o_exc);
 			}
 		});
 		
@@ -972,7 +971,7 @@ public abstract class Record<T> {
 														net.forestany.forestj.lib.Global.ilogFinest("add column to new where clause object");
 				
 				/* create where clause object */
-				Where o_where = new Where(o_querySelect, new Column(o_querySelect, o_filter.s_column), o_filter.o_value, o_filter.s_operator);
+				Where o_where = new Where(o_querySelect, new Column(o_querySelect, o_filter.s_column), o_filter.o_value, o_filter.s_operator, this.MarkStringValues);
 				
 														net.forestany.forestj.lib.Global.ilogFinest("added column to new where clause object");
 				
@@ -1094,7 +1093,7 @@ public abstract class Record<T> {
 															net.forestany.forestj.lib.Global.ilogFinest("added primary field/column to Filters property list");
 				} catch (Exception o_exc) {
 					/* skip a field/column if value cannot be retrieved */
-															net.forestany.forestj.lib.Global.ilogFinest("skipped a field/column if value cannot be retrieved: '" + s_primary + "'");
+															net.forestany.forestj.lib.Global.ilogFinest("skipped a field/column if value cannot be retrieved: '" + s_primary + "'; " + o_exc);
 				}
 			});
 			
@@ -1148,7 +1147,7 @@ public abstract class Record<T> {
 			this.Filters.clear();
 			
 			/* it is possible that a unique constraint exists of multiple columns, separated by semicolon */
-			if (s_unique.contains(";")) {
+			if ((s_unique != null) && (s_unique.contains(";"))) {
 				String[] a_uniques = s_unique.split(";");
 				
 				/* iterate each unique key field/column */
@@ -1180,7 +1179,7 @@ public abstract class Record<T> {
 				String s_uniqueValues = "";
 				
 				/* it is possible that a unique constraint exists of multiple columns, separated by semicolon */
-				if (s_unique.contains(";")) {
+				if ((s_unique != null) && (s_unique.contains(";"))) {
 					/* split unique key */
 					String[] a_uniques = s_unique.split(";");
 					
@@ -1212,7 +1211,7 @@ public abstract class Record<T> {
 												net.forestany.forestj.lib.Global.ilogFiner("created insert query");
 		
 		/* for nosqlmdb we must set 'Id' as auto increment column */
-		if ( (net.forestany.forestj.lib.Global.get().BaseGateway == BaseGateway.NOSQLMDB) && (!p_b_withPrimary) && (this.Primary.contains("Id")) && (this.Primary.size() == 1) ) {
+		if ( (net.forestany.forestj.lib.Global.get().BaseGateway == BaseGateway.NOSQLMDB) && (!p_b_withPrimary) && (this.Primary.size() == 1) && (this.Primary.contains("Id")) ) {
 													net.forestany.forestj.lib.Global.ilogFiner("for nosqlmdb we must set 'Id' as auto increment column");
 			
 			o_queryInsert.getQuery().o_nosqlmdbColumnAutoIncrement = new Column(o_queryInsert, "Id");
@@ -1226,7 +1225,7 @@ public abstract class Record<T> {
 			java.lang.reflect.Field o_field =  this.getClass().getDeclaredFields()[i];
 			
 			/* check if field starts with 'Column', but is not equal to 'Columns' */
-			if ( (o_field.getName().startsWith("Column")) && (o_field.getName().compareTo("Columns") != 0) ) {
+			if ( (o_field.getName() != null) && (o_field.getName().startsWith("Column")) && (o_field.getName().compareTo("Columns") != 0) ) {
 				/* get field name without 'Column' prefix */
 				String s_column = o_field.getName().substring(6);
 				
@@ -1237,7 +1236,7 @@ public abstract class Record<T> {
 															net.forestany.forestj.lib.Global.ilogFinest("add field/column '" + s_column + "' to column value pair list of insert query");
 					
 					/* add field/column to column value pair list of insert query */
-					o_queryInsert.getQuery().a_columnValues.add( new ColumnValue(new Column(o_queryInsert, s_column), this.getColumnValue(s_column)) );
+					o_queryInsert.getQuery().a_columnValues.add( new ColumnValue(new Column(o_queryInsert, s_column), this.getColumnValue(s_column), this.MarkStringValues) );
 					
 															net.forestany.forestj.lib.Global.ilogFinest("added field/column to column value pair list of insert query");
 				}
@@ -1282,6 +1281,191 @@ public abstract class Record<T> {
 		}
 	}
 	
+	/**
+	 * Inserts many records with current columns of inherited class, skip primary fields/columns
+	 * primary key or unique key violations are not checked before query execution
+	 * 
+	 * @param p_a_records										amount of records which will be inserted into the table
+	 * @return Integer											'LastInsertId' will not be available, but 'AffectedRows', -1 as error
+	 * @throws IllegalArgumentException							a column does not exist in optional filter list
+	 * @throws java.sql.SQLException							exception accessing column type, column name or just column value of current result set record
+	 * @throws java.text.ParseException 						could not parse column string value to java.util.Date
+	 * @throws NoSuchFieldException								column field does not exist
+	 * @throws IllegalAccessException							cannot access column field, must be public
+	 * @throws RuntimeException									base pool is not running
+	 * @throws InterruptedException								base pool thread for fetching query is interrupted
+	 */
+	public int insertManyRecords(java.util.List<T> p_a_records) throws IllegalArgumentException, java.sql.SQLException, java.text.ParseException, NoSuchFieldException, IllegalAccessException, RuntimeException, InterruptedException {
+		return insertManyRecords(p_a_records, false);
+	}
+
+	/**
+	 * Inserts many records with current columns of inherited class
+	 * primary key or unique key violations are not checked before query execution
+	 * 
+	 * @param p_a_records										amount of records which will be inserted into the table
+	 * @param p_b_withPrimary									true - set values for primary fields/columns as well, false - skip primary fields/columns
+	 * @return Integer											'LastInsertId' will not be available, but 'AffectedRows', -1 as error
+	 * @throws IllegalStateException							primary key or unique key violation occurred
+	 * @throws IllegalArgumentException							list of record is null or empty
+	 * @throws java.sql.SQLException							exception accessing column type, column name or just column value of current result set record
+	 * @throws java.text.ParseException 						could not parse column string value to java.util.Date
+	 * @throws NoSuchFieldException								column field does not exist
+	 * @throws IllegalAccessException							cannot access column field, must be public
+	 * @throws RuntimeException									base pool is not running
+	 * @throws InterruptedException								base pool thread for fetching query is interrupted
+	 */
+	public int insertManyRecords(java.util.List<T> p_a_records, boolean p_b_withPrimary) throws IllegalStateException, IllegalArgumentException, java.sql.SQLException, java.text.ParseException, NoSuchFieldException, IllegalAccessException, RuntimeException, InterruptedException {
+		/* check record list parameter */
+		if ((p_a_records == null) || (p_a_records.size() < 1)) {
+			throw new IllegalArgumentException("Record list parameter is null or empty");
+		}
+
+		/* get flag to skip query to get last insert id in sql */
+		boolean b_deactivateQueryLastInsertIdFlag = !net.forestany.forestj.lib.Global.get().Base.getSkipQueryLastInsertId();
+
+		/* deactivate retrieving last insert id */
+		if (b_deactivateQueryLastInsertIdFlag) {
+													net.forestany.forestj.lib.Global.ilogFiner("deactivate retrieving last insert id");
+
+			/* activate flag to skip query to retrieve last insert id */
+			net.forestany.forestj.lib.Global.get().Base.setSkipQueryLastInsertId(true);
+		}
+
+												net.forestany.forestj.lib.Global.ilogFiner("create insert query");
+		
+		/* create insert query */
+		Query<Insert> o_queryInsert = new Query<Insert>(net.forestany.forestj.lib.Global.get().BaseGateway, SqlType.INSERT, this.Table);
+		
+												net.forestany.forestj.lib.Global.ilogFiner("created insert query");
+		
+		/* for nosqlmdb we must set 'Id' as auto increment column */
+		if ( (net.forestany.forestj.lib.Global.get().BaseGateway == BaseGateway.NOSQLMDB) && (!p_b_withPrimary) && (this.Primary.size() == 1) && (this.Primary.contains("Id")) ) {
+													net.forestany.forestj.lib.Global.ilogFiner("for nosqlmdb we must set 'Id' as auto increment column");
+			
+			o_queryInsert.getQuery().o_nosqlmdbColumnAutoIncrement = new Column(o_queryInsert, "Id");
+		}
+		
+												net.forestany.forestj.lib.Global.ilogFiner("read out column fields to get values for insert query");
+		
+		java.util.List<String> a_columnNames = new java.util.ArrayList<String>();
+
+		/* read out column fields to get column names for insert query */
+		for (int i = 0; i < this.getClass().getDeclaredFields().length; i++) {
+			/* get field */
+			java.lang.reflect.Field o_field =  this.getClass().getDeclaredFields()[i];
+			
+			/* check if field starts with 'Column', but is not equal to 'Columns' */
+			if ( (o_field.getName() != null) && (o_field.getName().startsWith("Column")) && (o_field.getName().compareTo("Columns") != 0) ) {
+				/* get field name without 'Column' prefix */
+				String s_column = o_field.getName().substring(6);
+				
+														net.forestany.forestj.lib.Global.ilogFinest("check if field/column '" + s_column + "' is not part of primary key OR p_b_withPrimary = '" + p_b_withPrimary + "'");
+				
+				/* check if field/column is not part of primary key or we explicitly allow these fields/columns as well */
+				if ( (!this.Primary.contains(s_column)) || (p_b_withPrimary) ) {
+															net.forestany.forestj.lib.Global.ilogFinest("add field/column '" + s_column + "' to column name list");
+					
+					/* add field/column to column name list */
+					a_columnNames.add(s_column);
+					
+															net.forestany.forestj.lib.Global.ilogFinest("added field/column to column name list");
+				}
+			}
+		}
+
+		java.util.List<java.util.LinkedHashMap<String, Object>> a_rows = null;
+		int i_insertManyRecordChunkAmount = net.forestany.forestj.lib.Global.get().Base.getInsertManyRecordChunkAmount();
+		int i_count = 0;
+
+		/* iterate record list parameter */
+		for (T o_record : p_a_records) {
+			/* create new row of values */
+			java.util.List<net.forestany.forestj.lib.sql.ColumnValue> a_row = new java.util.ArrayList<net.forestany.forestj.lib.sql.ColumnValue>();
+
+			/* iterate each column we have identified before */
+			for (String s_columnName : a_columnNames) {
+				/* add value of record to row */
+				a_row.add( new net.forestany.forestj.lib.sql.ColumnValue(new net.forestany.forestj.lib.sql.Column(o_queryInsert, s_columnName), (this.getClass().cast(o_record)).getColumnValue(s_columnName), this.MarkStringValues) );
+			}
+
+			/* add row as record to insert query */
+			o_queryInsert.getQuery().a_multipleRecords.add(a_row);
+
+			i_count++;
+
+			if ((i_insertManyRecordChunkAmount > 0) && (i_count % i_insertManyRecordChunkAmount == 0)) {
+														net.forestany.forestj.lib.Global.ilogFiner("execute insert query");
+				
+				/* execute insert query and get result */
+				a_rows = (this.OtherBaseSource != null) ? this.OtherBaseSource.OtherBaseSourceImplementation(o_queryInsert) : net.forestany.forestj.lib.Global.get().Base.fetchQuery(o_queryInsert, this.AutoTransaction);
+		
+												net.forestany.forestj.lib.Global.ilogFiner("insert query executed");
+
+				/* result must be exactly one row */
+				if ((a_rows != null) && (a_rows.size() == 1)) {
+					/* check if 'AffectedRows' is available */
+					if (!a_rows.get(0).containsKey("AffectedRows")) {
+																net.forestany.forestj.lib.Global.ilogFiner("if we have not 'AffectedRows', return -1 as error");
+						
+						return -1;
+					}
+				} else { /* result is not just one row, return -1 as error */
+															net.forestany.forestj.lib.Global.ilogFiner("result is not just one row, return -1 as error");
+					
+					return -1;
+				}
+
+				/* re-initialize multiple records list for next insert query and set count back to 0 */
+				o_queryInsert.getQuery().a_multipleRecords = new java.util.ArrayList<java.util.List<net.forestany.forestj.lib.sql.ColumnValue>>();
+				i_count = 0;
+			}
+		}
+		
+		/* check if we have still an insert query left */
+		if (i_count > 0) {
+													net.forestany.forestj.lib.Global.ilogFiner("execute insert query");
+			
+			/* execute insert query and get result */
+			a_rows = (this.OtherBaseSource != null) ? this.OtherBaseSource.OtherBaseSourceImplementation(o_queryInsert) : net.forestany.forestj.lib.Global.get().Base.fetchQuery(o_queryInsert, this.AutoTransaction);
+		
+													net.forestany.forestj.lib.Global.ilogFiner("insert query executed");
+		}
+
+		/* activate retrieving last insert id */
+		if (b_deactivateQueryLastInsertIdFlag) {
+													net.forestany.forestj.lib.Global.ilogFiner("activate retrieving last insert id");
+
+			/* deactivate flag to skip query to retrieve last insert id */
+			net.forestany.forestj.lib.Global.get().Base.setSkipQueryLastInsertId(false);
+		}
+		
+		/* result must be exactly one row */
+		if ((a_rows != null) && (a_rows.size() == 1)) {
+			if (a_rows.get(0).containsKey("AffectedRows")) { /* check if 'AffectedRows' is available */
+														net.forestany.forestj.lib.Global.ilogFiner("return 0 if 'AffectedRows' value is lower than one");
+				
+				/* return 0 if 'AffectedRows' value is lower than one */
+				if (Integer.parseInt(a_rows.get(0).get("AffectedRows").toString()) < 1) {
+					return 0;
+				} else {
+															net.forestany.forestj.lib.Global.ilogFiner("return 'AffectedRows' value");
+					
+					/* return 'AffectedRows' value */
+					return Integer.parseInt(a_rows.get(0).get("AffectedRows").toString());
+				}
+			} else { /* if we have not 'AffectedRows', return -1 as error */
+														net.forestany.forestj.lib.Global.ilogFiner("if we have not 'AffectedRows', return -1 as error");
+				
+				return -1;
+			}
+		} else { /* result is not just one row, return -1 as error */
+													net.forestany.forestj.lib.Global.ilogFiner("result is not just one row, return -1 as error");
+			
+			return -1;
+		}
+	}
+
 	/**
 	 * Updates a record with current columns of inherited class, with unique fields/columns as well
 	 * checking primary key and all unique key violation which are given as information within inherited class
@@ -1332,7 +1516,7 @@ public abstract class Record<T> {
 			java.lang.reflect.Field o_field =  this.getClass().getDeclaredFields()[i];
 			
 			/* check if field starts with 'Column', but is not equal to 'Columns' */
-			if ( (o_field.getName().startsWith("Column")) && (o_field.getName().compareTo("Columns") != 0) ) {
+			if ( (o_field.getName() != null) && (o_field.getName().startsWith("Column")) && (o_field.getName().compareTo("Columns") != 0) ) {
 				/* get field name without 'Column' prefix */
 				String s_column = o_field.getName().substring(6);
 				
@@ -1405,7 +1589,7 @@ public abstract class Record<T> {
 															net.forestany.forestj.lib.Global.ilogFinest("added primary field/column to Filters property list");
 				} catch (Exception o_exc) {
 					/* skip a field/column if value cannot be retrieved */
-															net.forestany.forestj.lib.Global.ilogFinest("skipped a field/column if value cannot be retrieved: '" + s_primary + "'");
+															net.forestany.forestj.lib.Global.ilogFinest("skipped a field/column if value cannot be retrieved: '" + s_primary + "'; " + o_exc);
 				}
 			});
 			
@@ -1455,7 +1639,7 @@ public abstract class Record<T> {
 		/* iterate each unique key */
 		for (String s_unique : this.Unique) {
 			/* it is possible that a unique constraint exists of multiple columns, separated by semicolon */
-			if (s_unique.contains(";")) {
+			if ((s_unique != null) && (s_unique.contains(";"))) {
 				String[] a_uniques = s_unique.split(";");
 				
 				/* iterate each unique key field/column */
@@ -1506,7 +1690,7 @@ public abstract class Record<T> {
 				this.Filters.clear();
 				
 				/* it is possible that a unique constraint exists of multiple columns, separated by semicolon */
-				if (s_unique.contains(";")) {
+				if ((s_unique != null) && (s_unique.contains(";"))) {
 					String[] a_uniques = s_unique.split(";");
 					
 					/* iterate each unique key field/column */
@@ -1538,7 +1722,7 @@ public abstract class Record<T> {
 					String s_uniqueValues = "";
 					
 					/* it is possible that a unique constraint exists of multiple columns, separated by semicolon */
-					if (s_unique.contains(";")) {
+					if ((s_unique != null) && (s_unique.contains(";"))) {
 						/* split unique key */
 						String[] a_uniques = s_unique.split(";");
 						
@@ -1576,7 +1760,7 @@ public abstract class Record<T> {
 			java.lang.reflect.Field o_field =  this.getClass().getDeclaredFields()[i];
 						
 			/* check if field starts with 'Column', but is not equal to 'Columns' */
-			if ( (o_field.getName().startsWith("Column")) && (o_field.getName().compareTo("Columns") != 0) ) {
+			if ( (o_field.getName() != null) && (o_field.getName().startsWith("Column")) && (o_field.getName().compareTo("Columns") != 0) ) {
 				/* get field name without 'Column' prefix */
 				String s_column = o_field.getName().substring(6);
 				
@@ -1584,11 +1768,11 @@ public abstract class Record<T> {
 				
 				/* check if field/column is not part of primary key, because these fields should not be touched within an update normally */
 				/* check also for field/column not part if a unique or we explicitly allow these fields/columns with p_b_withUnique parameter */
-				if ( (!this.Primary.contains(s_column)) && ( (p_b_withUnique) || (!this.Unique.contains(s_column)) ) ) {
+				if ( (!this.Primary.contains(s_column)) && ( (p_b_withUnique) || ((this.Unique != null) && (!this.Unique.contains(s_column))) ) ) {
 															net.forestany.forestj.lib.Global.ilogFinest("add field/column '" + s_column + "' to column value pair list of update query");
 					
 					/* add field/column to column value pair list of update query */
-					o_queryUpdate.getQuery().a_columnValues.add( new ColumnValue(new Column(o_queryUpdate, s_column), this.getColumnValue(s_column)) );
+					o_queryUpdate.getQuery().a_columnValues.add( new ColumnValue(new Column(o_queryUpdate, s_column), this.getColumnValue(s_column), this.MarkStringValues) );
 					
 															net.forestany.forestj.lib.Global.ilogFinest("added field/column to column value pair list of update query");
 				}
@@ -1604,7 +1788,7 @@ public abstract class Record<T> {
 		for (String s_primary : this.Primary) {
 													net.forestany.forestj.lib.Global.ilogFinest("create where clause object with primary key field '" + s_primary + "'");
 			
-			Where o_where = new Where(o_queryUpdate, new Column(o_queryUpdate, s_primary), this.getColumnValue(s_primary), "=");
+			Where o_where = new Where(o_queryUpdate, new Column(o_queryUpdate, s_primary), this.getColumnValue(s_primary), "=", this.MarkStringValues);
 			
 													net.forestany.forestj.lib.Global.ilogFinest("created where clause object");
 			
@@ -1687,7 +1871,7 @@ public abstract class Record<T> {
 		for (String s_primary : this.Primary) {
 													net.forestany.forestj.lib.Global.ilogFinest("create where clause object with primary key field '" + s_primary + "'");
 			
-			Where o_where = new Where(o_queryDelete, new Column(o_queryDelete, s_primary), this.getColumnValue(s_primary), "=");
+			Where o_where = new Where(o_queryDelete, new Column(o_queryDelete, s_primary), this.getColumnValue(s_primary), "=", this.MarkStringValues);
 			
 													net.forestany.forestj.lib.Global.ilogFinest("created where clause object");
 			
@@ -1793,4 +1977,133 @@ public abstract class Record<T> {
 			return -1;
 		}
 	}
+
+	/**
+	 * Copy all columns from a record instance into current record object
+	 * 
+	 * @param p_o_recordInstance						record instance to copy column values from
+	 */
+	public void copyFrom(T p_o_recordInstance) {
+		copyFrom(p_o_recordInstance, false);
+	}
+
+	/**
+	 * Copy all columns from a record instance into current record object
+	 * 
+	 * @param p_o_recordInstance						record instance to copy column values from
+	 * @param p_b_deleteLineBreakFromStrings			true - delete all line breaks in string columns
+	 */
+	public void copyFrom(T p_o_recordInstance, boolean p_b_deleteLineBreakFromStrings) {
+        if (p_o_recordInstance != null) {
+            for (int i = 0; i < this.getClass().getDeclaredFields().length; i++) {
+                /* get field */
+                java.lang.reflect.Field o_field = this.getClass().getDeclaredFields()[i];
+
+                /* check if field starts with 'Column', but is not equal to 'Columns' */
+                if (o_field.getName().startsWith("Column") && o_field.getName().compareTo("Columns") != 0) {
+                    try {
+                        String s_fieldName = o_field.getName().substring(6);
+                        Object o_foo = (this.getClass().cast(p_o_recordInstance)).getColumnValue(s_fieldName);
+
+                        if (o_foo != null) {
+                            /* cast to java.sql.Timestamp necessary for LocalDateTime + LocalDate and LocalTime */
+                            if (o_field.getType().getTypeName().contentEquals("java.time.LocalDateTime")) {
+                                o_foo = java.sql.Timestamp.valueOf((java.time.LocalDateTime) o_foo);
+                            } else if (o_field.getType().getTypeName().contentEquals("java.time.LocalDate")) {
+                                o_foo = java.sql.Timestamp.valueOf( java.time.LocalDateTime.of( (java.time.LocalDate)o_foo, java.time.LocalTime.of(0, 0, 0) ) );
+                            } else if (o_field.getType().getTypeName().contentEquals("java.time.LocalTime")) {
+                                o_foo = java.sql.Time.valueOf((java.time.LocalTime) o_foo);
+                            }
+
+                            if ((p_b_deleteLineBreakFromStrings) && (o_field.getType().getTypeName().toLowerCase().contains("string"))) {
+                                o_foo = o_foo.toString().replace("\r", "").replace("\n", "");
+                            }
+                        }
+
+                        this.setColumnValue(s_fieldName, o_foo);
+                    } catch (Exception o_exc) {
+                        /* just continue if column name or column value cannot be retrieved */
+                        net.forestany.forestj.lib.Global.ilogWarning(o_exc.getMessage());
+                    }
+                }
+            }
+        }
+    }
+
+	/**
+	 * Compare all columns from a record instance with current record object
+	 * 
+	 * @return											true - both record instances have equal column values, false - both record instances differ
+	 * @param p_o_recordInstance						record instance to compare column values from
+	 */
+    public boolean equalsTo(T p_o_recordInstance) {
+		return equalsTo(p_o_recordInstance, false);
+	}
+
+	/**
+	 * Compare all columns from a record instance with current record object
+	 * 
+	 * @return											true - both record instances have equal column values, false - both record instances differ
+	 * @param p_o_recordInstance						record instance to compare column values from
+	 * @param p_b_ignoreLineBreakFromStrings			true - ignore all line breaks in string columns on both sides
+	 */
+    public boolean equalsTo(T p_o_recordInstance, boolean p_b_ignoreLineBreakFromStrings) {
+        if (p_o_recordInstance == null) {
+            return false;
+        }
+
+        for (int i = 0; i < this.getClass().getDeclaredFields().length; i++) {
+            /* get field */
+            java.lang.reflect.Field o_field = this.getClass().getDeclaredFields()[i];
+
+            /* check if field starts with 'Column', but is not equal to 'Columns' */
+            if (o_field.getName().startsWith("Column") && o_field.getName().compareTo("Columns") != 0) {
+                try {
+                    String s_fieldName = o_field.getName().substring(6);
+
+                    if ((this.getColumnValue(s_fieldName) == null) && ((this.getClass().cast(p_o_recordInstance)).getColumnValue(s_fieldName) == null)) {
+                        continue;
+                    }
+
+					if (
+						((this.getColumnValue(s_fieldName) == null) && ((this.getClass().cast(p_o_recordInstance)).getColumnValue(s_fieldName) != null)) ||
+						((this.getColumnValue(s_fieldName) != null) && ((this.getClass().cast(p_o_recordInstance)).getColumnValue(s_fieldName) == null))
+					) {
+						return false;
+					}
+
+                    if ((p_b_ignoreLineBreakFromStrings) && (o_field.getType().getTypeName().toLowerCase().contains("string"))) {
+                        if (
+							!this.getColumnValue(s_fieldName)
+								.toString()
+								.replace("\r", "").replace("\n", "")
+								.equals(
+									(this.getClass().cast(p_o_recordInstance)).getColumnValue(s_fieldName)
+									.toString()
+									.replace("\r", "").replace("\n", "")
+								)
+                        ) {
+                            return false;
+                        }
+					} else if (o_field.getType().getTypeName().toLowerCase().contains("bigdecimal")) {
+						java.math.BigDecimal o_decOne = (java.math.BigDecimal)this.getColumnValue(s_fieldName);
+						java.math.BigDecimal o_decTwo = (java.math.BigDecimal)(this.getClass().cast(p_o_recordInstance)).getColumnValue(s_fieldName);
+
+						if (o_decOne.compareTo(o_decTwo) != 0) {
+                            return false;
+                        }
+					} else {
+                        if (!this.getColumnValue(s_fieldName).equals((this.getClass().cast(p_o_recordInstance)).getColumnValue(s_fieldName))) {
+                            return false;
+                        }
+                    }
+                } catch (Exception o_exc) {
+                    /* just continue if column name or column value cannot be retrieved */
+                    net.forestany.forestj.lib.Global.ilogWarning(o_exc.getMessage());
+                }
+            }
+        }
+
+        return true;
+    }
 }

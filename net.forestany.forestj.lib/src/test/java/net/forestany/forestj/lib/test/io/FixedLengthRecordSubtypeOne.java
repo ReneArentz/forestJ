@@ -1,7 +1,7 @@
 package net.forestany.forestj.lib.test.io;
 
 import net.forestany.forestj.lib.io.StandardTransposeMethods;
-import net.forestany.forestj.lib.io.StandardTransposeMethods.Numbers;
+import net.forestany.forestj.lib.io.StandardTransposeMethods.*;
 
 public class FixedLengthRecordSubtypeOne extends net.forestany.forestj.lib.io.FixedLengthRecord<FixedLengthRecordSubtypeOne> {
 

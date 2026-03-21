@@ -148,6 +148,11 @@ public class SendUDP<T extends java.net.DatagramSocket> extends net.forestany.fo
 		this.i_terminations = 0;
 		this.i_multicastTTL = 1;
 		
+		/* check host parameter */
+		if (p_s_host == null) {
+			throw new IllegalArgumentException("Send host address is 'null'");
+		}
+
 		/* check port min. value */
 		if (p_i_port < 1) {
 			throw new IllegalArgumentException("Send port must be at least '1', but was set to '" + p_i_port + "'");

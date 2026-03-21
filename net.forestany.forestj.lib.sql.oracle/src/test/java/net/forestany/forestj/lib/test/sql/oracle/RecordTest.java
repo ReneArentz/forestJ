@@ -17,6 +17,9 @@ public class RecordTest {
 		try {
 			net.forestany.forestj.lib.test.sql.oracle.SetBase.setBase();
 			net.forestany.forestj.lib.test.sqltest.RecordTest.testRecord();
+			net.forestany.forestj.lib.test.sql.oracle.SetBase.setBase();
+			net.forestany.forestj.lib.Global.get().Base.setOracleInsertManyLegacyMode(true);
+			net.forestany.forestj.lib.test.sqltest.RecordTest.testRecord();
 		} catch (Exception o_exc) {
 			fail(o_exc.getMessage());
 		}

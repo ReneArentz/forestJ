@@ -16,8 +16,8 @@ public class BaseTest {
 	/**
 	 * base host ip
 	 */
-	//public static final String s_baseHost = "172.28.234.162";
-	public static final String s_baseHost = "192.168.122.105";
+	//public static final String s_baseHost = "192.168.122.150";
+	public static final String s_baseHost = "192.168.122.99";
 	
 	/**
 	 * method to test base instances
@@ -28,7 +28,7 @@ public class BaseTest {
 			
 			net.forestany.forestj.lib.Global o_glob = net.forestany.forestj.lib.Global.get();
 			
-			/* o_glob.LogCompleteSqlQuery(true); */
+			/* o_glob.setLogCompleteSqlQuery(true); */
 				
 			int i = 1;
 			
@@ -50,10 +50,10 @@ public class BaseTest {
 				java.time.LocalTime o_localTime = java.time.LocalTime.of(17, 42, 23);
 				
 				int i_start = 1;
-				int i_end = 23;
+				int i_end = 31;
 				
 				if (o_glob.BaseGateway == net.forestany.forestj.lib.sqlcore.BaseGateway.NOSQLMDB) {
-					i_end = 28;
+					i_end = 34;
 				}
 				
 				for (i = i_start; i <= i_end; i++) {
@@ -72,14 +72,28 @@ public class BaseTest {
 						}
 					}
 					
+					/* last insert id query is not necessary for insert many records */
+					if ((i == 25) || (i == 29)) {
+						net.forestany.forestj.lib.Global.get().Base.setSkipQueryLastInsertId(true);
+					}
+
 					net.forestany.forestj.lib.sql.Query<?> o_query = net.forestany.forestj.lib.test.sqltest.QueryTest.testQueryGenerator(i);
 					java.util.List<java.util.LinkedHashMap<String, Object>> a_result = o_glob.Base.fetchQuery(o_query);
 					
-					if (i <= 8) {
+					if ((i == 25) || (i == 29)) {
+						net.forestany.forestj.lib.Global.get().Base.setSkipQueryLastInsertId(false);
+					}
+
+					if ((i <= 8) || (i == 24) || (i == 28)) {
 						int i_expectedAffectedRows = 0;
 						
 						if (o_glob.BaseGateway == net.forestany.forestj.lib.sqlcore.BaseGateway.NOSQLMDB) {
 							i_expectedAffectedRows = 1;
+						}
+
+						/* `sqlite3_changes()` reflects only rows with actual data modifications, so the previous DELETE statement return of AffectedRows is still there */
+						if ((o_glob.BaseGateway == net.forestany.forestj.lib.sqlcore.BaseGateway.SQLITE) && (i == 28)) {
+							i_expectedAffectedRows = 18;
 						}
 						
 						assertTrue(
@@ -215,6 +229,16 @@ public class BaseTest {
 										} else if (j == 2) {
 											assertEquals(Integer.valueOf("323"), Integer.class.cast(o_object), "object[" + o_object.toString() + "] is not equal to '323'");
 										}
+									} else if (o_glob.BaseGateway == net.forestany.forestj.lib.sqlcore.BaseGateway.ORACLE) {
+										/* thanks to oracle NUMBER(Precision, Scale), a NUMBER(5, 0) can be a short or an integer; so we always use getInt in BaseJDBC */
+										/* cast int to short will fail, so we must parse it */
+										if (j == 0) {
+											assertEquals(Short.valueOf("123"), Short.parseShort(o_object.toString()), "object[" + o_object.toString() + "] is not equal to '123'");
+										} else if (j == 1) {
+											assertEquals(Short.valueOf("223"), Short.parseShort(o_object.toString()), "object[" + o_object.toString() + "] is not equal to '223'");
+										} else if (j == 2) {
+											assertEquals(Short.valueOf("323"), Short.parseShort(o_object.toString()), "object[" + o_object.toString() + "] is not equal to '323'");
+										}
 									} else {
 										if (j == 0) {
 											assertEquals(Short.valueOf("123"), Short.class.cast(o_object), "object[" + o_object.toString() + "] is not equal to '123'");
@@ -314,18 +338,26 @@ public class BaseTest {
 						
 							j++;
 						}
-					} else if ( (i >= 17) && (i <= 23) ) {
+					} else if (( (i >= 17) && (i <= 23) ) || (i == 27) || (i == 31)) {
 						int i_expectedAffectedRows = 0;
 						
 						if ( (o_glob.BaseGateway == net.forestany.forestj.lib.sqlcore.BaseGateway.SQLITE) && ((i >= 18) && (i <= 20)) ) {
 							i_expectedAffectedRows = 3;
+						}
+
+						if ( (o_glob.BaseGateway == net.forestany.forestj.lib.sqlcore.BaseGateway.SQLITE) && ((i == 27) || (i == 31)) ) {
+							if (i == 27) {
+								i_expectedAffectedRows = 18;
+							} else if (i == 31) {
+								i_expectedAffectedRows = 76;
+							}
 						}
 						
 						if ( (o_glob.BaseGateway == net.forestany.forestj.lib.sqlcore.BaseGateway.MSSQL) && (i == 21) ) {
 							i_expectedAffectedRows = -1;
 						}
 						
-						if ( (o_glob.BaseGateway == net.forestany.forestj.lib.sqlcore.BaseGateway.NOSQLMDB) && ((i >= 18) && (i <= 23)) ) {
+						if ( (o_glob.BaseGateway == net.forestany.forestj.lib.sqlcore.BaseGateway.NOSQLMDB) && (((i >= 18) && (i <= 23)) || (i == 27) || (i == 31)) ) {
 							i_expectedAffectedRows = 1;
 						}
 						
@@ -345,7 +377,141 @@ public class BaseTest {
 							Integer.valueOf(o_resultEntry.getValue().toString()) == i_expectedAffectedRows,
 							"Result row value of query #" + i + " is not '" + i_expectedAffectedRows + "', it is '" + o_resultEntry.getValue().toString() + "'"
 						);
-					} else if (i == 24) {
+					} else if ((i == 25) || (i == 29)) {
+						assertTrue(
+							a_result.size() == 1,
+							"Result row amount of query #" + i + " is not '1', it is '" + a_result.size() + "'"
+						);
+						
+						for (java.util.LinkedHashMap<String, Object> o_row : a_result) {
+							int j = 0;
+							
+							for (java.util.Map.Entry<String, Object> o_column : o_row.entrySet()) {
+								if (j == 0) {
+									assertTrue(
+										o_column.getKey().contentEquals("AffectedRows"),
+										"Result row key of query #" + i + " is not 'AffectedRows', it is '" + o_column.getKey() + "'"
+									);
+									
+									int i_expectedAffectedRows = 18;
+
+									if (i == 29) {
+										i_expectedAffectedRows = 76;
+									}
+
+									assertTrue(
+										Integer.valueOf(o_column.getValue().toString()) == i_expectedAffectedRows,
+										"Result row value of query #" + i + " is not '" + i_expectedAffectedRows + "', but '" + o_column.getValue().toString() + "'"
+									);
+								} else {
+									assertTrue(
+										o_column.getKey().contentEquals("LastInsertId"),
+										"Result row key of query #" + i + " is not 'LastInsertId', it is '" + o_column.getKey() + "'"
+									);
+									
+									/* checking the value is not safe with insert statements and multiple records */
+								}
+								
+								j++;
+							}
+						}
+					} else if ((i == 26) || (i == 30)) {
+						int i_expectedAmount = 18;
+
+						if (i == 30) {
+							i_expectedAmount = 76;
+						}
+
+						assertTrue(
+							a_result.size() == i_expectedAmount,
+							"Result row amount of query #" + i + " is not '" + i_expectedAmount + "', it is '" + a_result.size() + "'"
+						);
+						
+						int j = 0;
+
+						if (i == 26) {
+							String s_text = "";
+							int i_sum = 0;
+							
+							for (java.util.LinkedHashMap<String, Object> o_row : a_result) {
+								int k = 0;
+								
+								for (java.util.Map.Entry<String, Object> o_column : o_row.entrySet()) {
+									Object o_object = o_column.getValue();
+									int l = 0;
+									
+									if (k == l++) { /* Key */
+										assertEquals(Integer.valueOf(j + 1), Integer.class.cast(o_object), "Key[" + o_object.toString() + "] is not equal to '" + (j + 1) + "'");
+									} else if (k == l++) { /* Text */
+										s_text += o_object.toString() + " ";
+									} else if (k == l++) { /* Number */
+										/* thanks to oracle NUMBER(Precision, Scale), a NUMBER(10, 0) can be an integer or a long; so we always use getLong in BaseJDBC */
+										if (o_glob.BaseGateway == net.forestany.forestj.lib.sqlcore.BaseGateway.ORACLE) {
+											/* cast long to int will fail, so we must parse it */
+											i_sum += Integer.parseInt(o_object.toString());
+										} else {
+											i_sum += Integer.class.cast(o_object);
+										}
+									}
+									
+									k++;
+								}
+
+								j++;
+							}
+
+							assertEquals("Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna ", s_text, "'" + s_text + "' is not equal to 'Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna '");
+							assertEquals(0, i_sum, "'" + i_sum + "']' is not equal to '0'");
+						} else if (i == 30) {
+							int i_sumFrom = 0;
+							int i_sumTo = 0;
+							java.math.BigDecimal o_sumAmount = new java.math.BigDecimal(0);
+							
+							for (java.util.LinkedHashMap<String, Object> o_row : a_result) {
+								int k = 0;
+								
+								for (java.util.Map.Entry<String, Object> o_column : o_row.entrySet()) {
+									Object o_object = o_column.getValue();
+									int l = 0;
+									
+									if (k == l++) { /* Id */
+										assertEquals(Integer.valueOf(j + 1), Integer.class.cast(o_object), "Id[" + o_object.toString() + "] is not equal to '" + (j + 1) + "'");
+									} else if (k == l++) { /* UUID */
+										/* nothing to check */
+									} else if (k == l++) { /* From */
+										/* thanks to oracle NUMBER(Precision, Scale), a NUMBER(10, 0) can be an integer or a long; so we always use getLong in BaseJDBC */
+										if (o_glob.BaseGateway == net.forestany.forestj.lib.sqlcore.BaseGateway.ORACLE) {
+											/* cast long to int will fail, so we must parse it */
+											i_sumFrom += Integer.parseInt(o_object.toString());
+										} else {
+											i_sumFrom += Integer.class.cast(o_object);
+										}
+									} else if (k == l++) { /* To */
+										/* thanks to oracle NUMBER(Precision, Scale), a NUMBER(10, 0) can be an integer or a long; so we always use getLong in BaseJDBC */
+										if (o_glob.BaseGateway == net.forestany.forestj.lib.sqlcore.BaseGateway.ORACLE) {
+											/* cast long to int will fail, so we must parse it */
+											i_sumTo += Integer.parseInt(o_object.toString());
+										} else {
+											i_sumTo += Integer.class.cast(o_object);
+										}
+									} else if (k == l++) { /* Amount */
+										assertTrue(o_object instanceof java.math.BigDecimal, "object class[" + o_object.getClass().getTypeName() + "] is not of instance 'java.math.BigDecimal'");
+										o_sumAmount = o_sumAmount.add(java.math.BigDecimal.class.cast(o_object));
+									} else if (k == l++) { /* Created */
+										/* nothing to check */
+									}
+									
+									k++;
+								}
+
+								j++;
+							}
+
+							assertEquals(29700, i_sumFrom, "'" + i_sumFrom + "']' is not equal to '29700'");
+							assertEquals(25200, i_sumTo, "'" + i_sumTo + "']' is not equal to '25200'");
+							assertEquals(new java.math.BigDecimal(387836.85d).setScale(2, java.math.RoundingMode.HALF_EVEN), o_sumAmount.setScale(2, java.math.RoundingMode.HALF_EVEN), "[" + o_sumAmount.setScale(2, java.math.RoundingMode.HALF_EVEN) + "] is not equal to '387836.85' bigdecimal");
+						}
+					} else if (i == 32) {
 						assertTrue(
 							a_result.size() == 16,
 							"Result row amount of query #" + i + " is not '16', it is '" + a_result.size() + "'"
@@ -444,7 +610,7 @@ public class BaseTest {
 								i_rowPointer++;
 							}
 						}
-					} else if (i == 25) {
+					} else if (i == 33) {
 						assertTrue(
 							a_result.size() == 7,
 							"Result row amount of query #" + i + " is not '7', it is '" + a_result.size() + "'"
@@ -503,7 +669,7 @@ public class BaseTest {
 								i_rowPointer++;
 							}
 						}
-					} else if (i == 26) {
+					} else if (i == 34) {
 						assertTrue(
 							a_result.size() == 4,
 							"Result row amount of query #" + i + " is not '4', it is '" + a_result.size() + "'"
@@ -582,7 +748,7 @@ public class BaseTest {
 							i = i + 2;
 						}
 						
-						if (i == 28) {
+						if (i == 34) {
 							net.forestany.forestj.lib.sql.Query<net.forestany.forestj.lib.sql.Drop> o_queryDrop = new net.forestany.forestj.lib.sql.Query<net.forestany.forestj.lib.sql.Drop>(o_glob.BaseGateway, net.forestany.forestj.lib.sqlcore.SqlType.DROP, "sys_forestj_categories");
 							
 							@SuppressWarnings("unused")

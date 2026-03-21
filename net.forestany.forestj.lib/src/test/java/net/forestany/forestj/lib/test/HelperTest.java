@@ -42,6 +42,14 @@ public class HelperTest {
 				net.forestany.forestj.lib.Helper.isShort("123"),
 				"123 is not a short"
 		);
+		assertFalse(
+				net.forestany.forestj.lib.Helper.isShort("123 "),
+				"'123 ' is a short"
+		);
+		assertFalse(
+				net.forestany.forestj.lib.Helper.isShort("123  "),
+				"'123  ' is a short"
+		);
 		
 		assertFalse(
 				net.forestany.forestj.lib.Helper.isInteger("test"),
@@ -50,6 +58,14 @@ public class HelperTest {
 		assertTrue(
 				net.forestany.forestj.lib.Helper.isInteger("123550"),
 				"1234550 is not an integer"
+		);
+		assertFalse(
+				net.forestany.forestj.lib.Helper.isInteger("12355 "),
+				"'123550 ' is an integer"
+		);
+		assertFalse(
+				net.forestany.forestj.lib.Helper.isInteger("12355  "),
+				"'123550  ' is an integer"
 		);
 		
 		assertFalse(
@@ -60,7 +76,15 @@ public class HelperTest {
 				net.forestany.forestj.lib.Helper.isLong("1235464545464654550"),
 				"1235464545464654550 is not a long"
 		);
-		
+		assertFalse(
+				net.forestany.forestj.lib.Helper.isLong("12354645454646545 "),
+				"'12354645454646545 ' is a long"
+		);
+		assertFalse(
+				net.forestany.forestj.lib.Helper.isLong("12354645454646545  "),
+				"'12354645454646545  ' is a long"
+		);
+
 		assertFalse(
 				net.forestany.forestj.lib.Helper.isFloat("test"),
 				"'test' is a float"
@@ -68,6 +92,30 @@ public class HelperTest {
 		assertTrue(
 				net.forestany.forestj.lib.Helper.isFloat("1235464.454644545464654550"),
 				"1235464.454644545464654550 is no a float"
+		);
+		assertFalse(
+				net.forestany.forestj.lib.Helper.isFloat("1235464.45464454546 "),
+				"'1235464.45464454546 ' is a float"
+		);
+		assertFalse(
+				net.forestany.forestj.lib.Helper.isFloat("1235464.45464454546  "),
+				"'1235464.45464454546  ' is a float"
+		);
+		assertFalse(
+				net.forestany.forestj.lib.Helper.isFloat("1235464,45464454546 "),
+				"'1235464,45464454546 ' is a float"
+		);
+		assertFalse(
+				net.forestany.forestj.lib.Helper.isFloat("1235464,45464454546  "),
+				"'1235464,45464454546  ' is a float"
+		);
+		assertFalse(
+				net.forestany.forestj.lib.Helper.isFloat("1235464,"),
+				"'1235464,' is a float"
+		);
+		assertFalse(
+				net.forestany.forestj.lib.Helper.isFloat("1235464."),
+				"'1235464.' is a float"
 		);
 		
 		assertFalse(
@@ -77,6 +125,30 @@ public class HelperTest {
 		assertTrue(
 				net.forestany.forestj.lib.Helper.isDouble("12354645.45446445464654550"),
 				"12354645.45446445464654550 is not a double"
+		);
+		assertFalse(
+				net.forestany.forestj.lib.Helper.isDouble("1235464.45464454546 "),
+				"'1235464.45464454546 ' is a double"
+		);
+		assertFalse(
+				net.forestany.forestj.lib.Helper.isDouble("1235464.45464454546  "),
+				"'1235464.45464454546  ' is a double"
+		);
+		assertFalse(
+				net.forestany.forestj.lib.Helper.isDouble("1235464,45464454546 "),
+				"'1235464,45464454546 ' is a double"
+		);
+		assertFalse(
+				net.forestany.forestj.lib.Helper.isDouble("1235464,45464454546  "),
+				"'1235464,45464454546  ' is a double"
+		);
+		assertFalse(
+				net.forestany.forestj.lib.Helper.isDouble("1235464,"),
+				"'1235464,' is a double"
+		);
+		assertFalse(
+				net.forestany.forestj.lib.Helper.isDouble("1235464."),
+				"'1235464.' is a double"
 		);
 		
 		assertFalse(

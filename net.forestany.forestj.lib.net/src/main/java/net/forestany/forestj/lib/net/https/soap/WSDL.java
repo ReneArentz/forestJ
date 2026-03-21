@@ -225,7 +225,7 @@ public class WSDL {
 	    }
 	    
 	    /* check if wsdl-schema starts with <definitions>-tag */
-	    if (!a_wsdlTags.get(0).toLowerCase().startsWith("<definitions")) {
+	    if ((a_wsdlTags.size() <= 1) || (!a_wsdlTags.get(0).toLowerCase().startsWith("<definitions"))) {
     		throw new IllegalArgumentException("wsdl-schema must start with <definitions>-tag");
     	}
 	    
@@ -249,7 +249,7 @@ public class WSDL {
 	private void parseWSDL(java.util.List<String> p_a_wsdlTags, int p_i_min, int p_i_max) throws IllegalArgumentException, java.io.IOException {
 		if (p_i_min == 0) { /* expecting <definitions> */
 			/* check if we have <definitions> */
-			if (!p_a_wsdlTags.get(0).startsWith("<definitions")) {
+			if ((p_a_wsdlTags == null) || (p_a_wsdlTags.size() <= 1) || (!p_a_wsdlTags.get(0).startsWith("<definitions"))) {
 				throw new IllegalArgumentException("Invalid wsdl document. Expected <wsdl:definitions>-tag, but found \"" + p_a_wsdlTags.get(0) + "\".");
 			}
 			
@@ -263,20 +263,20 @@ public class WSDL {
 		}
 		
 		if (p_i_min == 1) { /* expecting <documentation /> or <types> */
-			if ( (p_a_wsdlTags.get(1).startsWith("<documentation")) && (p_a_wsdlTags.get(1).endsWith("/>")) ) { /* check if we have <documentation /> */
+			if ( (p_a_wsdlTags.size() > 1) && (p_a_wsdlTags.get(1).startsWith("<documentation")) && (p_a_wsdlTags.get(1).endsWith("/>")) ) { /* check if we have <documentation /> */
 				/* parse <documentation /> tag */
 				this.s_documentation = this.parseDocumentationTag(p_a_wsdlTags.get(1));
 				
 				/* parse <types> */
 				p_i_min = this.parseTypes(p_a_wsdlTags, (p_i_min + 2), p_i_max);
-			} else if (p_a_wsdlTags.get(1).contentEquals("<types>")) { /* check if we have <types> */
+			} else if ( (p_a_wsdlTags.size() > 1) && (p_a_wsdlTags.get(1).contentEquals("<types>")) ) { /* check if we have <types> */
 				/* parse <types> */
 				p_i_min = this.parseTypes(p_a_wsdlTags, (p_i_min + 1), p_i_max);
 			}
 		}
 		
 		/* check if parsing until now was valid */
-		if (p_i_min < 0) {
+		if ((p_i_min < 0) || (p_a_wsdlTags == null)) {
 			throw new IllegalArgumentException("Invalid wsdl document. <types> could not be parsed");
 		}
 		
@@ -289,7 +289,7 @@ public class WSDL {
 		/* parse <binding> tags */
 		do {
 			p_i_min = this.parseBinding(p_a_wsdlTags, p_i_min, p_i_max);
-		} while (p_a_wsdlTags.get(p_i_min).startsWith("<binding"));
+		} while ((p_a_wsdlTags.size() > p_i_min) && (p_a_wsdlTags.get(p_i_min).startsWith("<binding")));
 		
 		/* parse <service> with <port> tags */
 		this.parseService(p_a_wsdlTags, p_i_min, p_i_max);
@@ -304,6 +304,11 @@ public class WSDL {
 	 * @param p_i_max					xml/xsd-tag in parameter list where we stop
 	 */
 	private boolean lookForEndTag(String p_s_wsdlTag, java.util.List<String> p_a_wsdlTags, int p_i_min, int p_i_max) {
+		/* no end tag found if null */
+		if (p_s_wsdlTag == null) {
+			return false;
+		}
+		
 		/* get xml/xsd-tag definition name */
 		if (p_s_wsdlTag.indexOf(" ") > 1) {
 			/* get xml/xsd-tag definition name until first appearance of a whitespace */
@@ -316,7 +321,7 @@ public class WSDL {
 		/* iterate each following xml/xsd-tag */
 		for (int i_min = p_i_min; i_min <= p_i_max; i_min++) {
 			/* if we find our definition name as closing tag */
-			if (p_a_wsdlTags.get(i_min).contentEquals("</" + p_s_wsdlTag + ">")) {
+			if ((p_a_wsdlTags.size() > i_min) && (p_a_wsdlTags.get(i_min).contentEquals("</" + p_s_wsdlTag + ">"))) {
 				/* we have our end tag */
 				return true;
 			}
@@ -362,11 +367,11 @@ public class WSDL {
 		}
 		
 		/* expect <xs:schema> or <schema> tag */
-		if (!( (p_a_wsdlTags.get(p_i_min).startsWith("<xs:schema ")) || (p_a_wsdlTags.get(p_i_min).endsWith("schema>")) )) {
+		if ((p_a_wsdlTags.size() <= p_i_min) || (!( (p_a_wsdlTags.get(p_i_min).startsWith("<xs:schema ")) || (p_a_wsdlTags.get(p_i_min).endsWith("schema>")) ))) {
 			throw new IllegalArgumentException("Invalid wsdl document. <xs:schema>-tag not detected after <types>-tag");
 		}
 		
-		if (p_a_wsdlTags.get(p_i_min + 1).startsWith("<xs:import ")) { /* import xsd schema from other file */
+		if ((p_a_wsdlTags.size() > (p_i_min + 1)) && (p_a_wsdlTags.get(p_i_min + 1).startsWith("<xs:import "))) { /* import xsd schema from other file */
 			/* read schemaLocation attribute */
 			java.util.regex.Pattern o_regex = java.util.regex.Pattern.compile("schemaLocation=\"([^\"]*)\"");
 			java.util.regex.Matcher o_matcher = o_regex.matcher(p_a_wsdlTags.get(p_i_min + 1));
@@ -392,7 +397,7 @@ public class WSDL {
 	    		
 	    		/* find end of <types> part */
 	    		for (int i = p_i_min + 2; i < p_i_max; i++) {
-	    			if (p_a_wsdlTags.get(i).contentEquals("</types>")) {
+	    			if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).contentEquals("</types>"))) {
 	    				/* return xml/xsd-tag position to continue parsing */
 	    				return i + 1;
 	    			}
@@ -407,7 +412,7 @@ public class WSDL {
 			
 			for (int i = p_i_min; i < p_i_max; i++) {
 				/* find end of <types> part */
-				if (p_a_wsdlTags.get(i).contentEquals("</types>")) {
+				if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).contentEquals("</types>"))) {
 					i_endOfTypes = i;
 					break;
 				}
@@ -439,7 +444,7 @@ public class WSDL {
 		
 		/* find end of message tags */
 		for (int i = p_i_min; i < p_i_max; i++) {
-			if (p_a_wsdlTags.get(i).startsWith("<portType")) {
+			if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).startsWith("<portType"))) {
 				i_endOfMessages = i - 1;
 				break;
 			}
@@ -456,7 +461,7 @@ public class WSDL {
 			String s_messagePartName;
 			String s_messagePartElement;
 			
-			if (p_a_wsdlTags.get(i).startsWith("<message")) {
+			if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).startsWith("<message"))) {
 				/* read name tag */
 				java.util.regex.Pattern o_regex = java.util.regex.Pattern.compile("name=\"([^\"]*)\"");
 				java.util.regex.Matcher o_matcher = o_regex.matcher(p_a_wsdlTags.get(i));
@@ -477,7 +482,7 @@ public class WSDL {
 			    i++;
 			    
 			    /* expect <part> tag */
-			    if (p_a_wsdlTags.get(i).startsWith("<part")) {
+			    if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).startsWith("<part"))) {
 			    	/* read name tag */
 					o_regex = java.util.regex.Pattern.compile("name=\"([^\"]*)\"");
 					o_matcher = o_regex.matcher(p_a_wsdlTags.get(i));
@@ -510,7 +515,7 @@ public class WSDL {
 				    	throw new IllegalArgumentException("Invalid <wsdl:part>-tag without an element attribute");
 				    }
 				    
-				    if (p_a_wsdlTags.get(i).endsWith("/>")) { /* <part> tag was self closing */
+				    if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).endsWith("/>"))) { /* <part> tag was self closing */
 				    	i--;
 				    } else if (!this.lookForEndTag(p_a_wsdlTags.get(i), p_a_wsdlTags, i + 1, i_endOfMessages)) { /* check if <part> tag is closed */
 			    		throw new IllegalArgumentException("Invalid wsdl document. <wsdl:part>-tag is not closed in wsdl file");
@@ -545,7 +550,7 @@ public class WSDL {
 		
 		/* find end of portType tags */
 		for (int i = p_i_min; i < p_i_max; i++) {
-			if (p_a_wsdlTags.get(i).startsWith("<binding")) {
+			if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).startsWith("<binding"))) {
 				i_endOfPortTypes = i - 1;
 				break;
 			}
@@ -559,7 +564,7 @@ public class WSDL {
 		String s_portTypeName;
 		
 		/* first one must be our portType tag */
-		if (p_a_wsdlTags.get(p_i_min).startsWith("<portType")) {
+		if ((p_a_wsdlTags.size() > p_i_min) && (p_a_wsdlTags.get(p_i_min).startsWith("<portType"))) {
 			/* read name tag */
 			java.util.regex.Pattern o_regex = java.util.regex.Pattern.compile("name=\"([^\"]*)\"");
 			java.util.regex.Matcher o_matcher = o_regex.matcher(p_a_wsdlTags.get(p_i_min));
@@ -591,7 +596,7 @@ public class WSDL {
 			String s_portTypeDocumentation = null;
 			
 			/* expect operation tag */
-			if (p_a_wsdlTags.get(i).startsWith("<operation")) {
+			if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).startsWith("<operation"))) {
 				/* read name tag */
 				java.util.regex.Pattern o_regex = java.util.regex.Pattern.compile("name=\"([^\"]*)\"");
 				java.util.regex.Matcher o_matcher = o_regex.matcher(p_a_wsdlTags.get(i));
@@ -612,13 +617,13 @@ public class WSDL {
 			    i++;
 			    
 			    /* handle and parse possible documentation tag */
-			    if (p_a_wsdlTags.get(i).startsWith("<documentation")) {
+			    if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).startsWith("<documentation"))) {
 			    	s_portTypeDocumentation = this.parseDocumentationTag(p_a_wsdlTags.get(i));
 			    	i++;
 			    }
 			    
 			    /* expect input tag */
-			    if (p_a_wsdlTags.get(i).startsWith("<input")) {
+			    if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).startsWith("<input"))) {
 			    	/* read message tag */
 					o_regex = java.util.regex.Pattern.compile("message=\"([^\"]*)\"");
 					o_matcher = o_regex.matcher(p_a_wsdlTags.get(i));
@@ -629,7 +634,7 @@ public class WSDL {
 				    	
 				    	/* check if we find our message value in our message list */
 				    	for (Message o_message : this.a_messages) {
-				    		if (o_message.getName().contentEquals(s_inputMessage)) {
+				    		if ((o_message != null) && (o_message.getName() != null) && (o_message.getName().contentEquals(s_inputMessage))) {
 				    			o_inputMessage = o_message;
 				    		}
 				    	}
@@ -657,7 +662,7 @@ public class WSDL {
 				}
 			    
 			    /* expect output tag */
-			    if (p_a_wsdlTags.get(i).startsWith("<output")) {
+			    if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).startsWith("<output"))) {
 			    	/* read message tag */
 					o_regex = java.util.regex.Pattern.compile("message=\"([^\"]*)\"");
 					o_matcher = o_regex.matcher(p_a_wsdlTags.get(i));
@@ -668,7 +673,7 @@ public class WSDL {
 				    	
 				    	/* check if we find our message value in our message list */
 				    	for (Message o_message : this.a_messages) {
-				    		if (o_message.getName().contentEquals(s_outputMessage)) {
+				    		if ((o_message != null) && (o_message.getName() != null) && (o_message.getName().contentEquals(s_outputMessage))) {
 				    			o_outputMessage = o_message;
 				    		}
 				    	}
@@ -682,7 +687,7 @@ public class WSDL {
 				    	throw new IllegalArgumentException("Invalid <wsdl:output>-tag without a message attribute");
 				    }
 				    
-				    if (p_a_wsdlTags.get(i).endsWith("/>")) { /* <output> tag was self closing */
+				    if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).endsWith("/>"))) { /* <output> tag was self closing */
 				    	i--;
 				    } else if (!this.lookForEndTag(p_a_wsdlTags.get(i), p_a_wsdlTags, i + 1, i_endOfPortTypes)) { /* check if <output> tag is closed */
 			    		throw new IllegalArgumentException("Invalid wsdl document. <wsdl:output>-tag is not closed in wsdl file");
@@ -722,14 +727,14 @@ public class WSDL {
 		boolean b_bindingEndingOnce = false;
 		
 		/* check if soap:binding has closed itself, so we can continue with wsdl:binding */
-		if (p_a_wsdlTags.get(p_i_min + 1).endsWith("/>")) {
+		if ((p_a_wsdlTags.size() > (p_i_min + 1)) && (p_a_wsdlTags.get(p_i_min + 1).endsWith("/>"))) {
 			b_bindingEndingOnce = true;
 		}
 		
 		/* find end of binding part */
 		for (int i = p_i_min; i < p_i_max; i++) {
 			/* found binding closing tag */
-			if (p_a_wsdlTags.get(i).startsWith("</binding")) {
+			if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).startsWith("</binding"))) {
 				/* ignore closed soap:binding tag */
 				if (!b_bindingEndingOnce) {
 					b_bindingEndingOnce = true;
@@ -751,7 +756,7 @@ public class WSDL {
 		java.util.List<PortTypeOperation> a_bindingPortTypeOperations = new java.util.ArrayList<PortTypeOperation>();
 		
 		/* expect wsdl binding tag */
-		if (p_a_wsdlTags.get(p_i_min).startsWith("<binding")) {
+		if ((p_a_wsdlTags.size() > p_i_min) && (p_a_wsdlTags.get(p_i_min).startsWith("<binding"))) {
 			/* read name tag */
 			java.util.regex.Pattern o_regex = java.util.regex.Pattern.compile("name=\"([^\"]*)\"");
 			java.util.regex.Matcher o_matcher = o_regex.matcher(p_a_wsdlTags.get(p_i_min));
@@ -775,7 +780,7 @@ public class WSDL {
 		    	
 		    	/* check if binding type exists in our portType list */
 		    	for (PortTypeOperation o_foo : this.a_portTypeOperations) {
-		    		if (o_foo.getPortTypeName().contentEquals(s_bindingType)) {
+		    		if ((o_foo != null) && (o_foo.getPortTypeName() != null) && (o_foo.getPortTypeName().contentEquals(s_bindingType))) {
 		    			b_found = true;
 		    			break;
 		    		}
@@ -800,7 +805,7 @@ public class WSDL {
 		}
 		
 		/* expect soap binding tag */
-		if (p_a_wsdlTags.get(p_i_min + 1).startsWith("<binding")) {
+		if ((p_a_wsdlTags.size() > (p_i_min + 1)) && (p_a_wsdlTags.get(p_i_min + 1).startsWith("<binding"))) {
 			/* read name tag */
 			java.util.regex.Pattern o_regex = java.util.regex.Pattern.compile("style=\"([^\"]*)\"");
 			java.util.regex.Matcher o_matcher = o_regex.matcher(p_a_wsdlTags.get(p_i_min + 1));
@@ -834,7 +839,7 @@ public class WSDL {
 		    }
 		    
 		    /* check if soap binding tag will be closed */
-		    if ( (!p_a_wsdlTags.get(p_i_min + 1).endsWith("/>")) && (!this.lookForEndTag(p_a_wsdlTags.get(p_i_min + 1), p_a_wsdlTags, p_i_min + 2, i_endOfBinding)) ) {
+		    if ( (p_a_wsdlTags.size() > (p_i_min + 1)) && (!p_a_wsdlTags.get(p_i_min + 1).endsWith("/>")) && (!this.lookForEndTag(p_a_wsdlTags.get(p_i_min + 1), p_a_wsdlTags, p_i_min + 2, i_endOfBinding)) ) {
 				throw new IllegalArgumentException("Invalid wsdl document. <soap:binding>-tag is not closed in wsdl file");
 			}
 		} else {
@@ -845,7 +850,7 @@ public class WSDL {
 		int i_operationsStart = p_i_min + 2;
 		
 		/* check when next binding operation tag is starting */
-		if (!p_a_wsdlTags.get(p_i_min + 1).endsWith("/>")) {
+		if ((p_a_wsdlTags.size() > (p_i_min + 1)) && (!p_a_wsdlTags.get(p_i_min + 1).endsWith("/>"))) {
 			i_operationsStart++;
 		}
 		
@@ -854,7 +859,7 @@ public class WSDL {
 			String s_bindingOperationName;
 			
 			/* expect wsdl binding tag */
-			if (p_a_wsdlTags.get(i).startsWith("<operation")) {
+			if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).startsWith("<operation"))) {
 				/* read name tag */
 				java.util.regex.Pattern o_regex = java.util.regex.Pattern.compile("name=\"([^\"]*)\"");
 				java.util.regex.Matcher o_matcher = o_regex.matcher(p_a_wsdlTags.get(i));
@@ -865,7 +870,7 @@ public class WSDL {
 			    	
 			    	/* look for our portType operation with our binding operation name and add it to our binding list */
 			    	for (PortTypeOperation o_foo : this.a_portTypeOperations) {
-			    		if (o_foo.getPortTypeOperationName().contentEquals(s_bindingOperationName)) {
+			    		if ((o_foo != null) && (o_foo.getPortTypeOperationName() != null) && (o_foo.getPortTypeOperationName().contentEquals(s_bindingOperationName))) {
 			    			a_bindingPortTypeOperations.add(o_foo);
 			    		}
 			    	}
@@ -886,7 +891,7 @@ public class WSDL {
 			}
 			
 			/* expect soap operation tag */
-			if (p_a_wsdlTags.get(i).startsWith("<operation")) {
+			if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).startsWith("<operation"))) {
 				/* read name tag */
 				java.util.regex.Pattern o_regex = java.util.regex.Pattern.compile("style=\"([^\"]*)\"");
 				java.util.regex.Matcher o_matcher = o_regex.matcher(p_a_wsdlTags.get(i));
@@ -903,7 +908,7 @@ public class WSDL {
 			    	throw new IllegalArgumentException("Invalid <soap:operation>-tag without a style attribute");
 			    }
 			    
-			    if (p_a_wsdlTags.get(i).endsWith("/>")) { /* soap operation tag was self-closing */
+			    if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).endsWith("/>"))) { /* soap operation tag was self-closing */
 			    	i--;
 			    } else if (!this.lookForEndTag(p_a_wsdlTags.get(i), p_a_wsdlTags, i + 1, i_endOfBinding)) { /* check if soap operation tag is closed */
 					throw new IllegalArgumentException("Invalid wsdl document. <soap:operation>-tag is not closed in wsdl file");
@@ -917,7 +922,7 @@ public class WSDL {
 			}
 			
 			/* expect input tag */
-			if (p_a_wsdlTags.get(i).startsWith("<input")) {
+			if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).startsWith("<input"))) {
 				/* check if input tag is closed */
 				if (!this.lookForEndTag(p_a_wsdlTags.get(i), p_a_wsdlTags, i + 1, i_endOfBinding)) {
 					throw new IllegalArgumentException("Invalid wsdl document. <wsdl:input>-tag is not closed in wsdl file");
@@ -930,7 +935,7 @@ public class WSDL {
 			}
 			
 			/* expect body tag */
-			if (p_a_wsdlTags.get(i).startsWith("<body")) {
+			if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).startsWith("<body"))) {
 				/* read use tag */
 				java.util.regex.Pattern o_regex = java.util.regex.Pattern.compile("use=\"([^\"]*)\"");
 				java.util.regex.Matcher o_matcher = o_regex.matcher(p_a_wsdlTags.get(i));
@@ -947,7 +952,7 @@ public class WSDL {
 			    	throw new IllegalArgumentException("Invalid <soap:body>-tag without a use attribute");
 			    }
 			    				
-				if (p_a_wsdlTags.get(i).endsWith("/>")) { /* body tag was self-closing */
+				if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).endsWith("/>"))) { /* body tag was self-closing */
 					i--;
 				} else if (!this.lookForEndTag(p_a_wsdlTags.get(i), p_a_wsdlTags, i + 1, i_endOfBinding)) { /* check if body tag is closed */
 					throw new IllegalArgumentException("Invalid wsdl document. <soap:body>-tag is not closed in wsdl file");
@@ -962,7 +967,7 @@ public class WSDL {
 			}
 			
 			/* expect output tag */
-			if (p_a_wsdlTags.get(i).startsWith("<output")) {
+			if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).startsWith("<output"))) {
 				/* check if output tag is closed */
 				if (!this.lookForEndTag(p_a_wsdlTags.get(i), p_a_wsdlTags, i + 1, i_endOfBinding)) {
 					throw new IllegalArgumentException("Invalid wsdl document. <wsdl:output>-tag is not closed in wsdl file");
@@ -975,7 +980,7 @@ public class WSDL {
 			}
 			
 			/* expect body tag */
-			if (p_a_wsdlTags.get(i).startsWith("<body")) {
+			if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).startsWith("<body"))) {
 				/* read use tag */
 				java.util.regex.Pattern o_regex = java.util.regex.Pattern.compile("use=\"([^\"]*)\"");
 				java.util.regex.Matcher o_matcher = o_regex.matcher(p_a_wsdlTags.get(i));
@@ -992,7 +997,7 @@ public class WSDL {
 			    	throw new IllegalArgumentException("Invalid <soap:body>-tag without a use attribute");
 			    }
 			    				
-				if (p_a_wsdlTags.get(i).endsWith("/>")) { /* body tag was self-closing */
+				if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).endsWith("/>"))) { /* body tag was self-closing */
 					i--;
 				} else if (!this.lookForEndTag(p_a_wsdlTags.get(i), p_a_wsdlTags, i + 1, i_endOfBinding)) { /* check if body tag is closed */
 					throw new IllegalArgumentException("Invalid wsdl document. <soap:body>-tag is not closed in wsdl file");
@@ -1028,7 +1033,7 @@ public class WSDL {
 		java.util.List<ServicePort> a_servicePorts = new java.util.ArrayList<ServicePort>();
 		
 		/* expect service tag */
-		if (p_a_wsdlTags.get(p_i_min).startsWith("<service")) {
+		if ((p_a_wsdlTags.size() > p_i_min) && (p_a_wsdlTags.get(p_i_min).startsWith("<service"))) {
 			/* read name tag */
 			java.util.regex.Pattern o_regex = java.util.regex.Pattern.compile("name=\"([^\"]*)\"");
 			java.util.regex.Matcher o_matcher = o_regex.matcher(p_a_wsdlTags.get(p_i_min));
@@ -1058,18 +1063,18 @@ public class WSDL {
 			Binding o_serviceBinding = null;
 			
 			/* abort for loop if closing service tag is found */
-			if (p_a_wsdlTags.get(i).contentEquals("</service>")) {
+			if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).contentEquals("</service>"))) {
 				break;
 			}
 			
 			/* parse optional documentation tag */
-			if (p_a_wsdlTags.get(i).startsWith("<documentation")) {
+			if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).startsWith("<documentation"))) {
 				s_serviceDocumentation = this.parseDocumentationTag(p_a_wsdlTags.get(i));
 		    	i++;
 		    }
 			
 			/* expect port tag */
-			if (p_a_wsdlTags.get(i).startsWith("<port")) {
+			if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).startsWith("<port"))) {
 				/* read name tag */
 				java.util.regex.Pattern o_regex = java.util.regex.Pattern.compile("name=\"([^\"]*)\"");
 				java.util.regex.Matcher o_matcher = o_regex.matcher(p_a_wsdlTags.get(i));
@@ -1092,7 +1097,7 @@ public class WSDL {
 			    	
 			    	/* check our binding list if we find service port binding name there */
 			    	for (Binding o_binding : this.a_bindings) {
-			    		if (o_binding.getName().contentEquals(s_servicePortBinding)) {
+			    		if ((o_binding != null) && (o_binding.getName() != null) && (o_binding.getName().contentEquals(s_servicePortBinding))) {
 			    			o_serviceBinding = o_binding;
 			    			break;
 			    		}
@@ -1119,7 +1124,7 @@ public class WSDL {
 			}
 			
 			/* expect address tag */
-			if (p_a_wsdlTags.get(i).startsWith("<address")) {
+			if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).startsWith("<address"))) {
 				/* read location tag */
 				java.util.regex.Pattern o_regex = java.util.regex.Pattern.compile("location=\"([^\"]*)\"");
 				java.util.regex.Matcher o_matcher = o_regex.matcher(p_a_wsdlTags.get(i));
@@ -1132,7 +1137,7 @@ public class WSDL {
 			    	throw new IllegalArgumentException("Invalid <soap:address>-tag without a location attribute");
 			    }
 			    
-			    if (p_a_wsdlTags.get(i).endsWith("/>")) { /* address tag was self-closing */
+			    if ((p_a_wsdlTags.size() > i) && (p_a_wsdlTags.get(i).endsWith("/>"))) { /* address tag was self-closing */
 			    	i--;
 			    } else if (!this.lookForEndTag(p_a_wsdlTags.get(i), p_a_wsdlTags, i + 1, p_i_max)) { /* check if address tag is closed */
 					throw new IllegalArgumentException("Invalid wsdl document. <soap:address>-tag is not closed in wsdl file");
@@ -1169,7 +1174,7 @@ public class WSDL {
 		/* iterate each portType operation */
 		for (PortTypeOperation o_operation : this.a_portTypeOperations) {
 			/* input message part element value parameter must match with operation input message name */
-			if (o_operation.getInputMessage().getPartElement().contentEquals(p_s_inputMessagePartElementValue)) {
+			if ((o_operation != null) && (o_operation.getInputMessage() != null) && (o_operation.getInputMessage().getPartElement() != null) && (o_operation.getInputMessage().getPartElement().contentEquals(p_s_inputMessagePartElementValue))) {
 				/* found portType operation */
 				return true;
 			}
@@ -1195,7 +1200,7 @@ public class WSDL {
 		/* iterate each portType operation */
 		for (PortTypeOperation o_operation : this.a_portTypeOperations) {
 			/* input message part element value parameter must match with operation input message name */
-			if (o_operation.getInputMessage().getPartElement().contentEquals(p_s_inputMessagePartElementValue)) {
+			if ((o_operation != null) && (o_operation.getInputMessage() != null) && (o_operation.getInputMessage().getPartElement() != null) && (o_operation.getInputMessage().getPartElement().contentEquals(p_s_inputMessagePartElementValue))) {
 				/* return found portType operation */
 				return o_operation;
 			}

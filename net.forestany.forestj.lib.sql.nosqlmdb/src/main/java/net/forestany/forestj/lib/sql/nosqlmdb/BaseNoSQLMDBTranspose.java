@@ -84,7 +84,7 @@ public class BaseNoSQLMDBTranspose {
 				/* add constraints to current columns structure */
 				if (o_columnStructure.getConstraintList().size() > 0) {
 					for (String s_constraint : o_columnStructure.getConstraintList()) {
-						if ( (s_constraint.contentEquals("PRIMARY KEY")) || (s_constraint.contentEquals("UNIQUE")) ) {
+						if ((s_constraint != null) && ( (s_constraint.contentEquals("PRIMARY KEY")) || (s_constraint.contentEquals("UNIQUE")) )) {
 							a_puks.add(
 								new Document("key",
 									new Document(s_name, 1)
@@ -132,49 +132,51 @@ public class BaseNoSQLMDBTranspose {
 				
 				/* handle all alter columns within query */
 				for (ColumnStructure o_columnStructure : o_alterQuery.a_columns) {
-					if (o_columnStructure.getAlterOperation().contentEquals("ADD")) { /* add a column */
-						/* column name */
-						String s_name = o_columnStructure.s_name;
-						
-						/* use new name */
-						if (o_columnStructure.s_newName.length() > 0) {
-							s_name = o_columnStructure.s_newName;
-						}
-						
-						if (o_addColumns == null) {
-							o_addColumns = new Document(s_name, null);
-						} else {
-							o_addColumns.append(s_name, null);
-						}
-						
-						/* add constraints to current columns structure */
-						if (o_columnStructure.getConstraintList().size() > 0) {
-							for (String s_constraint : o_columnStructure.getConstraintList()) {
-								if ( (s_constraint.contentEquals("PRIMARY KEY")) || (s_constraint.contentEquals("UNIQUE")) ) {
-									a_puks.add(
-										new Document("key",
-											new Document(s_name, 1)
-										)
-										.append("name", s_collection + "_" + s_name + "_puk")
-										.append("unique", 1)
-									);
-								} 
+					if (o_columnStructure.getAlterOperation() != null) {
+						if (o_columnStructure.getAlterOperation().contentEquals("ADD")) { /* add a column */
+							/* column name */
+							String s_name = o_columnStructure.s_name;
+							
+							/* use new name */
+							if (o_columnStructure.s_newName.length() > 0) {
+								s_name = o_columnStructure.s_newName;
 							}
-						}
-					} else if (o_columnStructure.getAlterOperation().contentEquals("CHANGE")) { /* change a column */
-						/* change column name */
-						if (o_columnStructure.s_newName.length() > 0) {
-							if (o_changeColumns == null) {
-								o_changeColumns = new Document(o_columnStructure.s_name, o_columnStructure.s_newName);
+							
+							if (o_addColumns == null) {
+								o_addColumns = new Document(s_name, null);
 							} else {
-								o_changeColumns.append(o_columnStructure.s_name, o_columnStructure.s_newName);
+								o_addColumns.append(s_name, null);
 							}
-						}
-					} else if (o_columnStructure.getAlterOperation().contentEquals("DROP")) { /* drop a column */ 
-						if (o_deleteColumns == null) {
-							o_deleteColumns = new Document(o_columnStructure.s_name, 0);
-						} else {
-							o_deleteColumns.append(o_columnStructure.s_name, 0);
+							
+							/* add constraints to current columns structure */
+							if (o_columnStructure.getConstraintList().size() > 0) {
+								for (String s_constraint : o_columnStructure.getConstraintList()) {
+									if ((s_constraint != null) && ( (s_constraint.contentEquals("PRIMARY KEY")) || (s_constraint.contentEquals("UNIQUE")) )) {
+										a_puks.add(
+											new Document("key",
+												new Document(s_name, 1)
+											)
+											.append("name", s_collection + "_" + s_name + "_puk")
+											.append("unique", 1)
+										);
+									} 
+								}
+							}
+						} else if (o_columnStructure.getAlterOperation().contentEquals("CHANGE")) { /* change a column */
+							/* change column name */
+							if (o_columnStructure.s_newName.length() > 0) {
+								if (o_changeColumns == null) {
+									o_changeColumns = new Document(o_columnStructure.s_name, o_columnStructure.s_newName);
+								} else {
+									o_changeColumns.append(o_columnStructure.s_name, o_columnStructure.s_newName);
+								}
+							}
+						} else if (o_columnStructure.getAlterOperation().contentEquals("DROP")) { /* drop a column */ 
+							if (o_deleteColumns == null) {
+								o_deleteColumns = new Document(o_columnStructure.s_name, 0);
+							} else {
+								o_deleteColumns.append(o_columnStructure.s_name, 0);
+							}
 						}
 					}
 				}
@@ -244,52 +246,54 @@ public class BaseNoSQLMDBTranspose {
 				
 				/* handle all alter constraints within query */
 				for (Constraint o_constraint : o_alterQuery.a_constraints) {
-					if (o_constraint.getAlterOperation().contentEquals("ADD")) { /* add new constraint */
-						/* gather all columns for unique key constraint */
-						Document o_columns = null;
-						
-						/* add all columns of constraint to document variable */
-						for (String s_column : o_constraint.a_columns) {
-							if (o_columns == null) {
-								o_columns = new Document(s_column, 1);
-							} else {
-								o_columns.append(s_column, 1);
+					if (o_constraint.getAlterOperation() != null) {
+						if (o_constraint.getAlterOperation().contentEquals("ADD")) { /* add new constraint */
+							/* gather all columns for unique key constraint */
+							Document o_columns = null;
+							
+							/* add all columns of constraint to document variable */
+							for (String s_column : o_constraint.a_columns) {
+								if (o_columns == null) {
+									o_columns = new Document(s_column, 1);
+								} else {
+									o_columns.append(s_column, 1);
+								}
 							}
-						}
-						
-						/* add unique key for createIndexes command */
-						a_constraints.add(
-							new Document("key",
-								o_columns
-							)
-							.append("name", s_collection + "_" + o_constraint.s_name + ( (o_constraint.getConstraint().contentEquals("UNIQUE")) ? "_puk" : "_ik" ))
-							.append("unique", ( (o_constraint.getConstraint().contentEquals("UNIQUE")) ? 1 : 0 ))
-						);
-					} else if (o_constraint.getAlterOperation().contentEquals("CHANGE")) { /* change existing constraint */
-						a_deleteConstraintsBecauseOfChange.add(s_collection + "_" + o_constraint.s_name + ( (o_constraint.getConstraint().contentEquals("UNIQUE")) ? "_puk" : "_ik" ));
-						
-						/* gather all columns for unique key constraint */
-						Document o_columns = null;
-						
-						/* add all columns of constraint to document variable */
-						for (String s_column : o_constraint.a_columns) {
-							if (o_columns == null) {
-								o_columns = new Document(s_column, 1);
-							} else {
-								o_columns.append(s_column, 1);
+							
+							/* add unique key for createIndexes command */
+							a_constraints.add(
+								new Document("key",
+									o_columns
+								)
+								.append("name", s_collection + "_" + o_constraint.s_name + ( ((o_constraint.getConstraint() != null) && (o_constraint.getConstraint().contentEquals("UNIQUE"))) ? "_puk" : "_ik" ))
+								.append("unique", ( (o_constraint.getConstraint().contentEquals("UNIQUE")) ? 1 : 0 ))
+							);
+						} else if (o_constraint.getAlterOperation().contentEquals("CHANGE")) { /* change existing constraint */
+							a_deleteConstraintsBecauseOfChange.add(s_collection + "_" + o_constraint.s_name + ( ((o_constraint.getConstraint() != null) && (o_constraint.getConstraint().contentEquals("UNIQUE"))) ? "_puk" : "_ik" ));
+							
+							/* gather all columns for unique key constraint */
+							Document o_columns = null;
+							
+							/* add all columns of constraint to document variable */
+							for (String s_column : o_constraint.a_columns) {
+								if (o_columns == null) {
+									o_columns = new Document(s_column, 1);
+								} else {
+									o_columns.append(s_column, 1);
+								}
 							}
+							
+							/* add unique key for createIndexes command */
+							a_constraints.add(
+								new Document("key",
+									o_columns
+								)
+								.append("name", s_collection + "_" + o_constraint.s_newName + ( ((o_constraint.getConstraint() != null) && (o_constraint.getConstraint().contentEquals("UNIQUE"))) ? "_puk" : "_ik" ))
+								.append("unique", ( ((o_constraint.getConstraint() != null) && (o_constraint.getConstraint().contentEquals("UNIQUE"))) ? 1 : 0 ))
+							);
+						} else if (o_constraint.getAlterOperation().contentEquals("DROP")) { /* drop constraint */
+							a_deleteConstraints.add(s_collection + "_" + o_constraint.s_name + ( ((o_constraint.getConstraint() != null) && (o_constraint.getConstraint().contentEquals("UNIQUE"))) ? "_puk" : "_ik" ));
 						}
-						
-						/* add unique key for createIndexes command */
-						a_constraints.add(
-							new Document("key",
-								o_columns
-							)
-							.append("name", s_collection + "_" + o_constraint.s_newName + ( (o_constraint.getConstraint().contentEquals("UNIQUE")) ? "_puk" : "_ik" ))
-							.append("unique", ( (o_constraint.getConstraint().contentEquals("UNIQUE")) ? 1 : 0 ))
-						);
-					} else if (o_constraint.getAlterOperation().contentEquals("DROP")) { /* drop constraint */
-						a_deleteConstraints.add(s_collection + "_" + o_constraint.s_name + ( (o_constraint.getConstraint().contentEquals("UNIQUE")) ? "_puk" : "_ik" ));
 					}
 				}
 				
@@ -332,11 +336,6 @@ public class BaseNoSQLMDBTranspose {
 		String s_collection = p_o_sqlQuery.getTable();
 		java.util.List<Document> a_return = new java.util.ArrayList<Document>();
 		
-		/* add autoincrement command  */
-		if (o_insertQuery.o_nosqlmdbColumnAutoIncrement != null) {
-			a_return.add(new Document("autoincrement_collection", s_collection).append("autoincrement_column", o_insertQuery.o_nosqlmdbColumnAutoIncrement.s_column));
-		}
-		
 		/* store values we retrieve from insert query */
 		java.util.List<java.util.AbstractMap.SimpleEntry<String, Object>> a_values = new java.util.ArrayList<java.util.AbstractMap.SimpleEntry<String, Object>>();
 		
@@ -345,39 +344,84 @@ public class BaseNoSQLMDBTranspose {
 		
 		logValuesFromQuery(a_values);
 		
-		/* check if amount of values for query statement and column values of insert query are equal */
-		if (a_values.size() != o_insertQuery.a_columnValues.size()) {
-			throw new IllegalArgumentException("Amount of values does not match between query statement and query column values [" + a_values.size() + " != " + o_insertQuery.a_columnValues.size() + "]");
-		}
+		/* document list for all records containing each column value pairs */
+		java.util.List<Document> a_documentsForInsert = new java.util.ArrayList<Document>();
 		
-		/* document variable for all column value pairs in insert query  */
-		Document o_insertColumnValuePairs = null;
-		
-		/* handle all column value pairs of insert query */
-		int i = 0;
-		
-		for (ColumnValue o_columnValue : o_insertQuery.a_columnValues) {
-			if (o_insertColumnValuePairs == null) {
-				o_insertColumnValuePairs = new Document("_id", net.forestany.forestj.lib.Helper.generateUUID().replace("-", "").substring(0, 24));
+		if (o_insertQuery.a_multipleRecords.size() > 0) {
+			boolean b_firstRecord = true;
+			java.util.List<String> a_columns = new java.util.ArrayList<String>();
+
+			/* handle all column value pairs of all records in insert query */
+			int i = 0;
+			
+			/* add autoincrement command, but with additional amount of values which must be replaced */
+			if (o_insertQuery.o_nosqlmdbColumnAutoIncrement != null) {
+				a_return.add(new Document("autoincrement_collection", s_collection).append("autoincrement_column", o_insertQuery.o_nosqlmdbColumnAutoIncrement.s_column + "___fJ___" + o_insertQuery.a_multipleRecords.size()));
+			}
+
+			/* autoincrement counter */
+			int j = 0;
+
+			/* iterate all records */
+			for (java.util.List<ColumnValue> a_record : o_insertQuery.a_multipleRecords) {
+				Document o_insertColumnValuePairs = new Document("_id", net.forestany.forestj.lib.Helper.generateUUID().replace("-", "").substring(0, 24));
 				
+				/* add replacement holder for autoincrement value and counter number, for later */
 				if (o_insertQuery.o_nosqlmdbColumnAutoIncrement != null) {
-					o_insertColumnValuePairs.append(o_insertQuery.o_nosqlmdbColumnAutoIncrement.s_column, "FORESTJ_REPLACE_AUTOINCREMENT_VALUE");
+					o_insertColumnValuePairs.append(o_insertQuery.o_nosqlmdbColumnAutoIncrement.s_column, "FORESTJ_REPLACE_AUTOINCREMENT_VALUE_" + j++);
 				}
+
+				for (ColumnValue o_columnValue : a_record) {
+					if (b_firstRecord) {
+						a_columns.add(o_columnValue.o_column.toString());
+					} else if (!a_columns.contains(o_columnValue.o_column.toString())) { /* check if record is using the same columns as the first record */
+						throw new IllegalArgumentException("Unknown column '" + o_columnValue.o_column.toString() + "' for multiple record insert. Expected the following columns: " + net.forestany.forestj.lib.Helper.printArrayList(a_columns));
+					}
+					
+					java.util.AbstractMap.SimpleEntry<String, Object> o_entry = a_values.get(i++);
+					o_insertColumnValuePairs.append( o_columnValue.o_column.s_column, transposeValueFromQuery(o_entry) );
+				}
+
+				/* add document to insert list */
+				a_documentsForInsert.add(o_insertColumnValuePairs);
+				b_firstRecord = false;
+			}
+		} else if (o_insertQuery.a_columnValues.size() > 0) {
+			/* add autoincrement command */
+			if (o_insertQuery.o_nosqlmdbColumnAutoIncrement != null) {
+				a_return.add(new Document("autoincrement_collection", s_collection).append("autoincrement_column", o_insertQuery.o_nosqlmdbColumnAutoIncrement.s_column));
+			}
+
+			/* check if amount of values for query statement and column values of insert query are equal */
+			if (a_values.size() != o_insertQuery.a_columnValues.size()) {
+				throw new IllegalArgumentException("Amount of values does not match between query statement and query column values [" + a_values.size() + " != " + o_insertQuery.a_columnValues.size() + "]");
 			}
 			
-			java.util.AbstractMap.SimpleEntry<String, Object> o_entry = a_values.get(i++);
+			Document o_insertColumnValuePairs = new Document("_id", net.forestany.forestj.lib.Helper.generateUUID().replace("-", "").substring(0, 24));
 			
-			o_insertColumnValuePairs.append( o_columnValue.o_column.s_column, transposeValueFromQuery(o_entry) );
+			/* add replacement holder for autoincrement value, for later */
+			if (o_insertQuery.o_nosqlmdbColumnAutoIncrement != null) {
+				o_insertColumnValuePairs.append(o_insertQuery.o_nosqlmdbColumnAutoIncrement.s_column, "FORESTJ_REPLACE_AUTOINCREMENT_VALUE");
+			}
+
+			/* handle all column value pairs of insert query */
+			int i = 0;
+			
+			for (ColumnValue o_columnValue : o_insertQuery.a_columnValues) {
+				java.util.AbstractMap.SimpleEntry<String, Object> o_entry = a_values.get(i++);
+				o_insertColumnValuePairs.append( o_columnValue.o_column.s_column, transposeValueFromQuery(o_entry) );
+			}
+
+			/* add document to insert list */
+			a_documentsForInsert.add(o_insertColumnValuePairs);
 		}
-		
-		if (o_insertColumnValuePairs != null) {
+
+		/* return command if we have any documents for insert */
+		if (a_documentsForInsert.size() > 0) {
 			a_return.add(
 				new Document()
 					.append("insert", s_collection)
-					.append("documents", java.util.Arrays.asList(
-							o_insertColumnValuePairs
-						)
-					)
+					.append("documents", a_documentsForInsert)
 					.append("ordered", true)
 			);
 		}
@@ -550,7 +594,7 @@ public class BaseNoSQLMDBTranspose {
 		String s_collection = p_o_sqlQuery.getTable();
 		java.util.List<Document> a_return = new java.util.ArrayList<Document>();
 		
-		if ( (o_selectQuery.a_columns.size() != 1) || (o_selectQuery.a_columns.get(0).s_column.contentEquals("*")) ) {
+		if ( (o_selectQuery.a_columns.size() != 1) || (o_selectQuery.a_columns.get(0).s_column == null) || (o_selectQuery.a_columns.get(0).s_column.contentEquals("*")) ) {
 			throw new IllegalArgumentException("Only one column is allowed for using distinct operator for nosqlmdb, and no '*' as column");
 		}
 		
@@ -677,7 +721,7 @@ public class BaseNoSQLMDBTranspose {
 			/* iterate all where clauses */
 			for (int i = 0; i < o_selectQuery.a_where.size(); i++) {
 				/* if where clause table is equal to join table, set flag */
-				if (o_selectQuery.a_where.get(i).o_column.s_table.contentEquals(o_join.s_table)) {
+				if ((o_selectQuery.a_where.get(i) != null) && (o_selectQuery.a_where.get(i).o_column != null) && (o_selectQuery.a_where.get(i).o_column.s_table != null) && (o_selectQuery.a_where.get(i).o_column.s_table.contentEquals(o_join.s_table))) {
 					o_selectQuery.a_where.get(i).b_isJoinTable = true;
 				}
 			}
@@ -689,7 +733,7 @@ public class BaseNoSQLMDBTranspose {
 			/* iterate all columns */
 			for (int i = 0; i < o_selectQuery.a_columns.size(); i++) {
 				/* if column table is equal to join table, set flag */
-				if (o_selectQuery.a_columns.get(i).s_table.contentEquals(o_join.s_table)) {
+				if ((o_selectQuery.a_columns.get(i) != null) && (o_selectQuery.a_columns.get(i).s_table != null) && (o_selectQuery.a_columns.get(i).s_table.contentEquals(o_join.s_table))) {
 					if (!net.forestany.forestj.lib.Helper.isStringEmpty(o_selectQuery.a_columns.get(i).getSqlAggregation())) {
 						throw new IllegalArgumentException("Invalid column with aggregation on a join table at the same time. Only aggregation on main table allowed");
 					}
@@ -706,7 +750,7 @@ public class BaseNoSQLMDBTranspose {
 			/* iterate all columns of order by clause */
 			for (int i = 0; i < o_selectQuery.o_orderBy.getColumns().size(); i++) {
 				/* if column table is equal to join table, set flag */
-				if (o_selectQuery.o_orderBy.getColumns().get(i).s_table.contentEquals(o_join.s_table)) {
+				if ((o_selectQuery.o_orderBy.getColumns().get(i) != null) && (o_selectQuery.o_orderBy.getColumns().get(i).s_table != null) && (o_selectQuery.o_orderBy.getColumns().get(i).s_table.contentEquals(o_join.s_table))) {
 					if (!net.forestany.forestj.lib.Helper.isStringEmpty(o_selectQuery.a_columns.get(i).getSqlAggregation())) {
 						throw new IllegalArgumentException("Invalid column with aggregation on a join table at the same time. Only aggregation on main table allowed");
 					}
@@ -836,6 +880,10 @@ public class BaseNoSQLMDBTranspose {
 		
 		/* add other aggregations to group columns */
 		for (Column o_column : a_aggregations) {
+			if ((o_column == null) || (o_column.getSqlAggregation() == null)) {
+				continue;
+			}
+
 			String s_column = o_column.s_column;
 			
 			if (!net.forestany.forestj.lib.Helper.isStringEmpty(o_column.getSqlAggregation())) {
@@ -1006,7 +1054,7 @@ public class BaseNoSQLMDBTranspose {
 			/* iterate all columns */
 			for (int i = 0; i < o_selectQuery.a_columns.size(); i++) {
 				/* if column table is equal to join table, set flag */
-				if (o_selectQuery.a_columns.get(i).s_table.contentEquals(o_join.s_table)) {
+				if ((o_selectQuery.a_columns.get(i) != null) && (o_selectQuery.a_columns.get(i).s_table != null) && (o_selectQuery.a_columns.get(i).s_table.contentEquals(o_join.s_table))) {
 					if (!net.forestany.forestj.lib.Helper.isStringEmpty(o_selectQuery.a_columns.get(i).getSqlAggregation())) {
 						throw new IllegalArgumentException("Invalid column with aggregation on a join table at the same time. Only aggregation on main table allowed");
 					}
@@ -1024,7 +1072,7 @@ public class BaseNoSQLMDBTranspose {
 		/* handle having object */
 		for (Where o_having : o_selectQuery.a_having) {
 			/* if having clause table is equal to join table, set flag */
-			if (o_having.o_column.s_table.contentEquals(o_join.s_table)) {
+			if ((o_having != null) && (o_having.o_column != null) && (o_having.o_column.s_table != null) && (o_having.o_column.s_table.contentEquals(o_join.s_table))) {
 				o_having.b_isJoinTable = true;
 			}
 			
@@ -1034,7 +1082,7 @@ public class BaseNoSQLMDBTranspose {
 		/* handle where clauses */
 		for (Where o_where : o_selectQuery.a_where) {
 			/* if where clause table is equal to join table, set flag */
-			if (o_where.o_column.s_table.contentEquals(o_join.s_table)) {
+			if ((o_where != null) && (o_where.o_column != null) && (o_where.o_column.s_table != null) && (o_where.o_column.s_table.contentEquals(o_join.s_table))) {
 				o_where.b_isJoinTable = true;
 			}
 			
@@ -1056,7 +1104,7 @@ public class BaseNoSQLMDBTranspose {
 			/* iterate all columns of order by clause */
 			for (int i = 0; i < o_selectQuery.o_orderBy.getColumns().size(); i++) {
 				/* if column table is equal to join table, set flag */
-				if (o_selectQuery.o_orderBy.getColumns().get(i).s_table.contentEquals(o_join.s_table)) {
+				if ((o_selectQuery.o_orderBy.getColumns().get(i) != null) && (o_selectQuery.o_orderBy.getColumns().get(i).s_table != null) && (o_selectQuery.o_orderBy.getColumns().get(i).s_table.contentEquals(o_join.s_table))) {
 					if (!net.forestany.forestj.lib.Helper.isStringEmpty(o_selectQuery.a_columns.get(i).getSqlAggregation())) {
 						throw new IllegalArgumentException("Invalid column with aggregation on a join table at the same time. Only aggregation on main table allowed");
 					}
@@ -1074,6 +1122,10 @@ public class BaseNoSQLMDBTranspose {
 		
 		/* add other aggregations to group columns */
 		for (Column o_column : a_aggregations) {
+			if ((o_column == null) || (o_column.getSqlAggregation() == null)) {
+				continue;
+			}
+
 			String s_column = o_column.s_column;
 			
 			if (!net.forestany.forestj.lib.Helper.isStringEmpty(o_column.getSqlAggregation())) {
@@ -1183,6 +1235,10 @@ public class BaseNoSQLMDBTranspose {
 	}
 	
 	private static Object transposeValueFromQuery(java.util.AbstractMap.SimpleEntry<String, Object> p_o_entry) throws IllegalArgumentException {
+		if ((p_o_entry == null) || (p_o_entry.getKey() == null)) {
+			throw new IllegalArgumentException("Illegal parameter entry is 'null' or entry key is 'null'");
+		}
+		
 		if (p_o_entry.getKey().contentEquals("object")) {
 			return p_o_entry.getValue();
 		} else if (p_o_entry.getKey().contentEquals("string")) {
@@ -1263,7 +1319,7 @@ public class BaseNoSQLMDBTranspose {
 		/* retrieve columns from sql query */
 		for (Column o_column : p_a_columns) {
 			/* ignore "*" column */
-			if (!o_column.s_column.contentEquals("*")) {
+			if ((o_column != null) && (o_column.s_column != null) && (!o_column.s_column.contentEquals("*"))) {
 				if (o_columns == null) {
 					if (!net.forestany.forestj.lib.Helper.isStringEmpty(o_column.s_name)) {
 						if (!net.forestany.forestj.lib.Helper.isStringEmpty(o_column.getSqlAggregation())) {
@@ -1386,7 +1442,7 @@ public class BaseNoSQLMDBTranspose {
 				String s_nextFilterOperator = p_a_whereClauses.get(p_i_min + 1).getFilterOperator();
 				
 				/* XOR is not supported for nosqlmdb transpose library */
-				if (s_nextFilterOperator.toUpperCase().contentEquals("XOR")) {
+				if ((s_nextFilterOperator != null) && (s_nextFilterOperator.toUpperCase().contentEquals("XOR"))) {
 					throw new IllegalArgumentException("XOR filter operator is not supported for nosqlmdb transpose library");
 				}
 				
@@ -1397,7 +1453,7 @@ public class BaseNoSQLMDBTranspose {
 				
 				if (o_next != null) {
 					/* add new filter operator with sub document list */
-					o_return = o_current.append( ( (s_nextFilterOperator.toUpperCase().contentEquals("AND")) ? "$and" : "$or" ) , java.util.Arrays.asList( o_next ));
+					o_return = o_current.append( ( ((s_nextFilterOperator != null) && (s_nextFilterOperator.toUpperCase().contentEquals("AND"))) ? "$and" : "$or" ) , java.util.Arrays.asList( o_next ));
 				} else {
 					/* set current where clause as return object */
 					o_return = o_current;
@@ -1406,7 +1462,7 @@ public class BaseNoSQLMDBTranspose {
 				String s_nextFilterOperator = p_a_whereClauses.get(p_i_min + 1).getFilterOperator();
 				
 				/* XOR is not supported for nosqlmdb transpose library */
-				if (s_nextFilterOperator.toUpperCase().contentEquals("XOR")) {
+				if ((s_nextFilterOperator != null) && (s_nextFilterOperator.toUpperCase().contentEquals("XOR"))) {
 					throw new IllegalArgumentException("XOR filter operator is not supported for nosqlmdb transpose library");
 				}
 				
@@ -1422,7 +1478,7 @@ public class BaseNoSQLMDBTranspose {
 				}
 				
 				/* filter operator will change if there is no bracket end */
-				if (!p_s_lastFilterOperator.toUpperCase().contentEquals(s_nextFilterOperator.toUpperCase())) {
+				if ((p_s_lastFilterOperator != null) && (!p_s_lastFilterOperator.toUpperCase().contentEquals(s_nextFilterOperator.toUpperCase()))) {
 					if ( (!p_a_whereClauses.get(p_i_min).b_bracketStart) && (p_a_whereClauses.get(p_i_min).b_bracketEnd) ) {
 						Document o_before = null;
 						Document o_after = null;
@@ -1443,9 +1499,9 @@ public class BaseNoSQLMDBTranspose {
 						}
 						
 						o_return = o_before;
-						o_return.append( ( (s_nextFilterOperator.toUpperCase().contentEquals("AND")) ? "$and" : "$or" ) , java.util.Arrays.asList( o_after ) );
+						o_return.append( ( ((s_nextFilterOperator != null) && (s_nextFilterOperator.toUpperCase().contentEquals("AND"))) ? "$and" : "$or" ) , java.util.Arrays.asList( o_after ) );
 					} else {
-						o_return = new Document( ( (s_nextFilterOperator.toUpperCase().contentEquals("AND")) ? "$and" : "$or" ) , java.util.Arrays.asList( o_return ) );
+						o_return = new Document( ( ((s_nextFilterOperator != null) && (s_nextFilterOperator.toUpperCase().contentEquals("AND"))) ? "$and" : "$or" ) , java.util.Arrays.asList( o_return ) );
 					}
 				}
 			}
@@ -1455,6 +1511,10 @@ public class BaseNoSQLMDBTranspose {
 	}
 	
 	private static Document whereClauseToBSONDocument(Where p_o_where, Document p_o_document, java.util.AbstractMap.SimpleEntry<String, Object> p_o_valueEntry) throws IllegalArgumentException {
+		if (p_o_where == null) {
+			throw new IllegalArgumentException("Where parameter is 'null'");
+		}
+		
 		String s_column = p_o_where.o_column.s_column;
 		
 		if (!net.forestany.forestj.lib.Helper.isStringEmpty(p_o_where.o_column.getSqlAggregation())) {
@@ -1465,18 +1525,18 @@ public class BaseNoSQLMDBTranspose {
 		
 		if (p_o_document == null) { /* must create bson document object */
 			/* handle LIKE and NOT LIKE operator */
-			if (p_o_where.getOperator().toUpperCase().contentEquals("LIKE")) {
+			if ((p_o_where.getOperator() != null) && (p_o_where.getOperator().toUpperCase().contentEquals("LIKE"))) {
 				p_o_document = new Document(s_column, new Document("$regex", ".*" + transposeValueFromQuery(p_o_valueEntry).toString().replace("%", "") + ".*") );	
-			} else if (p_o_where.getOperator().toUpperCase().contentEquals("NOT LIKE")) {
+			} else if ((p_o_where.getOperator() != null) && (p_o_where.getOperator().toUpperCase().contentEquals("NOT LIKE"))) {
 				p_o_document = new Document(s_column, new Document( transposeOperatorFromQuery(p_o_where.getOperator()), new Document("$regex", ".*" + transposeValueFromQuery(p_o_valueEntry).toString().replace("%", "") + ".*")));
 			} else {
 				p_o_document = new Document(s_column, new Document( transposeOperatorFromQuery(p_o_where.getOperator()), transposeValueFromQuery(p_o_valueEntry)));
 			}
 		} else { /* append to parameter bson document object */
 			/* handle LIKE and NOT LIKE operator */
-			if (p_o_where.getOperator().toUpperCase().contentEquals("LIKE")) {
+			if ((p_o_where.getOperator() != null) && (p_o_where.getOperator().toUpperCase().contentEquals("LIKE"))) {
 				p_o_document.append(s_column, new Document("$regex", ".*" + transposeValueFromQuery(p_o_valueEntry).toString().replace("%", "") + ".*" ) );	
-			} else if (p_o_where.getOperator().toUpperCase().contentEquals("NOT LIKE")) {
+			} else if ((p_o_where.getOperator() != null) && (p_o_where.getOperator().toUpperCase().contentEquals("NOT LIKE"))) {
 				p_o_document.append(s_column, new Document( transposeOperatorFromQuery(p_o_where.getOperator()), new Document("$regex", ".*" + transposeValueFromQuery(p_o_valueEntry).toString().replace("%", "") + ".*")));
 			} else {
 				p_o_document.append(s_column, new Document( transposeOperatorFromQuery(p_o_where.getOperator()), transposeValueFromQuery(p_o_valueEntry)));

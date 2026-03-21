@@ -262,14 +262,14 @@ public class DateInterval {
 		
 		String[] a_word = new String[6];
 		
-		if ( (p_o_locale == null) || (p_o_locale.getLanguage().toLowerCase().contentEquals("de")) ) {
+		if ( (p_o_locale == null) || ((p_o_locale.getLanguage() != null) && (p_o_locale.getLanguage().toLowerCase().contentEquals("de"))) ) {
 			a_word[0] = "Jahr(e)";
 			a_word[1] = "Monat(e)";
 			a_word[2] = "Tag(e)";
 			a_word[3] = "Stunde(n)";
 			a_word[4] = "Minute(n)";
 			a_word[5] = "Sekunde(n)";
-		} else if (p_o_locale.getLanguage().toLowerCase().contentEquals("en")) {
+		} else if ((p_o_locale.getLanguage() != null) && (p_o_locale.getLanguage().toLowerCase().contentEquals("en"))) {
 			a_word[0] = "year(s)";
 			a_word[1] = "month(s)";
 			a_word[2] = "day(s)";
